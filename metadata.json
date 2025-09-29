@@ -1,0 +1,5 @@
+{
+  "name": "WanderLodge",
+  "description": "A mobile-first web application for travelers to connect, find shared housing, and discover local events. Users can create profiles, post their plans, and interact with a community of fellow adventurers.",
+  "requestFramePermissions": []
+}
