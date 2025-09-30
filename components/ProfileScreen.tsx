@@ -1,5 +1,4 @@
 
-
 import React, { useState, useMemo } from 'react';
 import { Post, User } from '../types';
 import Header from './Header';
@@ -107,7 +106,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                 currentUser={user}
                 isGuest={false}
                 onCommentClick={onSelectPost}
-                onMessageClick={onSendMessage}
                 onInterestToggle={onToggleInterest}
                 onViewProfile={onViewProfile}
                 onRepostToggle={onRepostToggle}
