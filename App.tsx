@@ -1,9 +1,4 @@
 
-
-
-
-
-
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import BottomNav from './components/BottomNav';
 import FeedScreen from './components/FeedScreen';
@@ -30,10 +25,11 @@ import PrivacySecurityScreen from './components/settings/PrivacySecurityScreen';
 import LanguageScreen from './components/settings/LanguageScreen';
 import ForgotPasswordModal from './components/ForgotPasswordModal';
 import { useTranslation } from './contexts/LanguageContext';
+import 'leaflet/dist/leaflet.css';
 
 
-import { Screen, Post, PostType, User, Conversation, Story, Notification, PostPrivacy, ActivityStatus, NotificationType, PrivacySettings } from './types';
-import { posts as mockPosts, currentUserData, users as mockUsers, conversations as mockConversations, stories as mockStories, notifications as mockNotifications } from './data/mockData';
+import { Screen, Post, PostType, User, Conversation, Story, Notification, PostPrivacy, ActivityStatus, NotificationType } from './types';
+import { posts as mockPosts, users as mockUsers, conversations as mockConversations, stories as mockStories, notifications as mockNotifications } from './data/mockData';
 
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -260,7 +256,7 @@ const App: React.FC = () => {
     });
 
     setToastMessage(t('settingsSaved'));
-    if(activeScreen === 'editProfile') goBack(); // Go back only if we are on edit profile
+    if(activeScreen === 'editProfile' || activeScreen === 'privacySecurity') goBack();
   };
 
   const handleRepostToggle = (postId: string) => {
@@ -597,8 +593,8 @@ const App: React.FC = () => {
         case PostPrivacy.Followers:
           return postAuthor.followers.includes(currentUser.id);
         case PostPrivacy.Twins:
-          if (!currentUser.birthday || !post.author.birthday) return false;
-          return currentUser.birthday.substring(5) === post.author.birthday.substring(5);
+          if (!currentUser.birthday || !postAuthor.birthday) return false;
+          return currentUser.birthday.substring(5) === postAuthor.birthday.substring(5);
         default:
           return false;
       }
@@ -661,7 +657,6 @@ const App: React.FC = () => {
           user={currentUser} 
           allPosts={posts}
           onSelectPost={handleSelectPost}
-          onSendMessage={handleSendMessage}
           onToggleInterest={handleToggleInterest}
           onViewProfile={handleViewProfile}
           onRepostToggle={handleRepostToggle}
