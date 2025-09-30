@@ -1,7 +1,6 @@
 
-
 import React from 'react';
-import { Post, PostType, User, ActivityLogEntry, ActivityStatus } from '../types';
+import { Post, PostType, User, ActivityStatus } from '../types';
 import HeartIcon from './icons/HeartIcon';
 import CommentIcon from './icons/CommentIcon';
 import PlayIcon from './icons/PlayIcon';
