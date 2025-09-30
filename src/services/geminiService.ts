@@ -32,7 +32,7 @@ export const generateDescription = async (title: string, keywords: string): Prom
       contents: prompt,
     });
     
-    return response.text?.trim() || "Could not generate a description.";
+    return response.text.trim();
   } catch (error) {
     console.error("Error generating description with Gemini:", error);
     return "There was an error generating the description. Please try again.";

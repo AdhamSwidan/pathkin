@@ -22,6 +22,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
   useEffect(() => {
     const fetchTranslations = async () => {
       try {
+        // Vite serves files from the `public` directory at the root.
         const response = await fetch(`/locales/${language}.json`);
         if (!response.ok) {
           throw new Error(`Could not load ${language}.json`);

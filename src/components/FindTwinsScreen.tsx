@@ -39,7 +39,7 @@ const FindTwinsScreen: React.FC<FindTwinsScreenProps> = ({
       if (searchType === 'exact') {
         return user.birthday === currentUser.birthday;
       }
-      return user.birthday.substring(5) === currentUser.birthday!.substring(5);
+      return user.birthday.substring(5) === currentUser.birthday?.substring(5);
     });
     setResults(matchingUsers);
   };

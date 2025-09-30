@@ -40,7 +40,7 @@ const PostCard: React.FC<PostCardProps> = ({
 }) => {
   const { t, language } = useTranslation();
   const isInterested = currentUser ? post.interestedUsers.includes(currentUser.id) : false;
-  const isReposted = currentUser ? currentUser.reposts.includes(post.id) : false;
+  const isReposted = currentUser ? currentUser.reposts.includes(currentUser.id) : false;
   const isSaved = currentUser ? currentUser.savedPosts.includes(post.id) : false;
   const isAuthor = currentUser?.id === post.author.id;
   
