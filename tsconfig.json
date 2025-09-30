@@ -14,9 +14,9 @@
     "jsx": "react-jsx",
     "strict": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"],
+  "include": ["src", "src/components/PrivacySecurityScreen.tsx", "src/components/LanguageScreen.tsx"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

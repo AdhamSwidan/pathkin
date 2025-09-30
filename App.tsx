@@ -657,7 +657,6 @@ const App: React.FC = () => {
           user={currentUser} 
           allPosts={posts}
           onSelectPost={handleSelectPost}
-          onSendMessage={handleSendMessage}
           onToggleInterest={handleToggleInterest}
           onViewProfile={handleViewProfile}
           onRepostToggle={handleRepostToggle}

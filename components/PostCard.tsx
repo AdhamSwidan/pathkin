@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Post, PostType, User, ActivityStatus } from '../types';
 import HeartIcon from './icons/HeartIcon';
 import CommentIcon from './icons/CommentIcon';
@@ -39,15 +39,6 @@ const PostCard: React.FC<PostCardProps> = ({
   onSharePost,
   onToggleCompleted
 }) => {
-  // NEW GUARANTEED FIX: This useEffect hook explicitly "reads" the onMessageClick prop.
-  // This is a failsafe to tell the TypeScript compiler that the prop IS being used,
-  // guaranteeing the build error will be resolved.
-  useEffect(() => {
-    if (onMessageClick) {
-      // This block's existence proves to the compiler that 'onMessageClick' has been read.
-    }
-  }, [onMessageClick]);
-
   const { t, language } = useTranslation();
   const isInterested = currentUser ? post.interestedUsers.includes(currentUser.id) : false;
   const isReposted = currentUser ? currentUser.reposts.includes(post.id) : false;
