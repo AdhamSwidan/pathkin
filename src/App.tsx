@@ -145,7 +145,6 @@ const App: React.FC = () => {
         bio: '',
         interests: [],
         birthday,
-        // FIX: Cast gender string to the specific union type required by the User interface to fix type error.
         gender: gender as User['gender'],
         followers: [],
         following: [],
@@ -194,6 +193,7 @@ const App: React.FC = () => {
     setCurrentUser(null);
     setIsGuest(false);
     setScreenStack(['feed']);
+    handleSetActiveScreen('feed');
   };
 
   const handleForgotPassword = (email: string) => {
@@ -677,7 +677,6 @@ const App: React.FC = () => {
         return <ChatScreen conversations={mockConversations} onSelectConversation={handleSelectConversation} onBack={goBack} />;
       case 'profile':
         if (isGuest || !currentUser) return null;
-        // FIX: Add missing 'onSendMessage' prop to satisfy ProfileScreenProps.
         return <ProfileScreen 
           user={currentUser} 
           allPosts={posts}
