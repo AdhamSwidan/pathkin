@@ -1,5 +1,3 @@
-
-
 import React, { useState } from 'react';
 import GoogleIcon from './icons/GoogleIcon';
 import FacebookIcon from './icons/FacebookIcon';

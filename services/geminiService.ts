@@ -33,6 +33,7 @@ export const generateDescription = async (title: string, keywords: string): Prom
       contents: prompt,
     });
     
+    // FIX: According to the guidelines, `response.text` is a string and not nullable.
     return response.text.trim();
   } catch (error) {
     console.error("Error generating description with Gemini:", error);

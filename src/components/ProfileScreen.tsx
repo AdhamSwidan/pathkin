@@ -1,5 +1,3 @@
-
-
 import React, { useState, useMemo } from 'react';
 import { Post, User } from '../types';
 import Header from './Header';
@@ -21,7 +19,7 @@ interface ProfileScreenProps {
   user: User;
   allPosts: Post[];
   onSelectPost: (post: Post) => void;
-  // FIX: Added onSendMessage prop to handle messaging on reposted items.
+  // FIX: Added missing onSendMessage prop to satisfy props passed from App.tsx
   onSendMessage: (user: User) => void;
   onToggleInterest: (postId: string) => void;
   onViewProfile: (user: User) => void;
@@ -40,7 +38,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   user, 
   allPosts,
   onSelectPost, 
-  // FIX: Destructured onSendMessage from props.
   onSendMessage,
   onToggleInterest, 
   onViewProfile,
@@ -110,7 +107,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                 currentUser={user}
                 isGuest={false}
                 onCommentClick={onSelectPost}
-                // FIX: Pass onSendMessage to PostCard to enable messaging functionality.
                 onMessageClick={onSendMessage}
                 onInterestToggle={onToggleInterest}
                 onViewProfile={onViewProfile}

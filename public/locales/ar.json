@@ -1,4 +1,3 @@
-
 {
   "appName": "WanderLodge",
   "feed": "الرئيسية",
@@ -134,7 +133,7 @@
   "PostPrivacy_Twins": "التوائم",
   "english": "English",
   "arabic": "العربية",
-  "forgotPassword": "هل نسيت كلمة المرور",
+  "forgotPassword": "هل نسيت كلمة المرور؟",
   "resetPassword": "إعادة تعيين كلمة المرور",
   "resetPasswordPrompt": "أدخل عنوان بريدك الإلكتروني وسنرسل لك رابطًا لإعادة تعيين كلمة مرورك.",
   "sendResetLink": "إرسال رابط إعادة التعيين",

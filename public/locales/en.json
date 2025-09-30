@@ -1,4 +1,3 @@
-
 {
   "appName": "WanderLodge",
   "feed": "Feed",
@@ -134,7 +133,7 @@
   "PostPrivacy_Twins": "Twins",
   "english": "English",
   "arabic": "العربية",
-  "forgotPassword": "Forgot Password",
+  "forgotPassword": "Forgot Password?",
   "resetPassword": "Reset Password",
   "resetPasswordPrompt": "Enter your email address and we'll send you a link to reset your password.",
   "sendResetLink": "Send Reset Link",

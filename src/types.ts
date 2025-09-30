@@ -1,4 +1,3 @@
-
 export enum PostType {
   Travel = 'Travel',
   Housing = 'Housing',
@@ -37,7 +36,6 @@ export interface ActivityLogEntry {
 export interface PrivacySettings {
   showFollowLists: boolean;
   showStats: boolean;
-
   showCompletedActivities: boolean;
   allowTwinSearch: boolean;
 }
