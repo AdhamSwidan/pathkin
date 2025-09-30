@@ -20,6 +20,7 @@ interface ProfileScreenProps {
   user: User;
   allPosts: Post[];
   onSelectPost: (post: Post) => void;
+  onSendMessage: (user: User) => void;
   onToggleInterest: (postId: string) => void;
   onViewProfile: (user: User) => void;
   onRepostToggle: (postId: string) => void;
@@ -37,6 +38,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   user, 
   allPosts,
   onSelectPost, 
+  onSendMessage, 
   onToggleInterest, 
   onViewProfile,
   onRepostToggle,
@@ -105,6 +107,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                 currentUser={user}
                 isGuest={false}
                 onCommentClick={onSelectPost}
+                onMessageClick={onSendMessage}
                 onInterestToggle={onToggleInterest}
                 onViewProfile={onViewProfile}
                 onRepostToggle={onRepostToggle}
