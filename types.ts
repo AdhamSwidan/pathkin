@@ -48,11 +48,12 @@ export interface User {
   username: string;
   email: string;
   password?: string;
-  avatarUrl: string;
+  avatarUrl?: string;
   coverUrl?: string;
   bio: string;
   interests: string[];
   birthday?: string; // e.g., 'YYYY-MM-DD'
+  gender?: 'male' | 'female' | 'other' | 'prefer_not_to_say';
   followers: string[]; // array of user ids
   following: string[]; // array of user ids
   reposts: string[]; // array of post ids

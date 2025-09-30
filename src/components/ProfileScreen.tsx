@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo } from 'react';
 import { Post, User } from '../types';
 import Header from './Header';
@@ -13,6 +14,7 @@ import StatsScreen from './StatsScreen';
 import StarIcon from './icons/StarIcon';
 import SettingsIcon from './icons/SettingsIcon';
 import { useTranslation } from '../contexts/LanguageContext';
+import UserIcon from './icons/UserIcon';
 
 
 interface ProfileScreenProps {
@@ -37,7 +39,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   user, 
   allPosts,
   onSelectPost, 
-  onSendMessage, 
+  onSendMessage,
   onToggleInterest, 
   onViewProfile,
   onRepostToggle,
@@ -127,19 +129,23 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
     <>
       <Header title={user.name} rightAction={headerActions} />
       <div className="bg-white dark:bg-neutral-950 flex-grow">
-        <img 
-          src={user.coverUrl || `https://picsum.photos/seed/${user.id}-cover/800/200`} 
-          alt="Cover" 
-          className="w-full h-32 object-cover" 
-        />
+        <div className="w-full h-32 bg-gray-200 dark:bg-neutral-800">
+            {user.coverUrl ? (
+                <img src={user.coverUrl} alt="Cover" className="w-full h-full object-cover" />
+            ) : (
+                <div className="w-full h-full bg-gradient-to-r from-gray-300 to-gray-400 dark:from-neutral-800 dark:to-neutral-700"></div>
+            )}
+        </div>
         
         <div className="px-4 relative">
           <div className="flex items-end">
-            <img 
-              src={user.avatarUrl} 
-              alt={user.name} 
-              className="w-24 h-24 rounded-full border-4 border-white dark:border-neutral-950 shadow-lg flex-shrink-0 -mt-12" 
-            />
+            <div className="w-24 h-24 rounded-full border-4 border-white dark:border-neutral-950 shadow-lg flex-shrink-0 -mt-12 bg-gray-300 dark:bg-neutral-700 flex items-center justify-center">
+                {user.avatarUrl ? (
+                    <img src={user.avatarUrl} alt={user.name} className="w-full h-full rounded-full object-cover" />
+                ) : (
+                    <UserIcon className="w-12 h-12 text-white dark:text-neutral-950" />
+                )}
+            </div>
             <div className="flex-grow ms-4 flex items-center">
                 <div className="flex justify-around w-full">
                     <div className="text-center">

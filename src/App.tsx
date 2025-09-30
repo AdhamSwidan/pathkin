@@ -1,3 +1,5 @@
+
+
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import BottomNav from './components/BottomNav';
 import FeedScreen from './components/FeedScreen';
@@ -20,8 +22,8 @@ import AuthScreen from './components/AuthScreen';
 import SettingsScreen from './components/SettingsScreen';
 import EditProfileScreen from './components/EditProfileScreen';
 import GuestHeader from './components/GuestHeader';
-import PrivacySecurityScreen from './components/PrivacySecurityScreen';
-import LanguageScreen from './components/LanguageScreen';
+import PrivacySecurityScreen from './components/settings/PrivacySecurityScreen';
+import LanguageScreen from './components/settings/LanguageScreen';
 import ForgotPasswordModal from './components/ForgotPasswordModal';
 import { useTranslation } from './contexts/LanguageContext';
 import 'leaflet/dist/leaflet.css';
@@ -59,6 +61,25 @@ const App: React.FC = () => {
   const mainContentRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
 
+  // Login Persistence
+  useEffect(() => {
+    const savedUserJSON = localStorage.getItem('currentUser');
+    if (savedUserJSON) {
+      try {
+        const savedUser = JSON.parse(savedUserJSON) as User;
+        // Re-hydrate user data from the main users array to ensure it's up to date
+        const fullUser = users.find(u => u.id === savedUser.id);
+        if (fullUser) {
+          setCurrentUser(fullUser);
+        }
+      } catch (e) {
+        console.error("Failed to parse saved user from localStorage", e);
+        localStorage.removeItem('currentUser');
+      }
+    }
+  }, [users]);
+
+
   const showGuestToast = () => {
     setToastMessage(t('guestToastMessage'));
   };
@@ -95,6 +116,7 @@ const App: React.FC = () => {
   const handleLogin = (email: string, pass: string) => {
     const user = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === pass);
     if (user) {
+      localStorage.setItem('currentUser', JSON.stringify(user));
       setCurrentUser(user);
       setIsGuest(false);
       handleSetActiveScreen('feed');
@@ -103,7 +125,7 @@ const App: React.FC = () => {
     }
   };
   
-  const handleSignUp = (name: string, username: string, email: string, pass: string) => {
+  const handleSignUp = (name: string, username: string, email: string, pass: string, birthday: string, gender: string) => {
     if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
         alert(t('emailExistsError'));
         return;
@@ -118,10 +140,13 @@ const App: React.FC = () => {
         username,
         email,
         password: pass,
-        avatarUrl: `https://picsum.photos/seed/${username}/200`,
-        coverUrl: `https://picsum.photos/seed/${username}-cover/800/200`,
+        avatarUrl: '', // New users start with no avatar
+        coverUrl: '', // New users start with no cover
         bio: '',
         interests: [],
+        birthday,
+        // FIX: Cast gender string to the specific union type required by the User interface to fix type error.
+        gender: gender as User['gender'],
         followers: [],
         following: [],
         reposts: [],
@@ -136,28 +161,26 @@ const App: React.FC = () => {
         },
     };
     setUsers(prev => [...prev, newUser]);
+    localStorage.setItem('currentUser', JSON.stringify(newUser));
     setCurrentUser(newUser);
     setIsGuest(false);
     handleSetActiveScreen('feed');
+    setToastMessage(t('emailConfirmationSent'));
   };
   
-  const handleSocialLogin = (provider: 'google' | 'facebook') => {
-    // Simulate login with different users for different providers
-    const userToLoginId = provider === 'google' ? 'user-1' : 'user-2'; // Alex for Google, Brenda for Facebook
-    const user = users.find(u => u.id === userToLoginId);
-
-    if (user) {
-      setCurrentUser(user);
-      setIsGuest(false);
-      handleSetActiveScreen('feed');
-    } else {
-      alert(`${provider} user not found for social login simulation.`);
+  const handleSocialLogin = (provider: 'google' | 'facebook'): {name: string, email: string} => {
+    // Simulate fetching data from social provider
+    if (provider === 'google') {
+      return { name: 'Alex Doe', email: 'alex@example.com' };
+    } else { // facebook
+      return { name: 'Brenda Smith', email: 'brenda@example.com' };
     }
   };
 
   const handleGuestLogin = () => {
     setIsGuest(true);
     setCurrentUser(null);
+    localStorage.removeItem('currentUser');
     handleSetActiveScreen('feed');
   };
   
@@ -167,6 +190,7 @@ const App: React.FC = () => {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('currentUser');
     setCurrentUser(null);
     setIsGuest(false);
     setScreenStack(['feed']);
@@ -225,6 +249,7 @@ const App: React.FC = () => {
           newUsers[userIndex] = updatedUser;
           
           if (currentUser?.id === userId) {
+            localStorage.setItem('currentUser', JSON.stringify(updatedUser));
             setCurrentUser(updatedUser);
           }
           if (viewingUser?.id === userId) {
@@ -652,6 +677,7 @@ const App: React.FC = () => {
         return <ChatScreen conversations={mockConversations} onSelectConversation={handleSelectConversation} onBack={goBack} />;
       case 'profile':
         if (isGuest || !currentUser) return null;
+        // FIX: Add missing 'onSendMessage' prop to satisfy ProfileScreenProps.
         return <ProfileScreen 
           user={currentUser} 
           allPosts={posts}
