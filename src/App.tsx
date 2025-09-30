@@ -593,20 +593,16 @@ const App: React.FC = () => {
 
 
   const visiblePosts = useMemo(() => {
-    // In guest mode, only show public posts
     if (isGuest) {
       return posts.filter(post => post.privacy === PostPrivacy.Public);
     }
     if (!currentUser) return [];
     
-    // For logged-in users, apply privacy rules
     return posts.filter(post => {
       const postAuthor = users.find(u => u.id === post.author.id);
       if (!postAuthor) return false;
 
-      // You can always see your own posts
       if (post.author.id === currentUser.id) return true;
-      // If the author's account is private, you must be a follower
       if (postAuthor.isPrivate && !postAuthor.followers.includes(currentUser.id)) return false;
       
       switch(post.privacy) {
@@ -624,7 +620,6 @@ const App: React.FC = () => {
   }, [posts, users, currentUser, isGuest]);
 
   const renderScreen = () => {
-    // If guest, currentUser is null, but we need a dummy for some components
     const userForUI = currentUser ?? { id: 'guest', name: 'Guest', followers: [], following: [], reposts: [], savedPosts: [], activityLog: [], privacySettings: {} } as any;
 
     switch (activeScreen) {
