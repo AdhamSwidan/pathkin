@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Header from '../Header';
 import { Post, User } from '../../types';
@@ -9,6 +8,7 @@ interface SavedPostsScreenProps {
   posts: Post[];
   currentUser: User;
   onCommentClick: (post: Post) => void;
+  onMessageClick: (user: User) => void;
   onInterestToggle: (postId: string) => void;
   onViewProfile: (user: User) => void;
   onRepostToggle: (postId: string) => void;
@@ -22,6 +22,7 @@ const SavedPostsScreen: React.FC<SavedPostsScreenProps> = ({
     posts, 
     currentUser, 
     onCommentClick, 
+    onMessageClick, 
     onInterestToggle,
     onViewProfile,
     onRepostToggle,
@@ -39,8 +40,10 @@ const SavedPostsScreen: React.FC<SavedPostsScreenProps> = ({
                     key={post.id} 
                     post={post} 
                     currentUser={currentUser}
+                    // FIX: Pass isGuest={false} as this screen is only for logged-in users.
                     isGuest={false}
                     onCommentClick={onCommentClick}
+                    onMessageClick={onMessageClick}
                     onInterestToggle={onInterestToggle}
                     onViewProfile={onViewProfile}
                     onRepostToggle={onRepostToggle}
