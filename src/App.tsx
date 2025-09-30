@@ -675,7 +675,6 @@ const App: React.FC = () => {
         return <ChatScreen conversations={mockConversations} onSelectConversation={handleSelectConversation} onBack={goBack} />;
       case 'profile':
         if (isGuest || !currentUser) return null;
-        // FIX: Add missing 'onSendMessage' prop to satisfy ProfileScreenProps.
         return <ProfileScreen 
           user={currentUser} 
           allPosts={posts}
