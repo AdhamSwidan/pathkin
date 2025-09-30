@@ -1,4 +1,3 @@
-
 import { User, Post, PostType, Conversation, Story, Notification, NotificationType, PostPrivacy, ActivityStatus } from '../types';
 
 export const currentUserData: User = {
@@ -301,6 +300,7 @@ export const notifications: Notification[] = [
   {
     id: 'notif-1',
     type: NotificationType.Interest,
+    recipientId: 'user-2', // Author of post-1 is Brenda (user-2)
     user: users[3],
     post: posts[0],
     text: 'is interested in your "Backpacking Southeast Asia" trip.',
@@ -310,6 +310,7 @@ export const notifications: Notification[] = [
   {
     id: 'notif-2',
     type: NotificationType.Comment,
+    recipientId: 'user-2', // Author of post-1 is Brenda (user-2)
     user: users[2],
     post: posts[0],
     text: 'commented on your "Backpacking Southeast Asia" trip.',
@@ -319,6 +320,7 @@ export const notifications: Notification[] = [
   {
     id: 'notif-3',
     type: NotificationType.Message,
+    recipientId: 'user-1', // Message to current user
     user: users[1],
     text: 'sent you a new message.',
     createdAt: '2024-05-20T11:00:00Z',
@@ -327,6 +329,7 @@ export const notifications: Notification[] = [
   {
     id: 'notif-4',
     type: NotificationType.Interest,
+    recipientId: 'user-4', // Author of post-2 is Diana (user-4)
     user: users[1],
     post: posts[1],
     text: 'is interested in your "Sunny room available in Lisbon" offer.',
@@ -336,7 +339,8 @@ export const notifications: Notification[] = [
   {
     id: 'notif-5',
     type: NotificationType.AttendanceRequest,
-    user: users[3], // Charlie
+    recipientId: 'user-3', // Author of post-3 is Charlie (user-3)
+    user: users[3], // Diana triggered it
     post: posts[2], // Art & Wine Night
     attendeeId: users[3].id,
     attendeeName: users[3].name,

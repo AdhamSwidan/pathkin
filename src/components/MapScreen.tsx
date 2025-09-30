@@ -1,3 +1,6 @@
+
+
+
 import React, { useEffect, useRef } from 'react';
 import { Post } from '../types';
 import Header from './Header';
@@ -5,6 +8,25 @@ import { useTranslation } from '../contexts/LanguageContext';
 
 // Declaring the Leaflet global 'L' to avoid TypeScript errors.
 declare const L: any;
+
+// FIX: Import Leaflet's CSS and icon assets directly
+// This ensures Vite bundles them and resolves paths correctly for deployment.
+import 'leaflet/dist/leaflet.css';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
+// FIX: Re-configure Leaflet's default icon paths to use the imported assets.
+// This is a common fix for issues with bundlers like Vite.
+// @ts-ignore
+delete L.Icon.Default.prototype._getIconUrl;
+
+L.Icon.Default.mergeOptions({
+  iconUrl: markerIcon,
+  iconRetinaUrl: markerIcon2x,
+  shadowUrl: markerShadow,
+});
+
 
 interface MapScreenProps {
   postsToShow: Post[];

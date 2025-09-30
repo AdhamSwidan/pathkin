@@ -1,3 +1,5 @@
+
+
 import React, { useState } from 'react';
 import GoogleIcon from './icons/GoogleIcon';
 import FacebookIcon from './icons/FacebookIcon';
@@ -8,7 +10,7 @@ import EyeOffIcon from './icons/EyeOffIcon';
 interface AuthScreenProps {
   onLogin: (email: string, pass: string) => void;
   onSignUp: (name: string, username: string, email: string, pass: string, birthday: string, gender: string) => void;
-  onSocialLogin: (provider: 'google' | 'facebook') => { name: string, email: string };
+  onSocialLogin: (provider: 'google' | 'facebook') => {name: string, email: string};
   onGuestLogin: () => void;
   onForgotPassword: () => void;
 }
@@ -67,7 +69,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onSignUp, onSocialLogi
             </>
           )}
           <input type="email" placeholder={t('emailAddress')} className={inputClasses} value={email} onChange={e => setEmail(e.target.value)} required />
-          <div className="relative">
+           <div className="relative">
             <input 
               type={showPassword ? 'text' : 'password'} 
               placeholder={t('password')} 
@@ -119,11 +121,10 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onSignUp, onSocialLogi
         </form>
 
         <div className="mt-4 text-center">
-             <button onClick={() => setIsLogin(!isLogin)} className="w-full py-3 rounded-md font-semibold text-orange-500 bg-orange-100/50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/40 transition-colors">
+             <button type="button" onClick={() => setIsLogin(!isLogin)} className="w-full py-3 rounded-md font-semibold text-orange-500 bg-orange-100/50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/40 transition-colors">
                 {isLogin ? t('createNewAccount') : t('backToLogin')}
             </button>
         </div>
-
 
         <div className="relative my-6">
           <div className="absolute inset-0 flex items-center">
@@ -147,6 +148,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onSignUp, onSocialLogi
             {t('continueAsGuest')}
           </button>
         </div>
+
       </div>
     </div>
   );

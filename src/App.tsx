@@ -1,3 +1,5 @@
+
+
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import BottomNav from './components/BottomNav';
 import FeedScreen from './components/FeedScreen';
@@ -23,11 +25,11 @@ import GuestHeader from './components/GuestHeader';
 import PrivacySecurityScreen from './components/settings/PrivacySecurityScreen';
 import LanguageScreen from './components/settings/LanguageScreen';
 import ForgotPasswordModal from './components/ForgotPasswordModal';
+import AddStoryModal from './components/AddStoryModal';
 import { useTranslation } from './contexts/LanguageContext';
-import 'leaflet/dist/leaflet.css';
 
 
-import { Screen, Post, PostType, User, Conversation, Story, Notification, PostPrivacy, ActivityStatus, NotificationType } from './types';
+import { Screen, Post, PostType, User, Conversation, Story, Notification, PostPrivacy, ActivityStatus, NotificationType, Media } from './types';
 import { posts as mockPosts, users as mockUsers, conversations as mockConversations, stories as mockStories, notifications as mockNotifications } from './data/mockData';
 
 const App: React.FC = () => {
@@ -55,6 +57,7 @@ const App: React.FC = () => {
     listType: 'followers' | 'following' | null;
   }>({ isOpen: false, user: null, listType: null });
   const [isForgotPasswordModalOpen, setIsForgotPasswordModalOpen] = useState(false);
+  const [isAddStoryModalOpen, setIsAddStoryModalOpen] = useState(false);
   
   const mainContentRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
@@ -77,6 +80,12 @@ const App: React.FC = () => {
     }
   }, [users]);
 
+  const userNotifications = useMemo(() => {
+    if (!currentUser) return [];
+    return notifications.filter(n => n.recipientId === currentUser.id);
+  }, [notifications, currentUser]);
+
+  const hasUnreadNotifications = userNotifications.some(n => !n.read);
 
   const showGuestToast = () => {
     setToastMessage(t('guestToastMessage'));
@@ -138,8 +147,8 @@ const App: React.FC = () => {
         username,
         email,
         password: pass,
-        avatarUrl: '', // New users start with no avatar
-        coverUrl: '', // New users start with no cover
+        avatarUrl: `https://picsum.photos/seed/${username}/200`,
+        coverUrl: `https://picsum.photos/seed/${username}-cover/800/200`,
         bio: '',
         interests: [],
         birthday,
@@ -166,7 +175,7 @@ const App: React.FC = () => {
   };
   
   const handleSocialLogin = (provider: 'google' | 'facebook'): {name: string, email: string} => {
-    // Simulate fetching data from social provider
+    // Simulate fetching data from social provider to pre-fill form
     if (provider === 'google') {
       return { name: 'Alex Doe', email: 'alex@example.com' };
     } else { // facebook
@@ -199,10 +208,8 @@ const App: React.FC = () => {
     setToastMessage(t('passwordResetSent'));
     setTimeout(() => {
         setIsForgotPasswordModalOpen(false);
-    }, 2500); // Close modal after delay to let user see confirmation
+    }, 2500);
   };
-  
-  const hasUnreadNotifications = notifications.some(n => !n.read);
   
   useEffect(() => {
     if (!['map', 'search'].includes(activeScreen)) {
@@ -336,6 +343,7 @@ const App: React.FC = () => {
         const newNotification: Notification = {
             id: `notif-${Date.now()}`,
             type: NotificationType.AttendanceRequest,
+            recipientId: post.author.id, // Send to the post author
             user: currentUser,
             post: post,
             text: t('attendanceRequestNotification', { title: post.title }),
@@ -367,6 +375,7 @@ const App: React.FC = () => {
         const confirmNotification: Notification = {
             id: `notif-${Date.now()}-confirm`,
             type: NotificationType.AttendanceConfirmed,
+            recipientId: attendeeId, // Send to the attendee
             user: currentUser,
             post: post,
             text: t('attendanceConfirmedNotification', { title: post.title }),
@@ -377,6 +386,7 @@ const App: React.FC = () => {
         const rateNotification: Notification = {
             id: `notif-${Date.now()}-rate`,
             type: NotificationType.RateExperience,
+            recipientId: attendeeId, // Send to the attendee
             user: currentUser,
             post: post,
             text: t('rateExperienceNotification', { title: post.title }),
@@ -433,13 +443,17 @@ const App: React.FC = () => {
   };
 
   const handleToggleNotifications = () => {
-    if (isGuest) {
+    if (isGuest || !currentUser) {
       showGuestToast();
       return;
     }
     setIsNotificationPanelOpen(prev => !prev);
     if (!isNotificationPanelOpen) {
-      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      setNotifications(prev =>
+        prev.map(n =>
+          n.recipientId === currentUser.id ? { ...n, read: true } : n
+        )
+      );
     }
   };
   
@@ -511,24 +525,26 @@ const App: React.FC = () => {
   };
 
   const handleAddStory = () => {
-    if (!currentUser || isGuest) {
+    if (isGuest) {
       showGuestToast();
       return;
     }
+    setIsAddStoryModalOpen(true);
+  };
+
+  const handleCreateStory = (media: Media) => {
+    if (!currentUser) return;
     const newStory: Story = {
       id: `story-new-${Date.now()}`,
       author: currentUser,
-      media: {
-        url: `https://picsum.photos/seed/newstory${Date.now()}/1080/1920`,
-        type: 'image',
-      },
+      media: media,
       createdAt: new Date().toISOString(),
     };
     const updatedStories = [newStory, ...stories];
     setStories(updatedStories);
     
-    const myUpdatedStories = updatedStories.filter(s => s.author.id === currentUser.id);
-    setViewingStories(myUpdatedStories);
+    // Open story viewer immediately with only the new story
+    setViewingStories([newStory]);
   };
 
   const handleSharePost = async (postId: string) => {
@@ -779,12 +795,17 @@ const App: React.FC = () => {
           {showBottomNav && <BottomNav activeScreen={activeScreen} setActiveScreen={handleSetActiveScreen} isGuest={isGuest} onGuestAction={showGuestToast} />}
       </main>
       
+      <AddStoryModal 
+        isOpen={isAddStoryModalOpen}
+        onClose={() => setIsAddStoryModalOpen(false)}
+        onStoryCreate={handleCreateStory}
+      />
       {selectedPost && <PostDetailModal post={selectedPost} onClose={handleCloseModal} />}
       {viewingStories && <StoryViewer stories={viewingStories} onClose={() => setViewingStories(null)} />}
       {isNotificationPanelOpen && (
           <div className="absolute top-0 right-0 z-50 w-full max-w-sm mt-2 mr-2">
               <NotificationPanel 
-                  notifications={notifications} 
+                  notifications={userNotifications} 
                   onClose={handleToggleNotifications} 
                   onConfirmAttendance={handleConfirmAttendance} 
                   onRateExperience={(postId) => setRatingModalPost(posts.find(p => p.id === postId) || null)} 

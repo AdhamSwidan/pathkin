@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo } from 'react';
 import { Post, User } from '../types';
 import Header from './Header';
@@ -20,7 +21,6 @@ interface ProfileScreenProps {
   user: User;
   allPosts: Post[];
   onSelectPost: (post: Post) => void;
-  // FIX: Add onSendMessage to props to align with its usage in App.tsx.
   onSendMessage: (user: User) => void;
   onToggleInterest: (postId: string) => void;
   onViewProfile: (user: User) => void;
@@ -39,7 +39,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   user, 
   allPosts,
   onSelectPost, 
-  onSendMessage,
+  onSendMessage, 
   onToggleInterest, 
   onViewProfile,
   onRepostToggle,

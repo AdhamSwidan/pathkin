@@ -117,6 +117,7 @@ export interface Conversation {
 export interface Notification {
   id: string;
   type: NotificationType;
+  recipientId: string; // The user who should receive this notification
   user: User; // The user who triggered the notification
   post?: Post;
   text: string;

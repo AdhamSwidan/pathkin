@@ -1,3 +1,5 @@
+
+
 import React from 'react';
 import { Post, PostType, User, ActivityStatus } from '../types';
 import HeartIcon from './icons/HeartIcon';
@@ -16,7 +18,7 @@ interface PostCardProps {
   currentUser: User | null; // Can be null for guests
   isGuest: boolean;
   onCommentClick: (post: Post) => void;
-  onMessageClick?: (user: User) => void; // Made optional to prevent errors
+  onMessageClick: (user: User) => void;
   onInterestToggle: (postId: string) => void;
   onViewProfile: (user: User) => void;
   onRepostToggle: (postId: string) => void;
@@ -40,7 +42,7 @@ const PostCard: React.FC<PostCardProps> = ({
 }) => {
   const { t, language } = useTranslation();
   const isInterested = currentUser ? post.interestedUsers.includes(currentUser.id) : false;
-  const isReposted = currentUser ? currentUser.reposts.includes(currentUser.id) : false;
+  const isReposted = currentUser ? currentUser.reposts.includes(post.id) : false;
   const isSaved = currentUser ? currentUser.savedPosts.includes(post.id) : false;
   const isAuthor = currentUser?.id === post.author.id;
   
@@ -102,7 +104,7 @@ const PostCard: React.FC<PostCardProps> = ({
                 <p className="text-xs text-gray-500 dark:text-gray-400">{new Date(post.createdAt).toLocaleString(language)}</p>
                 </div>
             </button>
-            {onMessageClick && !isGuest && !isAuthor && (
+            {!isGuest && !isAuthor && (
                 <button
                     onClick={(e) => {
                         e.stopPropagation();
