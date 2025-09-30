@@ -214,7 +214,6 @@ const SearchScreen: React.FC<SearchScreenProps> = ({
             currentUser={currentUser}
             isGuest={isGuest}
             onCommentClick={onSelectPost}
-            onMessageClick={onSendMessage}
             onInterestToggle={onToggleInterest}
             onViewProfile={onViewProfile}
             onRepostToggle={onRepostToggle}

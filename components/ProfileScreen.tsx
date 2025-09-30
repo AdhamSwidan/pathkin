@@ -107,7 +107,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                 currentUser={user}
                 isGuest={false}
                 onCommentClick={onSelectPost}
-                onMessageClick={onSendMessage}
                 onInterestToggle={onToggleInterest}
                 onViewProfile={onViewProfile}
                 onRepostToggle={onRepostToggle}

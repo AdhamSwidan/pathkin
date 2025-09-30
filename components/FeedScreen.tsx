@@ -78,7 +78,6 @@ const FeedScreen: React.FC<FeedScreenProps> = ({
             currentUser={currentUser}
             isGuest={isGuest}
             onCommentClick={onSelectPost}
-            onMessageClick={onSendMessage}
             onInterestToggle={onToggleInterest}
             onViewProfile={onViewProfile}
             onRepostToggle={onRepostToggle}

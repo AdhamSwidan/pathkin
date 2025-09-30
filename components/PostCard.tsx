@@ -1,7 +1,7 @@
 
 
 import React from 'react';
-import { Post, PostType, User, ActivityLogEntry, ActivityStatus } from '../types';
+import { Post, PostType, User, ActivityStatus } from '../types';
 import HeartIcon from './icons/HeartIcon';
 import CommentIcon from './icons/CommentIcon';
 import PlayIcon from './icons/PlayIcon';
@@ -17,7 +17,6 @@ interface PostCardProps {
   currentUser: User | null; // Can be null for guests
   isGuest: boolean;
   onCommentClick: (post: Post) => void;
-  onMessageClick: (user: User) => void;
   onInterestToggle: (postId: string) => void;
   onViewProfile: (user: User) => void;
   onRepostToggle: (postId: string) => void;
@@ -31,7 +30,6 @@ const PostCard: React.FC<PostCardProps> = ({
   currentUser, 
   isGuest,
   onCommentClick, 
-  onMessageClick, 
   onInterestToggle, 
   onViewProfile,
   onRepostToggle,
