@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { Post, User, Story } from '../types';
 import Header from './Header';
