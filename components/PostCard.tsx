@@ -17,7 +17,7 @@ interface PostCardProps {
   currentUser: User | null; // Can be null for guests
   isGuest: boolean;
   onCommentClick: (post: Post) => void;
-  onMessageClick?: (user: User) => void; // Made optional
+  onMessageClick?: (user: User) => void; // Made optional to fix build error
   onInterestToggle: (postId: string) => void;
   onViewProfile: (user: User) => void;
   onRepostToggle: (postId: string) => void;
@@ -31,7 +31,7 @@ const PostCard: React.FC<PostCardProps> = ({
   currentUser, 
   isGuest,
   onCommentClick, 
-  onMessageClick,
+  onMessageClick, 
   onInterestToggle, 
   onViewProfile,
   onRepostToggle,
@@ -88,33 +88,33 @@ const PostCard: React.FC<PostCardProps> = ({
       <div className="p-4">
         {/* Post Header */}
         <div className="flex items-center justify-between mb-3">
-          <button onClick={() => onViewProfile(post.author)} className="flex items-center text-left hover:bg-neutral-800/50 rounded-md p-1 -m-1 flex-grow min-w-0">
-            <img src={post.author.avatarUrl} alt={post.author.name} className="w-10 h-10 rounded-full me-3 flex-shrink-0" />
-            <div className="min-w-0">
-              <div className="flex items-center space-x-2">
-                <p className="font-semibold text-gray-800 dark:text-gray-100 truncate">{post.author.name}</p>
-                {post.author.averageRating && (
-                  <div className="flex items-center space-x-0.5 text-xs text-amber-500 flex-shrink-0">
-                      <StarIcon className="w-3 h-3 fill-current" />
-                      <span>{post.author.averageRating.toFixed(1)}</span>
-                  </div>
-                )}
-              </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">{new Date(post.createdAt).toLocaleString(language)}</p>
-            </div>
-          </button>
-          {!isOwnPost && !isGuest && onMessageClick && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onMessageClick(post.author);
-              }}
-              className={`p-2 rounded-full flex-shrink-0 ms-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-neutral-800`}
-              aria-label="Send message"
-            >
-              <MessageIcon className="w-5 h-5" />
+            <button onClick={() => onViewProfile(post.author)} className="flex items-center text-left hover:bg-neutral-800/50 rounded-md p-1 -m-1 flex-grow min-w-0">
+                <img src={post.author.avatarUrl} alt={post.author.name} className="w-10 h-10 rounded-full me-3 flex-shrink-0" />
+                <div className="min-w-0">
+                <div className="flex items-center space-x-2">
+                    <p className="font-semibold text-gray-800 dark:text-gray-100 truncate">{post.author.name}</p>
+                    {post.author.averageRating && (
+                    <div className="flex items-center space-x-0.5 text-xs text-amber-500 flex-shrink-0">
+                        <StarIcon className="w-3 h-3 fill-current" />
+                        <span>{post.author.averageRating.toFixed(1)}</span>
+                    </div>
+                    )}
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{new Date(post.createdAt).toLocaleString(language)}</p>
+                </div>
             </button>
-          )}
+            {!isOwnPost && !isGuest && onMessageClick && (
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onMessageClick(post.author);
+                    }}
+                    className={`p-2 rounded-full flex-shrink-0 ms-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-neutral-800`}
+                    aria-label={t('message')}
+                >
+                    <MessageIcon className="w-5 h-5" />
+                </button>
+            )}
         </div>
 
         {/* Post Content */}
