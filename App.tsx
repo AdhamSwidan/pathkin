@@ -1,5 +1,4 @@
 
-
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import BottomNav from './components/BottomNav';
 import FeedScreen from './components/FeedScreen';
@@ -614,7 +613,6 @@ const App: React.FC = () => {
           currentUser={userForUI}
           isGuest={isGuest}
           onSelectPost={handleSelectPost}
-// FIX: Add missing onSendMessage prop
           onSendMessage={handleSendMessage}
           onToggleInterest={handleToggleInterest}
           onSelectStories={handleSelectStories}
@@ -640,7 +638,6 @@ const App: React.FC = () => {
             currentUser={userForUI} 
             isGuest={isGuest}
             onSelectPost={handleSelectPost}
-// FIX: Add missing onSendMessage prop
             onSendMessage={handleSendMessage}
             onToggleInterest={handleToggleInterest}
             onNavigateToFindTwins={() => navigateTo('findTwins')}
@@ -660,7 +657,6 @@ const App: React.FC = () => {
           user={currentUser} 
           allPosts={posts}
           onSelectPost={handleSelectPost}
-// FIX: Add missing onSendMessage prop
           onSendMessage={handleSendMessage}
           onToggleInterest={handleToggleInterest}
           onViewProfile={handleViewProfile}

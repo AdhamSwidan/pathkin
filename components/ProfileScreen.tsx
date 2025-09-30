@@ -106,6 +106,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                 currentUser={user}
                 isGuest={false}
                 onCommentClick={onSelectPost}
+                // The onMessageClick prop is NOT passed here, as a user cannot message themselves.
                 onInterestToggle={onToggleInterest}
                 onViewProfile={onViewProfile}
                 onRepostToggle={onRepostToggle}
