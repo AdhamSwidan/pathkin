@@ -134,10 +134,20 @@
   "PostPrivacy_Twins": "التوائم",
   "english": "English",
   "arabic": "العربية",
-  "forgotPassword": "هل نسيت كلمة المرور؟",
+  "forgotPassword": "هل نسيت كلمة المرور",
   "resetPassword": "إعادة تعيين كلمة المرور",
   "resetPasswordPrompt": "أدخل عنوان بريدك الإلكتروني وسنرسل لك رابطًا لإعادة تعيين كلمة مرورك.",
   "sendResetLink": "إرسال رابط إعادة التعيين",
   "passwordResetSentTitle": "تحقق من بريدك الإلكتروني",
-  "passwordResetSent": "إذا كان هناك حساب بهذا البريد الإلكتروني، فقد تم إرسال رابط إعادة تعيين كلمة المرور."
+  "passwordResetSent": "إذا كان هناك حساب بهذا البريد الإلكتروني، فقد تم إرسال رابط إعادة تعيين كلمة المرور.",
+  "createNewAccount": "إنشاء حساب جديد",
+  "backToLogin": "العودة لتسجيل الدخول",
+  "birthday": "تاريخ الميلاد",
+  "gender": "الجنس",
+  "selectOption": "اختر...",
+  "male": "ذكر",
+  "female": "أنثى",
+  "other": "آخر",
+  "preferNotToSay": "أفضل عدم القول",
+  "emailConfirmationSent": "تم إنشاء الحساب! تم إرسال رابط تأكيد إلى بريدك الإلكتروني."
 }

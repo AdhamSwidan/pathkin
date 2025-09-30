@@ -134,10 +134,20 @@
   "PostPrivacy_Twins": "Twins",
   "english": "English",
   "arabic": "العربية",
-  "forgotPassword": "Forgot Password?",
+  "forgotPassword": "Forgot Password",
   "resetPassword": "Reset Password",
   "resetPasswordPrompt": "Enter your email address and we'll send you a link to reset your password.",
   "sendResetLink": "Send Reset Link",
   "passwordResetSentTitle": "Check Your Email",
-  "passwordResetSent": "If an account with that email exists, a password reset link has been sent."
+  "passwordResetSent": "If an account with that email exists, a password reset link has been sent.",
+  "createNewAccount": "Create New Account",
+  "backToLogin": "Back to Log In",
+  "birthday": "Birthday",
+  "gender": "Gender",
+  "selectOption": "Select an option...",
+  "male": "Male",
+  "female": "Female",
+  "other": "Other",
+  "preferNotToSay": "Prefer not to say",
+  "emailConfirmationSent": "Account created! A confirmation link has been sent to your email."
 }

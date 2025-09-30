@@ -1,3 +1,5 @@
+
+
 import React, { useState, useMemo } from 'react';
 import { Post, User } from '../types';
 import Header from './Header';
@@ -18,6 +20,7 @@ interface ProfileScreenProps {
   user: User;
   allPosts: Post[];
   onSelectPost: (post: Post) => void;
+  onSendMessage: (user: User) => void;
   onToggleInterest: (postId: string) => void;
   onViewProfile: (user: User) => void;
   onRepostToggle: (postId: string) => void;
@@ -35,6 +38,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   user, 
   allPosts,
   onSelectPost, 
+  onSendMessage, 
   onToggleInterest, 
   onViewProfile,
   onRepostToggle,
@@ -103,7 +107,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                 currentUser={user}
                 isGuest={false}
                 onCommentClick={onSelectPost}
-                // The onMessageClick prop is NOT passed here, as a user cannot message themselves.
+                onMessageClick={onSendMessage}
                 onInterestToggle={onToggleInterest}
                 onViewProfile={onViewProfile}
                 onRepostToggle={onRepostToggle}
