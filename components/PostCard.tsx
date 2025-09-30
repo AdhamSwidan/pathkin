@@ -1,5 +1,4 @@
 
-
 import React from 'react';
 import { Post, PostType, User, ActivityStatus } from '../types';
 import HeartIcon from './icons/HeartIcon';
