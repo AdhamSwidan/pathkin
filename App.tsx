@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import BottomNav from './components/BottomNav';
 import FeedScreen from './components/FeedScreen';

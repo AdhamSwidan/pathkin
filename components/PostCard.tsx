@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Post, PostType, User, ActivityStatus } from '../types';
 import HeartIcon from './icons/HeartIcon';
@@ -87,7 +86,7 @@ const PostCard: React.FC<PostCardProps> = ({
     <div className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-lg shadow-sm mb-4">
       <div className="p-4">
         {/* Post Header */}
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-start justify-between mb-3">
             <button onClick={() => onViewProfile(post.author)} className="flex items-center text-left hover:bg-neutral-800/50 rounded-md p-1 -m-1 flex-grow min-w-0">
                 <img src={post.author.avatarUrl} alt={post.author.name} className="w-10 h-10 rounded-full me-3 flex-shrink-0" />
                 <div className="min-w-0">
