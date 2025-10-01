@@ -67,8 +67,14 @@ const App: React.FC = () => {
   const [activeScreen, setActiveScreen] = useState<Screen>('feed');
   const [screenStack, setScreenStack] = useState<Screen[]>(['feed']);
 
-  const [posts, setPosts] = useState<Post[]>(mockPosts);
-  const [users, setUsers] = useState<User[]>(mockUsers);
+  const [posts, setPosts] = useState<Post[]>(() => {
+    const saved = localStorage.getItem('posts');
+    return saved ? JSON.parse(saved) : mockPosts;
+  });
+  const [users, setUsers] = useState<User[]>(() => {
+    const saved = localStorage.getItem('users');
+    return saved ? JSON.parse(saved) : mockUsers;
+  });
   
   const [stories, setStories] = useState<Story[]>(mockStories);
   const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
@@ -90,6 +96,16 @@ const App: React.FC = () => {
   
   const mainContentRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
+
+  // State Persistence: Save to localStorage whenever users or posts change
+  useEffect(() => {
+    localStorage.setItem('users', JSON.stringify(users));
+  }, [users]);
+
+  useEffect(() => {
+    localStorage.setItem('posts', JSON.stringify(posts));
+  }, [posts]);
+
 
   // Login Persistence
   useEffect(() => {
