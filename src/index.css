@@ -5,3 +5,8 @@
 body {
   @apply bg-slate-50 dark:bg-neutral-950;
 }
+
+/* Ensure proper word spacing in all languages, especially for RTL */
+html[dir="rtl"] body {
+  word-spacing: 1px;
+}

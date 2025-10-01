@@ -18,9 +18,11 @@ interface LanguageProviderProps {
 export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
   const [language, setLanguageState] = useState(localStorage.getItem('language') || 'en');
   const [translations, setTranslations] = useState<Record<string, string>>({});
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchTranslations = async () => {
+      setIsLoading(true);
       try {
         // Vite serves files from the `public` directory at the root.
         const response = await fetch(`/locales/${language}.json`);
@@ -32,9 +34,15 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       } catch (error) {
         console.error("Failed to load translations:", error);
         // Fallback to English if loading fails
-        const fallbackResponse = await fetch(`/locales/en.json`);
-        const fallbackData = await fallbackResponse.json();
-        setTranslations(fallbackData);
+        try {
+            const fallbackResponse = await fetch(`/locales/en.json`);
+            const fallbackData = await fallbackResponse.json();
+            setTranslations(fallbackData);
+        } catch (fallbackError) {
+            console.error("Failed to load fallback translations:", fallbackError);
+        }
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -66,6 +74,14 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
 
     return translation;
   }, [translations]);
+
+  if (isLoading) {
+    // Render a blank screen or a loading spinner while translations are loading
+    // to prevent showing untranslated keys.
+    return (
+        <div className="h-screen w-screen bg-slate-50 dark:bg-neutral-950" />
+    );
+  }
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t }}>
