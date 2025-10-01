@@ -24,6 +24,7 @@ import PrivacySecurityScreen from './components/settings/PrivacySecurityScreen';
 import LanguageScreen from './components/settings/LanguageScreen';
 import ForgotPasswordModal from './components/ForgotPasswordModal';
 import AddStoryModal from './components/AddStoryModal';
+import SavedPostsScreen from './components/settings/SavedPostsScreen';
 import { useTranslation } from './contexts/LanguageContext';
 
 import { Screen, Post, PostType, User, Conversation, Story, Notification, PostPrivacy, Media, HydratedPost, HydratedStory } from './types';
@@ -31,7 +32,7 @@ import {
   auth, db, storage,
   onAuthStateChanged,
   doc, getDoc, signOut,
-  collection, onSnapshot, query, orderBy,
+  collection, onSnapshot, query, orderBy, where,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword, setDoc,
   sendPasswordResetEmail,
@@ -116,7 +117,7 @@ const App: React.FC = () => {
     return () => unsubscribe();
   }, []);
   
-  // Firestore Listeners
+  // Global Firestore Listeners (Users, Posts, Stories)
   useEffect(() => {
     const usersQuery = query(collection(db, "users"));
     const unsubUsers = onSnapshot(usersQuery, (snapshot) => {
@@ -154,6 +155,42 @@ const App: React.FC = () => {
     };
   }, []);
 
+  // User-specific Listeners (Notifications, Conversations)
+  useEffect(() => {
+    if (!currentUser) {
+        setNotifications([]);
+        setConversations([]);
+        return;
+    }
+
+    // Listener for Notifications
+    const notificationsQuery = query(collection(db, "notifications"), where("recipientId", "==", currentUser.id), orderBy("createdAt", "desc"));
+    const unsubNotifications = onSnapshot(notificationsQuery, (snapshot) => {
+        const fetchedNotifications = snapshot.docs.map(doc => {
+            const data = doc.data();
+            const user = users.find(u => u.id === data.userId) || data.user;
+            return {
+                ...data,
+                id: doc.id,
+                createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() ?? new Date().toISOString(),
+                user,
+            } as Notification;
+        });
+        setNotifications(fetchedNotifications.filter(n => n.user));
+    });
+
+    // Listener for Conversations (placeholder logic)
+    const conversationsQuery = query(collection(db, "conversations")); 
+    const unsubConversations = onSnapshot(conversationsQuery, (snapshot) => {
+        setConversations(snapshot.docs.map(doc => doc.data() as Conversation));
+    });
+
+    return () => {
+        unsubNotifications();
+        unsubConversations();
+    };
+}, [currentUser, users]);
+
   const hydratedPosts = useMemo((): HydratedPost[] => {
     return posts
       .map(post => {
@@ -171,6 +208,11 @@ const App: React.FC = () => {
         })
         .filter((story): story is HydratedStory => story !== null);
   }, [stories, users]);
+  
+  const savedPosts = useMemo(() => {
+    if (!currentUser) return [];
+    return hydratedPosts.filter(p => currentUser.savedPosts.includes(p.id));
+  }, [hydratedPosts, currentUser]);
 
   const userNotifications = useMemo(() => {
     if (!currentUser) return [];
@@ -433,6 +475,39 @@ const App: React.FC = () => {
     } catch (e) { console.error("Error toggling save:", e); }
   };
   
+  const handleSelectConversation = (user: User) => {
+    const conversation = conversations.find(c => c.participant.id === user.id);
+    if(conversation) {
+        setSelectedConversation(conversation);
+        navigateTo('chatDetail');
+    } else {
+        const newConversation: Conversation = {
+            id: user.id,
+            participant: user,
+            messages: [],
+            lastMessage: {id: '1', senderId: '', text: `Start a conversation with ${user.name}`, timestamp: new Date().toISOString()}
+        };
+        setSelectedConversation(newConversation);
+        navigateTo('chatDetail');
+    }
+  };
+
+  const handleToggleNotifications = () => setIsNotificationPanelOpen(p => !p);
+
+  const handleViewProfile = (userToView: User) => {
+    if (isGuest) {
+        setViewingUser(userToView);
+        navigateTo('userProfile');
+        return;
+    }
+    if (!currentUser) return;
+    if (userToView.id === currentUser.id) handleSetActiveScreen('profile');
+    else {
+      setViewingUser(userToView);
+      navigateTo('userProfile');
+    }
+  };
+
   // Other handlers like handleToggleCompleted, handleConfirmAttendance, handleSubmitRating would also need to be converted.
   // For brevity in this refactor, some handlers remain as stubs.
   
@@ -450,24 +525,8 @@ const App: React.FC = () => {
   const handleToggleCompleted = (postId: string) => { console.log("Toggling completed", postId) };
   const handleConfirmAttendance = (notificationId: string, postId: string, attendeeId: string, didAttend: boolean) => { console.log("Confirming attendance") };
   const handleSubmitRating = (postId: string, rating: number) => { console.log("Submitting rating") };
-  const handleSelectConversation = (user: User) => { console.log("Selecting conversation with", user.id) };
   const handleSendMessage = (user: User) => { console.log("Sending message to", user.id) };
-  const handleToggleNotifications = () => setIsNotificationPanelOpen(p => !p);
-
-  const handleViewProfile = (userToView: User) => {
-    if (isGuest) {
-        setViewingUser(userToView);
-        navigateTo('userProfile');
-        return;
-    }
-    if (!currentUser) return;
-    if (userToView.id === currentUser.id) handleSetActiveScreen('profile');
-    else {
-      setViewingUser(userToView);
-      navigateTo('userProfile');
-    }
-  };
-
+  
   const visiblePosts = useMemo(() => {
     if (isGuest) return hydratedPosts.filter(post => post.privacy === PostPrivacy.Public);
     if (!currentUser) return [];
@@ -553,6 +612,21 @@ const App: React.FC = () => {
       case 'language':
         if (isGuest || !currentUser) return null;
         return <LanguageScreen onBack={goBack} />;
+      case 'savedPosts':
+        if (isGuest || !currentUser) return null;
+        return <SavedPostsScreen 
+            onBack={goBack} 
+            posts={savedPosts}
+            currentUser={currentUser}
+            onSelectPost={handleSelectPost}
+            onSendMessage={handleSendMessage}
+            onToggleInterest={handleToggleInterest}
+            onViewProfile={handleViewProfile}
+            onRepostToggle={handleRepostToggle}
+            onSaveToggle={handleSaveToggle}
+            onSharePost={handleSharePost}
+            onToggleCompleted={handleToggleCompleted}
+        />;
       default: return null;
     }
   };

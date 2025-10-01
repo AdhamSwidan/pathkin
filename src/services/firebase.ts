@@ -20,6 +20,7 @@ export {
   onSnapshot, 
   query, 
   orderBy, 
+  where,
   addDoc, 
   serverTimestamp, 
   arrayUnion, 

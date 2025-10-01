@@ -153,4 +153,5 @@ export type Screen =
   | 'settings'
   | 'editProfile'
   | 'privacySecurity'
-  | 'language';
+  | 'language'
+  | 'savedPosts';

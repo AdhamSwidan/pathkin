@@ -6,6 +6,7 @@ import LogoutIcon from './icons/LogoutIcon';
 import ChevronRightIcon from './icons/ChevronRightIcon';
 import ShieldIcon from './icons/ShieldIcon';
 import LanguageIcon from './icons/LanguageIcon';
+import BookmarkIcon from './icons/BookmarkIcon';
 import { Screen } from '../types';
 import { useTranslation } from '../contexts/LanguageContext';
 
@@ -46,6 +47,11 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack, onNavigate, onL
             icon={<EditIcon />} 
             label={t('editProfile')} 
             onClick={() => onNavigate('editProfile')}
+          />
+           <SettingsItem 
+            icon={<BookmarkIcon />} 
+            label={t('savedPosts')} 
+            onClick={() => onNavigate('savedPosts')}
           />
            <SettingsItem 
             icon={<ShieldIcon />} 

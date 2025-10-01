@@ -151,5 +151,7 @@
   "female": "Female",
   "other": "Other",
   "preferNotToSay": "Prefer not to say",
-  "emailConfirmationSent": "Account created! A confirmation link has been sent to your email."
+  "emailConfirmationSent": "Account created! A confirmation link has been sent to your email.",
+  "savedPosts": "Saved Posts",
+  "noSavedPosts": "You have no saved posts."
 }
