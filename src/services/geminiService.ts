@@ -3,16 +3,19 @@ import { GoogleGenAI } from "@google/genai";
 
 const API_KEY = process.env.API_KEY;
 
-if (!API_KEY) {
+// Conditionally initialize the Gemini AI client only if an API key is provided.
+// This prevents a crash on app startup when the key is missing.
+const ai = API_KEY ? new GoogleGenAI({ apiKey: API_KEY }) : null;
+
+if (!ai) {
   // In a real app, you'd handle this more gracefully.
   // For this context, we'll proceed, but API calls will fail.
   console.warn("API_KEY environment variable not set. Gemini API calls will fail.");
 }
 
-const ai = new GoogleGenAI({ apiKey: API_KEY! });
-
 export const generateDescription = async (title: string, keywords: string): Promise<string> => {
-  if (!API_KEY) {
+  // Check if the AI client was successfully initialized before using it.
+  if (!ai) {
     return Promise.resolve("AI functionality is disabled. Please set your API_KEY.");
   }
 
@@ -33,8 +36,8 @@ export const generateDescription = async (title: string, keywords: string): Prom
       contents: prompt,
     });
     
-    // FIX: Safely access response.text to satisfy strict compiler checks.
-    return (response.text ?? '').trim();
+    // Access the text directly as per the API guidelines.
+    return response.text.trim();
   } catch (error) {
     console.error("Error generating description with Gemini:", error);
     return "There was an error generating the description. Please try again.";

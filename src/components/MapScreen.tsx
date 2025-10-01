@@ -1,32 +1,8 @@
-
-
-
 import React, { useEffect, useRef } from 'react';
+import L from 'leaflet';
 import { Post } from '../types';
 import Header from './Header';
 import { useTranslation } from '../contexts/LanguageContext';
-
-// Declaring the Leaflet global 'L' to avoid TypeScript errors.
-declare const L: any;
-
-// FIX: Import Leaflet's CSS and icon assets directly
-// This ensures Vite bundles them and resolves paths correctly for deployment.
-import 'leaflet/dist/leaflet.css';
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-
-// FIX: Re-configure Leaflet's default icon paths to use the imported assets.
-// This is a common fix for issues with bundlers like Vite.
-// @ts-ignore
-delete L.Icon.Default.prototype._getIconUrl;
-
-L.Icon.Default.mergeOptions({
-  iconUrl: markerIcon,
-  iconRetinaUrl: markerIcon2x,
-  shadowUrl: markerShadow,
-});
-
 
 interface MapScreenProps {
   postsToShow: Post[];
@@ -34,11 +10,25 @@ interface MapScreenProps {
 
 const MapScreen: React.FC<MapScreenProps> = ({ postsToShow }) => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
-  const mapInstanceRef = useRef<any | null>(null); // To store the map instance
+  const mapInstanceRef = useRef<L.Map | null>(null); // To store the map instance
   const { t } = useTranslation();
 
+  // This effect runs once on mount to configure the leaflet icons.
+  // It uses absolute CDN URLs to avoid build path conflicts with the import map.
   useEffect(() => {
-    if (!mapContainerRef.current || typeof L === 'undefined') {
+    // @ts-ignore
+    delete L.Icon.Default.prototype._getIconUrl;
+
+    L.Icon.Default.mergeOptions({
+      iconUrl: 'https://aistudiocdn.com/leaflet@1.9.4/dist/images/marker-icon.png',
+      iconRetinaUrl: 'https://aistudiocdn.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+      shadowUrl: 'https://aistudiocdn.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    });
+  }, []);
+
+
+  useEffect(() => {
+    if (!mapContainerRef.current) {
       return;
     }
 
@@ -64,7 +54,7 @@ const MapScreen: React.FC<MapScreenProps> = ({ postsToShow }) => {
     const markerLayer = L.layerGroup().addTo(map);
 
     // Add markers for each post
-    const markers: any[] = [];
+    const markers: L.Marker[] = [];
     postsToShow.forEach(post => {
       if (post.coordinates) {
         const marker = L.marker([post.coordinates.lat, post.coordinates.lng])
@@ -105,11 +95,6 @@ const MapScreen: React.FC<MapScreenProps> = ({ postsToShow }) => {
         id="map" 
         className="w-full flex-grow"
       >
-        {typeof L === 'undefined' && (
-          <div className="p-4 text-center text-gray-500 dark:text-gray-400">
-            Loading map library...
-          </div>
-        )}
       </div>
     </div>
   );

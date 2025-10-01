@@ -32,6 +32,35 @@ import { useTranslation } from './contexts/LanguageContext';
 import { Screen, Post, PostType, User, Conversation, Story, Notification, PostPrivacy, ActivityStatus, NotificationType, Media } from './types';
 import { posts as mockPosts, users as mockUsers, conversations as mockConversations, stories as mockStories, notifications as mockNotifications } from './data/mockData';
 
+// Define a guest user object that conforms to the User type
+const guestUser: User = {
+    id: 'guest',
+    name: 'Guest',
+    username: 'guest',
+    email: '',
+    password: '',
+    avatarUrl: `https://picsum.photos/seed/guest/200`,
+    coverUrl: `https://picsum.photos/seed/guest-cover/800/200`,
+    bio: 'A guest exploring WanderLodge.',
+    interests: [],
+    birthday: '',
+    gender: 'prefer_not_to_say',
+    followers: [],
+    following: [],
+    reposts: [],
+    savedPosts: [],
+    activityLog: [],
+    averageRating: 0,
+    totalRatings: 0,
+    isPrivate: false,
+    privacySettings: {
+        showFollowLists: true,
+        showStats: true,
+        showCompletedActivities: true,
+        allowTwinSearch: false,
+    },
+};
+
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isGuest, setIsGuest] = useState(false);
@@ -636,7 +665,7 @@ const App: React.FC = () => {
   }, [posts, users, currentUser, isGuest]);
 
   const renderScreen = () => {
-    const userForUI = currentUser ?? { id: 'guest', name: 'Guest', followers: [], following: [], reposts: [], savedPosts: [], activityLog: [], privacySettings: {} } as any;
+    const userForUI = currentUser ?? guestUser;
 
     switch (activeScreen) {
       case 'feed':
