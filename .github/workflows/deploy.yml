@@ -1,16 +1,42 @@
-# This workflow is disabled. The project is now automatically deployed via Vercel.
-# This file is a valid placeholder to prevent parsing errors. It can be safely deleted.
-
-name: Disabled GitHub Pages Deployment
+name: Deploy to GitHub Pages
 
 on:
-  # This empty 'on' block ensures the workflow is never triggered automatically.
-  # It solves the "No event triggers defined in `on`" error.
-  workflow_dispatch: # Allows manual trigger, but has no automatic triggers.
+  push:
+    branches:
+      - main
 
 jobs:
-  disabled_job:
+  deploy:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
     steps:
-      - name: Do nothing
-        run: echo "This deployment workflow is disabled. See Vercel for deployments."
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Create .env file
+        run: echo "VITE_API_KEY=${{ secrets.API_KEY }}" > .env
+
+      - name: Clean and Build the project
+        run: |
+          rm -rf dist
+          npm run build
+          touch ./dist/.nojekyll
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          force_orphan: true

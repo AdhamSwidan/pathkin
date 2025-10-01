@@ -1,4 +1,6 @@
 /** @type {import('tailwindcss').Config} */
+import defaultTheme from 'tailwindcss/defaultTheme';
+
 export default {
   content: [
     "./index.html",
@@ -7,7 +9,10 @@ export default {
   darkMode: 'class', // or 'media' or 'class'
   theme: {
     extend: {
-        animation: {
+      fontFamily: {
+        sans: ['Tajawal', ...defaultTheme.fontFamily.sans],
+      },
+      animation: {
         'fade-in': 'fadeIn 0.2s ease-out',
         'fade-in-up': 'fadeInUp 0.3s ease-out forwards',
       },
