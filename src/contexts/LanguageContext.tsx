@@ -17,12 +17,13 @@ interface LanguageProviderProps {
 
 export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
   const [language, setLanguageState] = useState(localStorage.getItem('language') || 'en');
-  const [translations, setTranslations] = useState<Record<string, string>>({});
-  const [isLoading, setIsLoading] = useState(true);
+  // Initialize translations to null. This will act as our loading state.
+  const [translations, setTranslations] = useState<Record<string, string> | null>(null);
 
   useEffect(() => {
     const fetchTranslations = async () => {
-      setIsLoading(true);
+      // When language changes, reset translations to trigger the loading state
+      setTranslations(null);
       try {
         // Vite serves files from the `public` directory at the root.
         const response = await fetch(`/locales/${language}.json`);
@@ -40,9 +41,9 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
             setTranslations(fallbackData);
         } catch (fallbackError) {
             console.error("Failed to load fallback translations:", fallbackError);
+            // If even fallback fails, set to empty object to unblock rendering.
+            setTranslations({});
         }
-      } finally {
-        setIsLoading(false);
       }
     };
 
@@ -57,8 +58,10 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
   };
   
   const t = useCallback((key: string, options?: Record<string, string | number>) => {
-    let translation = translations[key] || key;
-    if (options) {
+    // Guard against translations being null during the initial load.
+    let translation = translations?.[key] || key;
+    
+    if (options && translations) {
       Object.keys(options).forEach((optionKey) => {
         const regex = new RegExp(`{{${optionKey}}}`, 'g');
         translation = translation.replace(regex, String(options[optionKey]));
@@ -66,7 +69,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
     }
 
     // Handle pluralization for "foundTwins"
-    if (key.startsWith('foundTwins') && options && typeof options.count === 'number') {
+    if (key.startsWith('foundTwins') && options && typeof options.count === 'number' && translations) {
         if (options.count !== 1) {
             return translations[`${key}_plural`]?.replace('{{count}}', String(options.count)) || key;
         }
@@ -75,9 +78,9 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
     return translation;
   }, [translations]);
 
-  if (isLoading) {
-    // Render a blank screen or a loading spinner while translations are loading
-    // to prevent showing untranslated keys.
+  // If translations haven't been loaded yet, render a blank screen.
+  // This is the crucial part that prevents showing untranslated keys.
+  if (translations === null) {
     return (
         <div className="h-screen w-screen bg-slate-50 dark:bg-neutral-950" />
     );
