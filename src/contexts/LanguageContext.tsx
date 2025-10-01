@@ -22,8 +22,6 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
 
   useEffect(() => {
     const fetchTranslations = async () => {
-      // When language changes, reset translations to trigger the loading state
-      setTranslations(null);
       try {
         // Vite serves files from the `public` directory at the root.
         const response = await fetch(`/locales/${language}.json`);
@@ -35,14 +33,18 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       } catch (error) {
         console.error("Failed to load translations:", error);
         // Fallback to English if loading fails
-        try {
-            const fallbackResponse = await fetch(`/locales/en.json`);
-            const fallbackData = await fallbackResponse.json();
-            setTranslations(fallbackData);
-        } catch (fallbackError) {
-            console.error("Failed to load fallback translations:", fallbackError);
-            // If even fallback fails, set to empty object to unblock rendering.
-            setTranslations({});
+        if (language !== 'en') {
+            try {
+                const fallbackResponse = await fetch(`/locales/en.json`);
+                const fallbackData = await fallbackResponse.json();
+                setTranslations(fallbackData);
+            } catch (fallbackError) {
+                console.error("Failed to load fallback translations:", fallbackError);
+                setTranslations({});
+            }
+        } else {
+             // If even english fails, set to empty object to unblock rendering.
+             setTranslations({});
         }
       }
     };
@@ -78,11 +80,13 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
     return translation;
   }, [translations]);
 
-  // If translations haven't been loaded yet, render a blank screen.
+  // If translations haven't been loaded yet, render a loading screen.
   // This is the crucial part that prevents showing untranslated keys.
   if (translations === null) {
     return (
-        <div className="h-screen w-screen bg-slate-50 dark:bg-neutral-950" />
+        <div className="h-screen w-screen bg-slate-50 dark:bg-neutral-950 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-orange-500"></div>
+        </div>
     );
   }
 
