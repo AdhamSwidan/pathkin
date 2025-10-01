@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import Header from './Header';
 import { User } from '../types';
@@ -7,7 +6,7 @@ import { useTranslation } from '../contexts/LanguageContext';
 interface EditProfileScreenProps {
   onBack: () => void;
   currentUser: User;
-  onUpdateProfile: (updatedUser: Partial<User>) => void;
+  onUpdateProfile: (updatedUser: Partial<User>, avatarFile?: File, coverFile?: File) => void;
 }
 
 const allInterests = [
@@ -20,8 +19,12 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ onBack, currentUs
   const [bio, setBio] = useState(currentUser.bio);
   const [birthday, setBirthday] = useState(currentUser.birthday || '');
   const [password, setPassword] = useState('');
-  const [avatarUrl, setAvatarUrl] = useState(currentUser.avatarUrl);
-  const [coverUrl, setCoverUrl] = useState(currentUser.coverUrl || '');
+  
+  const [avatarPreview, setAvatarPreview] = useState(currentUser.avatarUrl);
+  const [coverPreview, setCoverPreview] = useState(currentUser.coverUrl || '');
+  const [avatarFile, setAvatarFile] = useState<File | undefined>();
+  const [coverFile, setCoverFile] = useState<File | undefined>();
+
   const [selectedInterests, setSelectedInterests] = useState(new Set(currentUser.interests));
   
   const avatarFileRef = useRef<HTMLInputElement>(null);
@@ -34,8 +37,13 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ onBack, currentUs
       const reader = new FileReader();
       reader.onload = (e) => {
         const url = e.target?.result as string;
-        if (type === 'avatar') setAvatarUrl(url);
-        else setCoverUrl(url);
+        if (type === 'avatar') {
+          setAvatarPreview(url);
+          setAvatarFile(file);
+        } else {
+          setCoverPreview(url);
+          setCoverFile(file);
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -59,14 +67,12 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ onBack, currentUs
       username,
       bio,
       birthday,
-      avatarUrl,
-      coverUrl,
       interests: Array.from(selectedInterests),
     };
     if (password) {
       updatedData.password = password;
     }
-    onUpdateProfile(updatedData);
+    onUpdateProfile(updatedData, avatarFile, coverFile);
   };
 
   const inputClasses = "w-full p-2 border border-gray-300 dark:border-neutral-700 rounded-md bg-gray-100 dark:bg-neutral-800 text-gray-900 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400";
@@ -81,14 +87,14 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ onBack, currentUs
         <div>
           <label className={labelClasses}>Profile Pictures</label>
           <div className="relative h-32 rounded-lg bg-gray-200 dark:bg-neutral-800 border border-gray-300 dark:border-neutral-700">
-            <img src={coverUrl || `https://picsum.photos/seed/${currentUser.id}-cover/800/200`} className="w-full h-full object-cover rounded-lg" />
+            <img src={coverPreview || `https://picsum.photos/seed/${currentUser.id}-cover/800/200`} className="w-full h-full object-cover rounded-lg" />
             <input type="file" accept="image/*" ref={coverFileRef} onChange={(e) => handleFileChange(e, 'cover')} className="hidden" />
             <button onClick={() => coverFileRef.current?.click()} className="absolute top-2 end-2 bg-black/50 p-1 rounded-full text-white">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
             </button>
             <div className="absolute bottom-0 start-4 translate-y-1/2">
                <div className="relative w-24 h-24">
-                 <img src={avatarUrl} className="w-full h-full rounded-full border-4 border-slate-50 dark:border-neutral-950" />
+                 <img src={avatarPreview} className="w-full h-full rounded-full border-4 border-slate-50 dark:border-neutral-950" />
                  <input type="file" accept="image/*" ref={avatarFileRef} onChange={(e) => handleFileChange(e, 'avatar')} className="hidden" />
                  <button onClick={() => avatarFileRef.current?.click()} className="absolute bottom-1 end-1 bg-black/50 p-1 rounded-full text-white">
                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>

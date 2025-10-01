@@ -71,7 +71,8 @@ export interface Media {
 export interface Post {
   id: string;
   type: PostType;
-  author: User;
+  authorId: string;
+  author?: User;
   title: string;
   description: string;
   location: string;
@@ -86,12 +87,23 @@ export interface Post {
   privacy: PostPrivacy;
 }
 
+// A Post that has been "hydrated" with its author's data
+export type HydratedPost = Post & {
+  author: User;
+};
+
 export interface Story {
   id: string;
-  author: User;
+  authorId: string;
+  author?: User;
   media: Media;
   createdAt: string;
 }
+
+// A Story that has been "hydrated" with its author's data
+export type HydratedStory = Story & {
+  author: User;
+};
 
 export interface Comment {
   id: string;

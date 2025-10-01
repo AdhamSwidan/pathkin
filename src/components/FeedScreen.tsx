@@ -1,7 +1,5 @@
-
-
 import React from 'react';
-import { Post, User, Story } from '../types';
+import { User, HydratedPost, HydratedStory } from '../types';
 import Header from './Header';
 import PostCard from './PostCard';
 import StoryReel from './StoryReel';
@@ -10,13 +8,13 @@ import MessageIcon from './icons/MessageIcon';
 import { useTranslation } from '../contexts/LanguageContext';
 
 interface FeedScreenProps {
-  posts: Post[];
-  stories: Story[];
+  posts: HydratedPost[];
+  stories: HydratedStory[];
   currentUser: User;
-  onSelectPost: (post: Post) => void;
+  onSelectPost: (post: HydratedPost) => void;
   onSendMessage: (user: User) => void;
   onToggleInterest: (postId: string) => void;
-  onSelectStories: (stories: Story[]) => void;
+  onSelectStories: (stories: HydratedStory[]) => void;
   onAddStory: () => void;
   onNotificationClick: () => void;
   hasUnreadNotifications: boolean;

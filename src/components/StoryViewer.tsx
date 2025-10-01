@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
-import { Story } from '../types';
+import { HydratedStory } from '../types';
 
 interface StoryViewerProps {
-  stories: Story[];
+  stories: HydratedStory[];
   onClose: () => void;
 }
 
@@ -73,7 +72,7 @@ const StoryViewer: React.FC<StoryViewerProps> = ({ stories, onClose }) => {
       setProgress((video.currentTime / video.duration) * 100);
     }
   };
-  
+
   return (
     <div className="fixed inset-0 bg-black z-[100] flex flex-col p-2 animate-fade-in select-none">
       {/* Progress Bars */}

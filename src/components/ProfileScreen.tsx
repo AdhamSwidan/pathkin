@@ -1,7 +1,5 @@
-
-
 import React, { useState, useMemo } from 'react';
-import { Post, User } from '../types';
+import { User, HydratedPost } from '../types';
 import Header from './Header';
 import PostCard from './PostCard';
 import GridIcon from './icons/GridIcon';
@@ -19,8 +17,8 @@ import UserIcon from './icons/UserIcon';
 
 interface ProfileScreenProps {
   user: User;
-  allPosts: Post[];
-  onSelectPost: (post: Post) => void;
+  allPosts: HydratedPost[];
+  onSelectPost: (post: HydratedPost) => void;
   onSendMessage: (user: User) => void;
   onToggleInterest: (postId: string) => void;
   onViewProfile: (user: User) => void;

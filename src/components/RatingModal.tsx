@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
-import { Post } from '../types';
+import { HydratedPost } from '../types';
 import StarIcon from './icons/StarIcon';
 import { useTranslation } from '../contexts/LanguageContext';
 
 interface RatingModalProps {
-  post: Post;
+  post: HydratedPost;
   onClose: () => void;
   onSubmit: (postId: string, rating: number) => void;
 }

@@ -1,7 +1,5 @@
-
-
 import React, { useState, useMemo } from 'react';
-import { Post, User, PostType } from '../types';
+import { User, PostType, HydratedPost } from '../types';
 import Header from './Header';
 import PostCard from './PostCard';
 import FilterBar from './FilterBar';
@@ -11,14 +9,14 @@ import MapIcon from './icons/MapIcon';
 import { useTranslation } from '../contexts/LanguageContext';
 
 interface SearchScreenProps {
-  posts: Post[];
+  posts: HydratedPost[];
   currentUser: User;
-  onSelectPost: (post: Post) => void;
+  onSelectPost: (post: HydratedPost) => void;
   onSendMessage: (user: User) => void;
   onToggleInterest: (postId: string) => void;
   onNavigateToFindTwins: () => void;
   onViewProfile: (user: User) => void;
-  onShowResultsOnMap: (posts: Post[]) => void;
+  onShowResultsOnMap: (posts: HydratedPost[]) => void;
   onRepostToggle: (postId: string) => void;
   onSaveToggle: (postId: string) => void;
   onSharePost: (postId: string) => void;

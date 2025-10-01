@@ -25,9 +25,6 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Create .env file
-        run: echo "VITE_API_KEY=${{ secrets.API_KEY }}" > .env
-
       - name: Clean and Build the project
         run: |
           rm -rf dist

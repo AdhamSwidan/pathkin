@@ -1,12 +1,12 @@
-
 import React, { useState, useRef } from 'react';
 import Header from './Header';
-import { PostType, Media, PostPrivacy, Post } from '../types';
+import { PostType, Media, PostPrivacy, Post, User } from '../types';
 import { generateDescription } from '../services/geminiService';
 import { useTranslation } from '../contexts/LanguageContext';
 
 interface CreatePostScreenProps {
-  onCreatePost: (post: Omit<Post, 'id' | 'author' | 'interestedUsers' | 'comments' | 'createdAt'>) => void;
+  currentUser: User;
+  onCreatePost: (post: Omit<Post, 'id' | 'authorId' | 'interestedUsers' | 'comments' | 'createdAt'>, mediaFile: File | null) => void;
 }
 
 const CreatePostScreen: React.FC<CreatePostScreenProps> = ({ onCreatePost }) => {
@@ -15,16 +15,16 @@ const CreatePostScreen: React.FC<CreatePostScreenProps> = ({ onCreatePost }) => 
   const [title, setTitle] = useState('');
   const [keywords, setKeywords] = useState('');
   const [description, setDescription] = useState('');
-  const [media, setMedia] = useState<Media[]>([]);
   const [location, setLocation] = useState('');
   const [budget, setBudget] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [mediaFile, setMediaFile] = useState<File | null>(null);
+  const [mediaPreview, setMediaPreview] = useState<Media | null>(null);
   
   const [isGenerating, setIsGenerating] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { t } = useTranslation();
-
 
   const handleGenerateDescription = async () => {
     if (!title || !keywords) {
@@ -40,11 +40,12 @@ const CreatePostScreen: React.FC<CreatePostScreenProps> = ({ onCreatePost }) => 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      setMediaFile(file);
       const reader = new FileReader();
       reader.onload = (e) => {
         const url = e.target?.result as string;
         const type = file.type.startsWith('video') ? 'video' : 'image';
-        setMedia([{ url, type }]);
+        setMediaPreview({ url, type });
       };
       reader.readAsDataURL(file);
     }
@@ -65,15 +66,13 @@ const CreatePostScreen: React.FC<CreatePostScreenProps> = ({ onCreatePost }) => 
       startDate,
       endDate: endDate || undefined,
       budget: parseInt(budget, 10),
-      media: media.length > 0 ? media : undefined,
     };
     
-    onCreatePost(newPostData);
+    onCreatePost(newPostData, mediaFile);
   };
 
   const inputBaseClasses = "w-full p-2 border border-gray-300 rounded-md dark:bg-neutral-800 dark:border-neutral-700 dark:text-gray-200 dark:placeholder-gray-400";
   const labelBaseClasses = "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1";
-
 
   return (
     <>
@@ -101,7 +100,6 @@ const CreatePostScreen: React.FC<CreatePostScreenProps> = ({ onCreatePost }) => 
             </select>
           </div>
         </div>
-
 
         <div>
           <label htmlFor="title" className={labelBaseClasses}>{t('title')}</label>
@@ -137,11 +135,11 @@ const CreatePostScreen: React.FC<CreatePostScreenProps> = ({ onCreatePost }) => 
           >
             {t('uploadMedia')}
           </button>
-           {media.length > 0 && (
+           {mediaPreview && (
             <div className="mt-2 p-2 border dark:border-neutral-700 rounded-md relative">
               <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">{t('mediaPreview')}</p>
-              {media[0].type === 'image' ? <img src={media[0].url} className="rounded w-full" /> : <video src={media[0].url} className="rounded w-full" controls />}
-              <button onClick={() => setMedia([])} className="absolute top-1 right-1 bg-black bg-opacity-50 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">&times;</button>
+              {mediaPreview.type === 'image' ? <img src={mediaPreview.url} className="rounded w-full" /> : <video src={mediaPreview.url} className="rounded w-full" controls />}
+              <button onClick={() => { setMediaFile(null); setMediaPreview(null); }} className="absolute top-1 right-1 bg-black bg-opacity-50 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">&times;</button>
             </div>
           )}
         </div>

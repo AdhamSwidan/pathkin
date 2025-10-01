@@ -1,15 +1,16 @@
 import React from 'react';
-import { Post } from '../types';
+import { HydratedPost } from '../types';
 import SendIcon from './icons/SendIcon';
 import { useTranslation } from '../contexts/LanguageContext';
 
 interface PostDetailModalProps {
-  post: Post;
+  post: HydratedPost;
   onClose: () => void;
 }
 
 const PostDetailModal: React.FC<PostDetailModalProps> = ({ post, onClose }) => {
   const {} = useTranslation();
+  
   return (
     <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex justify-center items-center p-4">
       <div className="bg-white dark:bg-neutral-900 rounded-lg shadow-xl w-full max-w-md max-h-[90vh] flex flex-col">

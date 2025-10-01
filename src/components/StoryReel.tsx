@@ -1,13 +1,12 @@
-
 import React, { useMemo } from 'react';
-import { Story, User } from '../types';
+import { User, HydratedStory } from '../types';
 import PlusIcon from './icons/PlusIcon';
 import { useTranslation } from '../contexts/LanguageContext';
 
 interface StoryReelProps {
-  stories: Story[];
+  stories: HydratedStory[];
   currentUser: User;
-  onSelectStories: (stories: Story[]) => void;
+  onSelectStories: (stories: HydratedStory[]) => void;
   onAddStory: () => void;
 }
 
@@ -27,7 +26,7 @@ const StoryReelItem: React.FC<{ author: User; hasBeenViewed?: boolean; onClick: 
 
 // Special item for the current user to add/view their own story
 const MyStoryReelItem: React.FC<{
-  myStories: Story[];
+  myStories: HydratedStory[];
   currentUser: User;
   onAddStory: () => void;
   onViewMyStories: () => void;
@@ -85,7 +84,7 @@ const StoryReel: React.FC<StoryReelProps> = ({ stories, currentUser, onSelectSto
       }
       acc[story.author.id].push(story);
       return acc;
-    }, {} as Record<string, Story[]>);
+    }, {} as Record<string, HydratedStory[]>);
 
     return { myStories, otherUserStoriesGrouped: Object.values(grouped) };
   }, [stories, currentUser.id]);

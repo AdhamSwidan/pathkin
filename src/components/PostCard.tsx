@@ -1,7 +1,5 @@
-
-
 import React from 'react';
-import { Post, PostType, User, ActivityStatus } from '../types';
+import { PostType, User, ActivityStatus, HydratedPost } from '../types';
 import HeartIcon from './icons/HeartIcon';
 import CommentIcon from './icons/CommentIcon';
 import PlayIcon from './icons/PlayIcon';
@@ -14,10 +12,10 @@ import { useTranslation } from '../contexts/LanguageContext';
 import MessageIcon from './icons/MessageIcon';
 
 interface PostCardProps {
-  post: Post;
+  post: HydratedPost;
   currentUser: User | null; // Can be null for guests
   isGuest: boolean;
-  onCommentClick: (post: Post) => void;
+  onCommentClick: (post: HydratedPost) => void;
   onMessageClick: (user: User) => void;
   onInterestToggle: (postId: string) => void;
   onViewProfile: (user: User) => void;

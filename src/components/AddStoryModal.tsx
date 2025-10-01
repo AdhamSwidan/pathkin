@@ -3,12 +3,11 @@ import { useTranslation } from '../contexts/LanguageContext';
 import CameraIcon from './icons/CameraIcon';
 import UploadIcon from './icons/UploadIcon';
 import BackIcon from './icons/BackIcon';
-import { Media } from '../types';
 
 interface AddStoryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onStoryCreate: (media: Media) => void;
+  onStoryCreate: (mediaFile: File) => void;
 }
 
 const AddStoryModal: React.FC<AddStoryModalProps> = ({ isOpen, onClose, onStoryCreate }) => {
@@ -22,14 +21,8 @@ const AddStoryModal: React.FC<AddStoryModalProps> = ({ isOpen, onClose, onStoryC
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const url = e.target?.result as string;
-        const type = file.type.startsWith('video') ? 'video' : 'image';
-        onStoryCreate({ url, type });
-        onClose();
-      };
-      reader.readAsDataURL(file);
+      onStoryCreate(file);
+      onClose();
     }
   };
 
@@ -63,9 +56,13 @@ const AddStoryModal: React.FC<AddStoryModalProps> = ({ isOpen, onClose, onStoryC
       const context = canvas.getContext('2d');
       if (context) {
         context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
-        const dataUrl = canvas.toDataURL('image/jpeg');
-        onStoryCreate({ url: dataUrl, type: 'image' });
-        onClose();
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const imageFile = new File([blob], "story_capture.jpg", { type: "image/jpeg" });
+            onStoryCreate(imageFile);
+            onClose();
+          }
+        }, 'image/jpeg');
       }
     }
   };
