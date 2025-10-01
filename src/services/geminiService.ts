@@ -1,4 +1,5 @@
 
+
 import { GoogleGenAI } from "@google/genai";
 
 const API_KEY = process.env.API_KEY;
@@ -36,8 +37,8 @@ export const generateDescription = async (title: string, keywords: string): Prom
       contents: prompt,
     });
     
-    // Access the text directly as per the API guidelines.
-    return response.text.trim();
+    // Safely access the text property, providing a fallback to an empty string.
+    return (response.text ?? '').trim();
   } catch (error) {
     console.error("Error generating description with Gemini:", error);
     return "There was an error generating the description. Please try again.";
