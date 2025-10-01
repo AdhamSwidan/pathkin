@@ -1,3 +1,16 @@
-# This workflow is deprecated and has been disabled.
-# The project is now automatically deployed via Vercel.
-# This file can be safely deleted.
+# This workflow is disabled. The project is now automatically deployed via Vercel.
+# This file is a valid placeholder to prevent parsing errors. It can be safely deleted.
+
+name: Disabled GitHub Pages Deployment
+
+on:
+  # This empty 'on' block ensures the workflow is never triggered automatically.
+  # It solves the "No event triggers defined in `on`" error.
+  workflow_dispatch: # Allows manual trigger, but has no automatic triggers.
+
+jobs:
+  disabled_job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Do nothing
+        run: echo "This deployment workflow is disabled. See Vercel for deployments."
