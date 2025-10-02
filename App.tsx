@@ -41,7 +41,7 @@ const App: React.FC = () => {
   const [users, setUsers] = useState<User[]>(mockUsers);
   
   const [stories, setStories] = useState<Story[]>(mockStories);
-  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
+  const [notifications, _setNotifications] = useState<Notification[]>(mockNotifications);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [viewingStories, setViewingStories] = useState<Story[] | null>(null);
