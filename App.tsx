@@ -311,10 +311,43 @@ const App: React.FC = () => {
       });
   };
 
-  const handleToggleCompleted = (postId: string) => {
-    if (!currentUser || isGuest) {
-      showGuestToast();
-      return;
+  const handleApproveCompletion = async (postId: string, userId: string) => {
+  if (!currentUser) return;
+  
+  try {
+    const postRef = doc(db, "posts", postId);
+    await updateDoc(postRef, {
+      approvedCompletions: arrayUnion(userId)
+    });
+
+    // 2. إذا صاحب المنشور مش هو المستخدم الحالي، ابعت إشعار
+    if (post.authorId !== currentUser.id) {
+     const notificationRef = collection(db, "notifications");
+    await addDoc(notificationRef, {
+      type: 'completion_approved',
+      recipientId: userId,
+      senderId: currentUser.id,
+      postId: postId,
+      message: `${currentUser.name} approved your completion`,
+      read: false,
+      createdAt: serverTimestamp()
+    });
+    }
+
+    // 3. update local state immediately
+  setPosts(prev => prev.map(p => 
+      p.id === postId 
+        ? { 
+            ...p, 
+            approvedCompletions: [...(p.approvedCompletions || []), userId] 
+          }
+        : p
+    ));
+
+  } catch (error) {
+    console.error("Error approving completion:", error);
+  }
+};
     }
     const post = posts.find(p => p.id === postId);
     if (!post) return;
