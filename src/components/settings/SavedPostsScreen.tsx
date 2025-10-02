@@ -31,8 +31,7 @@ const SavedPostsScreen: React.FC<SavedPostsScreenProps> = ({
   onSharePost,
   onToggleCompleted,
 }) => {
-  const validPosts = posts.filter((post): post is HydratedPost => 
-    post.author !== undefined
+  const validPosts = posts.filter(post => post.author !== undefined);
   ); // ← هذا السطر كان ناقص إغلاق
 
   const { t } = useTranslation();
@@ -45,7 +44,7 @@ const SavedPostsScreen: React.FC<SavedPostsScreenProps> = ({
           validPosts.map(post => ( // ← غير posts ل validPosts
             <PostCard
               key={post.id}
-              post={post}
+              post={post as any}
               currentUser={currentUser}
               isGuest={false}
               onCommentClick={onSelectPost}
