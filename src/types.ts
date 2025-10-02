@@ -61,6 +61,10 @@ export interface User {
   totalRatings?: number;
   isPrivate: boolean;
   privacySettings: PrivacySettings;
+  activityLog: Array<{
+    postId: string;
+    status: 'pending' | 'confirmed';
+    timestamp: string;
 }
 
 export interface Media {
@@ -85,6 +89,8 @@ export interface Post {
   createdAt: string;
   media?: Media[];
   privacy: PostPrivacy;
+  completedBy?: string[];
+  approvedCompletions?: string[];
 }
 
 // A Post that has been "hydrated" with its author's data
