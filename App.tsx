@@ -979,6 +979,7 @@ const handleApproveCompletion = async (postId: string, userId: string) => {
                   onClose={handleToggleNotifications} 
                   onConfirmAttendance={handleConfirmAttendance} 
                   onRateExperience={(postId) => setRatingModalPost(posts.find(p => p.id === postId) || null)} 
+                  onApproveCompletion={handleApproveCompletion}
               />
           </div>
       )}
