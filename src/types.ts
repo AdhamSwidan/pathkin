@@ -150,11 +150,20 @@ user: {
     id: string;
     title?: string;
   };
-  postId?: string; // أضف هذا
-  senderId?: string; // أضف هذا
+  postId?: string;
+  senderId?: string;
   attendeeId?: string;
   read: boolean;
   createdAt: string;
+}
+
+export enum NotificationType {
+  Interest = 'interest',
+  Comment = 'comment', 
+  Message = 'message',
+  AttendanceRequest = 'attendance_request',
+  AttendanceConfirmed = 'attendance_confirmed',
+  RateExperience = 'rate_experience'
 }
 
 export type Screen = 
