@@ -36,14 +36,18 @@ const PostCard: React.FC<PostCardProps> = ({
   onRepostToggle,
   onSaveToggle,
   onSharePost,
-  onToggleCompleted
+  onToggleCompleted,
 }) => {
   const { t, language } = useTranslation();
   const isInterested = currentUser ? post.interestedUsers.includes(currentUser.id) : false;
   const isReposted = currentUser ? currentUser.reposts.includes(post.id) : false;
   const isSaved = currentUser ? currentUser.savedPosts.includes(post.id) : false;
   const isAuthor = currentUser?.id === post.author.id;
-  
+  const isCompleted = post.completedBy?.includes(currentUser.id);
+  const isPending = post.completedBy?.includes(currentUser.id) && 
+                   !post.approvedCompletions?.includes(currentUser.id);
+  const isApproved = post.completedBy?.includes(currentUser.id) && 
+                    post.approvedCompletions?.includes(currentUser.id);
   const activityLogEntry = currentUser ? currentUser.activityLog.find(a => a.postId === post.id) : undefined;
   const activityStatus = activityLogEntry?.status;
 
