@@ -538,7 +538,6 @@ const handleApproveCompletion = async (postId: string, userId: string) => {
   try {
     const postRef = doc(db, "posts", postId);
     
-    // 1. أضف الموافقة في الـ post
     await updateDoc(postRef, {
       approvedCompletions: arrayUnion(userId)
     });
@@ -975,12 +974,12 @@ const handleApproveCompletion = async (postId: string, userId: string) => {
       {isNotificationPanelOpen && (
           <div className="absolute top-0 right-0 z-50 w-full max-w-sm mt-2 mr-2">
               <NotificationPanel 
-                  notifications={notifications} 
+                  notifications={userNotifications} 
                   onClose={handleToggleNotifications} 
                   onConfirmAttendance={handleConfirmAttendance} 
-                  onRateExperience={(postId) => setRatingModalPost(posts.find(p => p.id === postId) || null)} 
+                  onRateExperience={(postId: string) => setRatingModalPost(hydratedPosts.find(p => p.id === postId) || null)}
                   onApproveCompletion={handleApproveCompletion}
-              />
+                /> 
           </div>
       )}
       {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage(null)} />}
