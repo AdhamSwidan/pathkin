@@ -374,7 +374,7 @@ const App: React.FC = () => {
   const handleCreatePost = async (newPostData: Omit<Post, 'id' | 'authorId' | 'interestedUsers' | 'comments' | 'createdAt'>, mediaFile: File | null) => {
     if (!currentUser) return;
     try {
-        let media: Media[] | undefined = undefined;
+        let media: Media[] = [];
         if (mediaFile) {
             const mediaUrl = await uploadFile(mediaFile, `posts/${currentUser.id}/${Date.now()}_${mediaFile.name}`);
             media = [{ url: mediaUrl, type: mediaFile.type.startsWith('video') ? 'video' : 'image' }];
