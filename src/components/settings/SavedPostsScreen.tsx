@@ -33,14 +33,16 @@ const SavedPostsScreen: React.FC<SavedPostsScreenProps> = ({
 }) => {
   const validPosts = posts.filter((post): post is HydratedPost => 
     post.author !== undefined
+  ); // ← هذا السطر كان ناقص إغلاق
+
   const { t } = useTranslation();
 
   return (
     <div className="h-full flex flex-col bg-slate-50 dark:bg-neutral-950">
       <Header title={t('savedPosts')} onBack={onBack} />
       <div className="flex-grow overflow-y-auto p-2">
-        {posts.length > 0 ? (
-          posts.map(post => (
+        {validPosts.length > 0 ? ( // ← غير posts ل validPosts
+          validPosts.map(post => ( // ← غير posts ل validPosts
             <PostCard
               key={post.id}
               post={post}
