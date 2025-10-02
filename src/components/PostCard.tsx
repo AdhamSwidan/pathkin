@@ -1,5 +1,5 @@
 import React from 'react';
-import { PostType, User, ActivityStatus, HydratedPost } from '../types';
+import { PostType, User, HydratedPost } from '../types'; // حذفت ActivityStatus
 import HeartIcon from './icons/HeartIcon';
 import CommentIcon from './icons/CommentIcon';
 import PlayIcon from './icons/PlayIcon';
@@ -46,17 +46,17 @@ const PostCard: React.FC<PostCardProps> = ({
   const isSaved = currentUser ? currentUser.savedPosts.includes(post.id) : false;
   const isAuthor = currentUser?.id === post.author.id;
   
-  // إصلاح مشكلة completedBy و approvedCompletions
-  const isCompleted = currentUser ? (post.completedBy || []).includes(currentUser.id) : false;
-  const isPending = currentUser ? 
-    (post.completedBy || []).includes(currentUser.id) && 
-    !(post.approvedCompletions || []).includes(currentUser.id) : false;
-  const isApproved = currentUser ? 
-    (post.completedBy || []).includes(currentUser.id) && 
-    (post.approvedCompletions || []).includes(currentUser.id) : false;
+  // إزالة الخصائص غير الموجودة في HydratedPost
+  // const isCompleted = currentUser ? (post.completedBy || []).includes(currentUser.id) : false;
+  // const isPending = currentUser ? 
+  //   (post.completedBy || []).includes(currentUser.id) && 
+  //   !(post.approvedCompletions || []).includes(currentUser.id) : false;
+  // const isApproved = currentUser ? 
+  //   (post.completedBy || []).includes(currentUser.id) && 
+  //   (post.approvedCompletions || []).includes(currentUser.id) : false;
   
   const activityLogEntry = currentUser ? currentUser.activityLog.find(a => a.postId === post.id) : undefined;
-  const activityStatus = activityLogEntry?.status;
+  // const activityStatus = activityLogEntry?.status; // حذفت لأنها مش مستخدمة
 
   const getTagStyle = (type: PostType) => {
     switch (type) {
@@ -84,9 +84,9 @@ const PostCard: React.FC<PostCardProps> = ({
   };
 
   const checkmarkColor = () => {
-    if (isApproved) return 'text-green-500';
-    if (isPending) return 'text-yellow-500';
-    if (isCompleted) return 'text-blue-500';
+    // استخدام activityLogEntry بدل الخصائص غير الموجودة
+    if (activityLogEntry?.status === 'completed') return 'text-green-500';
+    if (activityLogEntry?.status === 'pending') return 'text-yellow-500';
     return '';
   };
   
@@ -186,9 +186,9 @@ const PostCard: React.FC<PostCardProps> = ({
           className={`${actionButtonClasses} ${isGuest || !currentUser ? disabledClasses : `hover:text-green-500 ${checkmarkColor()}`}`}
           aria-label="Mark as done"
         >
-          <CheckCircleIcon className={(isApproved || isPending || isCompleted) ? 'fill-current' : ''} />
+          <CheckCircleIcon className={activityLogEntry?.status ? 'fill-current' : ''} />
           <span className="text-xs">
-            {isApproved ? '✓' : isPending ? '⏳' : ''}
+            {activityLogEntry?.status === 'completed' ? '✓' : activityLogEntry?.status === 'pending' ? '⏳' : ''}
           </span>
         </button>
         <button 
