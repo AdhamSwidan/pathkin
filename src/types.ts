@@ -141,6 +141,20 @@ export interface Notification {
   // For attendance requests
   attendeeId?: string; 
   attendeeName?: string;
+user: {
+    id: string;
+    name: string;
+    avatarUrl: string;
+  };
+  post?: {
+    id: string;
+    title?: string;
+  };
+  postId?: string; // أضف هذا
+  senderId?: string; // أضف هذا
+  attendeeId?: string;
+  read: boolean;
+  createdAt: string;
 }
 
 export type Screen = 
