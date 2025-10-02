@@ -38,7 +38,7 @@ export interface PrivacySettings {
   showFollowLists: boolean;
   showStats: boolean;
   showCompletedActivities: boolean;
-  allowTunSearch: boolean;
+  allowTwinSearch: boolean;
 }
 
 export interface User {
