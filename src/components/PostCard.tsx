@@ -39,18 +39,24 @@ const PostCard: React.FC<PostCardProps> = ({
   onToggleCompleted,
 }) => {
   const { t, language } = useTranslation();
+  
+  // الحماية من currentUser being null
   const isInterested = currentUser ? post.interestedUsers.includes(currentUser.id) : false;
   const isReposted = currentUser ? currentUser.reposts.includes(post.id) : false;
   const isSaved = currentUser ? currentUser.savedPosts.includes(post.id) : false;
   const isAuthor = currentUser?.id === post.author.id;
-  const isCompleted = post.completedBy?.includes(currentUser.id);
-  const isPending = post.completedBy?.includes(currentUser.id) && 
-                   !post.approvedCompletions?.includes(currentUser.id);
-  const isApproved = post.completedBy?.includes(currentUser.id) && 
-                    post.approvedCompletions?.includes(currentUser.id);
+  
+  // إصلاح مشكلة completedBy و approvedCompletions
+  const isCompleted = currentUser ? (post.completedBy || []).includes(currentUser.id) : false;
+  const isPending = currentUser ? 
+    (post.completedBy || []).includes(currentUser.id) && 
+    !(post.approvedCompletions || []).includes(currentUser.id) : false;
+  const isApproved = currentUser ? 
+    (post.completedBy || []).includes(currentUser.id) && 
+    (post.approvedCompletions || []).includes(currentUser.id) : false;
+  
   const activityLogEntry = currentUser ? currentUser.activityLog.find(a => a.postId === post.id) : undefined;
   const activityStatus = activityLogEntry?.status;
-
 
   const getTagStyle = (type: PostType) => {
     switch (type) {
@@ -78,8 +84,9 @@ const PostCard: React.FC<PostCardProps> = ({
   };
 
   const checkmarkColor = () => {
-    if (activityStatus === ActivityStatus.Confirmed) return 'text-green-500';
-    if (activityStatus === ActivityStatus.Pending) return 'text-amber-500';
+    if (isApproved) return 'text-green-500';
+    if (isPending) return 'text-yellow-500';
+    if (isCompleted) return 'text-blue-500';
     return '';
   };
   
@@ -175,11 +182,14 @@ const PostCard: React.FC<PostCardProps> = ({
         </button>
         <button
           onClick={() => onToggleCompleted(post.id)}
-          disabled={isGuest}
-          className={`${actionButtonClasses} ${isGuest ? disabledClasses : `hover:text-green-500 ${checkmarkColor()}`}`}
+          disabled={isGuest || !currentUser}
+          className={`${actionButtonClasses} ${isGuest || !currentUser ? disabledClasses : `hover:text-green-500 ${checkmarkColor()}`}`}
           aria-label="Mark as done"
         >
-          <CheckCircleIcon className={activityStatus ? 'fill-current' : ''} />
+          <CheckCircleIcon className={(isApproved || isPending || isCompleted) ? 'fill-current' : ''} />
+          <span className="text-xs">
+            {isApproved ? '✓' : isPending ? '⏳' : ''}
+          </span>
         </button>
         <button 
           onClick={() => onSharePost(post.id)}
