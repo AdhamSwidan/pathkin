@@ -41,7 +41,6 @@ import {
   addDoc, serverTimestamp, arrayUnion, arrayRemove, Timestamp
 } from './services/firebase';
 
-
 const guestUser: User = {
     id: 'guest',
     name: 'Guest',
@@ -76,10 +75,10 @@ const App: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [stories, setStories] = useState<Story[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [conversations, _setConversations] = useState<Conversation[]>([]);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
   
   const [selectedPost, setSelectedPost] = useState<HydratedPost | null>(null);
-  const [selectedConversation, setSelectedConversation] = useState(null);
+  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [viewingStories, setViewingStories] = useState<HydratedStory[] | null>(null);
   const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
   const [viewingUser, setViewingUser] = useState<User | null>(null);
