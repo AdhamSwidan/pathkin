@@ -31,17 +31,16 @@ const SavedPostsScreen: React.FC<SavedPostsScreenProps> = ({
   onSharePost,
   onToggleCompleted,
 }) => {
-  const validPosts = posts.filter(post => post.author !== undefined);
-  ); // ← هذا السطر كان ناقص إغلاق
-
   const { t } = useTranslation();
+
+  const validPosts = posts.filter(post => post.author !== undefined);
 
   return (
     <div className="h-full flex flex-col bg-slate-50 dark:bg-neutral-950">
       <Header title={t('savedPosts')} onBack={onBack} />
       <div className="flex-grow overflow-y-auto p-2">
-        {validPosts.length > 0 ? ( // ← غير posts ل validPosts
-          validPosts.map(post => ( // ← غير posts ل validPosts
+        {validPosts.length > 0 ? (
+          validPosts.map(post => (
             <PostCard
               key={post.id}
               post={post as any}
