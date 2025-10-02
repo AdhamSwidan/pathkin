@@ -31,13 +31,14 @@ export enum ActivityStatus {
 export interface ActivityLogEntry {
   postId: string;
   status: ActivityStatus;
+  timestamp: string; // أضفت timestamp
 }
 
 export interface PrivacySettings {
   showFollowLists: boolean;
   showStats: boolean;
   showCompletedActivities: boolean;
-  allowTwinSearch: boolean;
+  allowTunSearch: boolean;
 }
 
 export interface User {
@@ -56,16 +57,12 @@ export interface User {
   following: string[]; // array of user ids
   reposts: string[]; // array of post ids
   savedPosts: string[]; // array of post ids
-  activityLog: ActivityLogEntry[]; // Replaces completedActivities
+  activityLog: ActivityLogEntry[]; // استخدمنا الـ interface الجديد
   averageRating?: number;
   totalRatings?: number;
   isPrivate: boolean;
   privacySettings: PrivacySettings;
-  activityLog: Array<{
-    postId: string;
-    status: 'pending' | 'confirmed';
-    timestamp: string;
-}
+} // ← هنا كان ناقص إغلاق الـ interface
 
 export interface Media {
   url: string;
