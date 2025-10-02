@@ -131,6 +131,7 @@ const App: React.FC = () => {
                 ...data,
                 id: doc.id,
                 createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() ?? new Date().toISOString(),
+               interestedUsers: data.interestedUsers || [],
             } as Post
         }));
     });
@@ -460,6 +461,12 @@ const App: React.FC = () => {
         await updateDoc(userRef, {
             reposts: isReposted ? arrayRemove(postId) : arrayUnion(postId)
         });
+      setCurrentUser(prev => prev ? {
+          ...prev,
+          reposts: isReposted 
+              ? prev.reposts.filter(id => id !== postId)
+              : [...prev.reposts, postId]
+      } : null);
     } catch (e) { console.error("Error toggling repost:", e); }
   };
 
@@ -471,6 +478,12 @@ const App: React.FC = () => {
         await updateDoc(userRef, {
             savedPosts: isSaved ? arrayRemove(postId) : arrayUnion(postId)
         });
+       setCurrentUser(prev => prev ? {
+          ...prev,
+          savedPosts: isSaved 
+              ? prev.savedPosts.filter(id => id !== postId)
+              : [...prev.savedPosts, postId]
+      } : null);
     } catch (e) { console.error("Error toggling save:", e); }
   };
   
