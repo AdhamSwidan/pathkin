@@ -1,54 +1,3 @@
-import React from 'react';
-import { Notification, NotificationType } from '../types';
-import HeartIcon from './icons/HeartIcon';
-import CommentIcon from './icons/CommentIcon';
-import MessageIcon from './icons/MessageIcon';
-import CheckCircleIcon from './icons/CheckCircleIcon';
-import StarIcon from './icons/StarIcon';
-import { useTranslation } from '../contexts/LanguageContext';
-
-interface NotificationPanelProps {
-  notifications: Notification[];
-  onClose: () => void;
-  onConfirmAttendance: (notificationId: string, postId: string, attendeeId: string, didAttend: boolean) => void;
-  onRateExperience: (postId: string) => void;
-  onApproveCompletion?: (postId: string, senderId: string) => void;
-}
-
-const NotificationIcon: React.FC<{ type: NotificationType }> = ({ type }) => {
-  switch (type) {
-    case NotificationType.Interest:
-      return <HeartIcon className="w-5 h-5 text-rose-500" />;
-    case NotificationType.Comment:
-      return <CommentIcon className="w-5 h-5 text-sky-500" />;
-    case NotificationType.Message:
-      return <MessageIcon className="w-5 h-5 text-orange-500" />;
-    case NotificationType.AttendanceRequest:
-      return <CheckCircleIcon className="w-5 h-5 text-amber-500" />;
-    case NotificationType.AttendanceConfirmed:
-      return <CheckCircleIcon className="w-5 h-5 text-green-500" />;
-    case NotificationType.RateExperience:
-      return <StarIcon className="w-5 h-5 text-amber-400" />;
-    default:
-      return null;
-  }
-};
-
-const TimeAgo: React.FC<{ date: string }> = ({ date }) => {
-  const seconds = Math.floor((new Date().getTime() - new Date(date).getTime()) / 1000);
-  let interval = seconds / 31536000;
-  if (interval > 1) return <span>{Math.floor(interval)}y ago</span>;
-  interval = seconds / 2592000;
-  if (interval > 1) return <span>{Math.floor(interval)}mo ago</span>;
-  interval = seconds / 86400;
-  if (interval > 1) return <span>{Math.floor(interval)}d ago</span>;
-  interval = seconds / 3600;
-  if (interval > 1) return <span>{Math.floor(interval)}h ago</span>;
-  interval = seconds / 60;
-  if (interval > 1) return <span>{Math.floor(interval)}m ago</span>;
-  return <span>{Math.floor(seconds)}s ago</span>;
-};
-
 const NotificationPanel: React.FC<NotificationPanelProps> = ({ 
   notifications, 
   onClose, 
@@ -104,10 +53,10 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({
           )}
           
           {/* زر Approve Completion */}
-          {(notif.type as any) === 'completion_pending' && notif.postId && (notif as any).senderId && onApproveCompletion && (
+          {(notif.type as any) === 'completion_pending' && notif.postId && notif.senderId && onApproveCompletion && (
             <div className="mt-2">
               <button 
-                onClick={() => onApproveCompletion(notif.postId!, (notif as any).senderId!)}
+                onClick={() => onApproveCompletion(notif.postId!, notif.senderId!)}
                 className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600"
               >
                 Approve Completion
@@ -137,5 +86,3 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({
     </div>
   );
 };
-
-export default NotificationPanel;
