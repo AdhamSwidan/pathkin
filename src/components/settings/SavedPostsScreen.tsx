@@ -31,6 +31,8 @@ const SavedPostsScreen: React.FC<SavedPostsScreenProps> = ({
   onSharePost,
   onToggleCompleted,
 }) => {
+  const validPosts = posts.filter((post): post is HydratedPost => 
+    post.author !== undefined
   const { t } = useTranslation();
 
   return (
