@@ -33,15 +33,17 @@ const SavedPostsScreen: React.FC<SavedPostsScreenProps> = ({
 }) => {
   const { t } = useTranslation();
 
+  const validPosts = posts.filter(post => post.author !== undefined);
+
   return (
     <div className="h-full flex flex-col bg-slate-50 dark:bg-neutral-950">
       <Header title={t('savedPosts')} onBack={onBack} />
       <div className="flex-grow overflow-y-auto p-2">
-        {posts.length > 0 ? (
-          posts.map(post => (
+        {validPosts.length > 0 ? (
+          validPosts.map(post => (
             <PostCard
               key={post.id}
-              post={post}
+              post={post as any}
               currentUser={currentUser}
               isGuest={false}
               onCommentClick={onSelectPost}

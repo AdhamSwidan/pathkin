@@ -41,9 +41,9 @@ const App: React.FC = () => {
   const [users, setUsers] = useState<User[]>(mockUsers);
   
   const [stories, setStories] = useState<Story[]>(mockStories);
-  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
+  const [notifications, _setNotifications] = useState<Notification[]>(mockNotifications);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
-  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+  const [selectedConversation, _setSelectedConversation] = useState<Conversation | null>(null);
   const [viewingStories, setViewingStories] = useState<Story[] | null>(null);
   const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
   const [viewingUser, setViewingUser] = useState<User | null>(null);
@@ -311,10 +311,43 @@ const App: React.FC = () => {
       });
   };
 
-  const handleToggleCompleted = (postId: string) => {
-    if (!currentUser || isGuest) {
-      showGuestToast();
-      return;
+  const handleApproveCompletion = async (postId: string, userId: string) => {
+  if (!currentUser) return;
+  
+  try {
+    const postRef = doc(db, "posts", postId);
+    await updateDoc(postRef, {
+      approvedCompletions: arrayUnion(userId)
+    });
+
+    // 2. إذا صاحب المنشور مش هو المستخدم الحالي، ابعت إشعار
+    if (post.authorId !== currentUser.id) {
+     const notificationRef = collection(db, "notifications");
+    await addDoc(notificationRef, {
+      type: 'completion_approved',
+      recipientId: userId,
+      senderId: currentUser.id,
+      postId: postId,
+      message: `${currentUser.name} approved your completion`,
+      read: false,
+      createdAt: serverTimestamp()
+    });
+    }
+
+    // 3. update local state immediately
+  setPosts(prev => prev.map(p => 
+      p.id === postId 
+        ? { 
+            ...p, 
+            approvedCompletions: [...(p.approvedCompletions || []), userId] 
+          }
+        : p
+    ));
+
+  } catch (error) {
+    console.error("Error approving completion:", error);
+  }
+};
     }
     const post = posts.find(p => p.id === postId);
     if (!post) return;
@@ -402,6 +435,160 @@ const App: React.FC = () => {
       const newAverageRating = ((currentAverage * currentTotalRatings) + rating) / newTotalRatings;
       return { ...user, averageRating: newAverageRating, totalRatings: newTotalRatings };
     });
+
+    const handleToggleCompleted = async (postId: string) => {
+  if (!currentUser) return;
+  
+  try {
+    const post = posts.find(p => p.id === postId);
+    if (!post) {
+      console.error("Post not found:", postId);
+      return;
+    }
+
+    // التحقق من التاريخ أولاً
+    const now = new Date();
+    const startDate = new Date(post.startDate);
+    const endDate = post.endDate ? new Date(post.endDate) : null;
+    
+    let canMarkAsDone = false;
+    let timeStatus = '';
+    
+    if (endDate) {
+      canMarkAsDone = now >= endDate;
+      timeStatus = now < endDate ? 'event_not_ended' : 'can_mark_done';
+    } else {
+      canMarkAsDone = now >= startDate;
+      timeStatus = now < startDate ? 'event_not_started' : 'can_mark_done';
+    }
+
+    if (!canMarkAsDone) {
+      setToastMessage(t(timeStatus === 'event_not_ended' ? 'eventNotEnded' : 'eventNotStarted'));
+      return;
+    }
+
+    // 1. أضف المستخدم لـ completedBy في الـ post
+    const postRef = doc(db, "posts", postId);
+    await updateDoc(postRef, {
+      completedBy: arrayUnion(currentUser.id),
+      approvedCompletions: arrayRemove(currentUser.id) // تأكد إنه مش موافق عليه
+    });
+
+    // 2. أضف activity log للمستخدم
+    const userRef = doc(db, "users", currentUser.id);
+    await updateDoc(userRef, {
+      activityLog: arrayUnion({
+        postId: postId,
+        status: 'pending',
+        timestamp: new Date().toISOString()
+      })
+    });
+
+    // 3. إذا صاحب المنشور مش هو المستخدم الحالي، ابعت إشعار
+    if (post.authorId !== currentUser.id) {
+      const notificationRef = collection(db, "notifications");
+      await addDoc(notificationRef, {
+        type: 'completion_pending',
+        recipientId: post.authorId,
+        senderId: currentUser.id,
+        senderName: currentUser.name,
+        postId: postId,
+        postTitle: post.title,
+        message: `${currentUser.name} marked your post "${post.title}" as completed and waiting for your approval`,
+        read: false,
+        createdAt: serverTimestamp()
+      });
+    }
+
+    // 4. update local state immediately
+    setPosts(prev => prev.map(p => 
+      p.id === postId 
+        ? { 
+            ...p, 
+            completedBy: [...(p.completedBy || []), currentUser.id],
+            approvedCompletions: (p.approvedCompletions || []).filter(id => id !== currentUser.id)
+          }
+        : p
+    ));
+
+    // update current user activity log
+    setCurrentUser(prev => prev ? {
+      ...prev,
+      activityLog: [
+        ...prev.activityLog,
+        {
+          postId: postId,
+          status: 'pending',
+          timestamp: new Date().toISOString()
+        }
+      ]
+    } : null);
+
+    setToastMessage("Completion marked! Waiting for post owner approval.");
+    
+  } catch (error) {
+    console.error("Error toggling completed:", error);
+    setToastMessage("Failed to mark as completed");
+  }
+};
+    // دالة للموافقة على الـ completion
+const handleApproveCompletion = async (postId: string, userId: string) => {
+  if (!currentUser) return;
+  
+  try {
+    const postRef = doc(db, "posts", postId);
+    
+    await updateDoc(postRef, {
+      approvedCompletions: arrayUnion(userId)
+    });
+
+    // 2. update الـ activity log للمستخدم
+    const userRef = doc(db, "users", userId);
+    const userDoc = await getDoc(userRef);
+    if (userDoc.exists()) {
+      const userData = userDoc.data();
+      const updatedActivityLog = userData.activityLog?.map((activity: any) => 
+        activity.postId === postId 
+          ? { ...activity, status: 'confirmed' }
+          : activity
+      ) || [];
+
+      await updateDoc(userRef, {
+        activityLog: updatedActivityLog
+      });
+    }
+
+    // 3. أرسل إشعار للمستخدم إنه تمت الموافقة
+    const notificationRef = collection(db, "notifications");
+    await addDoc(notificationRef, {
+      type: 'completion_approved',
+      recipientId: userId,
+      senderId: currentUser.id,
+      senderName: currentUser.name,
+      postId: postId,
+      postTitle: posts.find(p => p.id === postId)?.title || '',
+      message: `${currentUser.name} approved your completion`,
+      read: false,
+      createdAt: serverTimestamp()
+    });
+
+    // 4. update local state
+    setPosts(prev => prev.map(p => 
+      p.id === postId 
+        ? { 
+            ...p, 
+            approvedCompletions: [...(p.approvedCompletions || []), userId] 
+          }
+        : p
+    ));
+
+    setToastMessage("Completion approved successfully!");
+
+  } catch (error) {
+    console.error("Error approving completion:", error);
+    setToastMessage("Failed to approve completion");
+  }
+};
 
     setNotifications(prev => prev.filter(n => n.post?.id !== postId || n.type !== NotificationType.RateExperience));
 
@@ -787,11 +974,12 @@ const App: React.FC = () => {
       {isNotificationPanelOpen && (
           <div className="absolute top-0 right-0 z-50 w-full max-w-sm mt-2 mr-2">
               <NotificationPanel 
-                  notifications={notifications} 
+                  notifications={userNotifications} 
                   onClose={handleToggleNotifications} 
                   onConfirmAttendance={handleConfirmAttendance} 
-                  onRateExperience={(postId) => setRatingModalPost(posts.find(p => p.id === postId) || null)} 
-              />
+                  onRateExperience={(postId: string) => setRatingModalPost(hydratedPosts.find(p => p.id === postId) || null)}
+                  onApproveCompletion={handleApproveCompletion}
+                /> 
           </div>
       )}
       {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage(null)} />}

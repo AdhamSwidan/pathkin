@@ -43,7 +43,6 @@ import {
   GoogleAuthProvider, signInWithPopup, increment
 } from './services/firebase';
 
-
 const guestUser: User = {
     id: 'guest',
     name: 'Guest',
@@ -136,6 +135,7 @@ const App: React.FC = () => {
                 ...data,
                 id: doc.id,
                 createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() ?? new Date().toISOString(),
+               interestedUsers: data.interestedUsers || [],
             } as Post
         }));
     });
@@ -461,7 +461,7 @@ const App: React.FC = () => {
   const handleCreatePost = async (newPostData: Omit<Post, 'id' | 'authorId' | 'interestedUsers' | 'commentCount' | 'createdAt'>, mediaFile: File | null) => {
     if (!currentUser) return;
     try {
-        let media: Media[] | undefined = undefined;
+        let media: Media[] = [];
         if (mediaFile) {
             const mediaUrl = await uploadFile(mediaFile, `posts/${currentUser.id}/${Date.now()}_${mediaFile.name}`);
             media = [{ url: mediaUrl, type: mediaFile.type.startsWith('video') ? 'video' : 'image' }];
@@ -559,6 +559,12 @@ const App: React.FC = () => {
         await updateDoc(userRef, {
             reposts: isReposted ? arrayRemove(postId) : arrayUnion(postId)
         });
+      setCurrentUser(prev => prev ? {
+          ...prev,
+          reposts: isReposted 
+              ? prev.reposts.filter(id => id !== postId)
+              : [...prev.reposts, postId]
+      } : null);
     } catch (e) { console.error("Error toggling repost:", e); }
   };
 
@@ -570,6 +576,12 @@ const App: React.FC = () => {
         await updateDoc(userRef, {
             savedPosts: isSaved ? arrayRemove(postId) : arrayUnion(postId)
         });
+       setCurrentUser(prev => prev ? {
+          ...prev,
+          savedPosts: isSaved 
+              ? prev.savedPosts.filter(id => id !== postId)
+              : [...prev.savedPosts, postId]
+      } : null);
     } catch (e) { console.error("Error toggling save:", e); }
   };
   

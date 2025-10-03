@@ -1,5 +1,5 @@
 import React from 'react';
-import { PostType, User, ActivityStatus, HydratedPost } from '../types';
+import { PostType, User, HydratedPost, ActivityStatus } from '../types';
 import HeartIcon from './icons/HeartIcon';
 import CommentIcon from './icons/CommentIcon';
 import PlayIcon from './icons/PlayIcon';
@@ -13,7 +13,7 @@ import MessageIcon from './icons/MessageIcon';
 
 interface PostCardProps {
   post: HydratedPost;
-  currentUser: User | null; // Can be null for guests
+  currentUser: User | null;
   isGuest: boolean;
   onCommentClick: (post: HydratedPost) => void;
   onMessageClick: (user: User) => void;
@@ -36,9 +36,10 @@ const PostCard: React.FC<PostCardProps> = ({
   onRepostToggle,
   onSaveToggle,
   onSharePost,
-  onToggleCompleted
+  onToggleCompleted,
 }) => {
   const { t, language } = useTranslation();
+  
   const isInterested = currentUser ? post.interestedUsers.includes(currentUser.id) : false;
   const isReposted = currentUser ? currentUser.reposts.includes(post.id) : false;
   const isSaved = currentUser ? currentUser.savedPosts.includes(post.id) : false;
@@ -47,6 +48,37 @@ const PostCard: React.FC<PostCardProps> = ({
   const activityLogEntry = currentUser ? currentUser.activityLog.find(a => a.postId === post.id) : undefined;
   const activityStatus = activityLogEntry?.status;
 
+  // التحقق من التاريخ لتحديد إذا ممكن يكبس Done
+  const canMarkAsDone = () => {
+    const now = new Date();
+    const startDate = new Date(post.startDate);
+    const endDate = post.endDate ? new Date(post.endDate) : null;
+    
+    // إذا في تاريخ نهاية، لازم يكون بعد تاريخ النهاية
+    if (endDate) {
+      return now >= endDate;
+    }
+    // إذا ما في تاريخ نهاية، لازم يكون بعد تاريخ البداية
+    else {
+      return now >= startDate;
+    }
+  };
+
+  const getTimeStatus = () => {
+    const now = new Date();
+    const startDate = new Date(post.startDate);
+    const endDate = post.endDate ? new Date(post.endDate) : null;
+    
+    if (endDate && now < endDate) {
+      return 'event_not_ended';
+    } else if (!endDate && now < startDate) {
+      return 'event_not_started';
+    } else {
+      return 'can_mark_done';
+    }
+  };
+
+  const timeStatus = getTimeStatus();
 
   const getTagStyle = (type: PostType) => {
     switch (type) {
@@ -75,12 +107,32 @@ const PostCard: React.FC<PostCardProps> = ({
 
   const checkmarkColor = () => {
     if (activityStatus === ActivityStatus.Confirmed) return 'text-green-500';
-    if (activityStatus === ActivityStatus.Pending) return 'text-amber-500';
+    if (activityStatus === ActivityStatus.Pending) return 'text-yellow-500';
     return '';
   };
+
+  const getDoneButtonText = () => {
+    if (activityStatus === ActivityStatus.Confirmed) return '✓ Done';
+    if (activityStatus === ActivityStatus.Pending) return '⏳ Pending';
+    
+    if (timeStatus === 'event_not_ended') return 'Event not ended';
+    if (timeStatus === 'event_not_started') return 'Event not started';
+    
+    return 'Mark Done';
+  };
+
+  const isDoneButtonDisabled = isGuest || !currentUser || !canMarkAsDone();
   
   const actionButtonClasses = "flex items-center space-x-1 transition-colors";
   const disabledClasses = "cursor-not-allowed text-gray-400 dark:text-gray-600";
+
+  const handleDoneClick = () => {
+    if (!canMarkAsDone()) {
+      alert(t(timeStatus === 'event_not_ended' ? 'eventNotEnded' : 'eventNotStarted'));
+      return;
+    }
+    onToggleCompleted(post.id);
+  };
 
   return (
     <div className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-lg shadow-sm mb-4">
@@ -170,12 +222,15 @@ const PostCard: React.FC<PostCardProps> = ({
           <span>{post.commentCount || 0}</span>
         </button>
         <button
-          onClick={() => onToggleCompleted(post.id)}
-          disabled={isGuest}
-          className={`${actionButtonClasses} ${isGuest ? disabledClasses : `hover:text-green-500 ${checkmarkColor()}`}`}
+          onClick={handleDoneClick}
+          disabled={isDoneButtonDisabled}
+          className={`${actionButtonClasses} ${isDoneButtonDisabled ? disabledClasses : `hover:text-green-500 ${checkmarkColor()}`}`}
           aria-label="Mark as done"
         >
           <CheckCircleIcon className={activityStatus ? 'fill-current' : ''} />
+          <span className="text-xs whitespace-nowrap">
+            {getDoneButtonText()}
+          </span>
         </button>
         <button 
           onClick={() => onSharePost(post)}
