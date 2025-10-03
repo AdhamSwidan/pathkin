@@ -276,12 +276,14 @@ const App: React.FC = () => {
   }, [conversations, users, currentUser]);
   
   const hydratedNotifications = useMemo((): HydratedNotification[] => {
-    return notifications.map(notif => {
-        const user = users.find(u => u.id === notif.userId);
-        const adventure = hydratedAdventures.find(p => p.id === notif.adventureId);
-        if (!user) return null;
-        return { ...notif, user, adventure };
-    }).filter((n): n is HydratedNotification => n !== null);
+    return notifications.reduce<HydratedNotification[]>((acc, notif) => {
+      const user = users.find(u => u.id === notif.userId);
+      const adventure = hydratedAdventures.find(p => p.id === notif.adventureId);
+      if (user) {
+        acc.push({ ...notif, user, adventure });
+      }
+      return acc;
+    }, []);
   }, [notifications, users, hydratedAdventures]);
 
   
