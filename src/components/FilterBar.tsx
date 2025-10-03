@@ -1,15 +1,16 @@
 
+
 import React from 'react';
-import { PostType } from '../types';
+import { AdventureType } from '../types';
 import { useTranslation } from '../contexts/LanguageContext';
 
 interface FilterBarProps {
-  type: PostType | 'all';
+  type: AdventureType | 'all';
   city: string;
   budget: string;
   startDate: string;
   endDate: string;
-  onTypeChange: (value: PostType | 'all') => void;
+  onTypeChange: (value: AdventureType | 'all') => void;
   onCityChange: (value: string) => void;
   onBudgetChange: (value: string) => void;
   onStartDateChange: (date: string) => void;
@@ -37,22 +38,22 @@ const FilterBar: React.FC<FilterBarProps> = ({
       {/* Filters */}
       <div className="space-y-2">
         <div>
-            <label htmlFor="type-filter" className={labelBaseClasses}>{t('postType')}</label>
+            <label htmlFor="type-filter" className={labelBaseClasses}>{t('adventureType')}</label>
             <select 
               id="type-filter" 
               className={inputBaseClasses} 
-              aria-label="Filter by post type"
+              aria-label="Filter by adventure type"
               value={type}
-              onChange={(e) => onTypeChange(e.target.value as PostType | 'all')}
+              onChange={(e) => onTypeChange(e.target.value as AdventureType | 'all')}
             >
               <option value="all">{t('allTypes')}</option>
-              <option value={PostType.Travel}>{t('PostType_Travel')}</option>
-              <option value={PostType.Housing}>{t('PostType_Housing')}</option>
-              <option value={PostType.Event}>{t('PostType_Event')}</option>
-              <option value={PostType.Hiking}>{t('PostType_Hiking')}</option>
-              <option value={PostType.Camping}>{t('PostType_Camping')}</option>
-              <option value={PostType.Volunteering}>{t('PostType_Volunteering')}</option>
-              <option value={PostType.Cycling}>{t('PostType_Cycling')}</option>
+              <option value={AdventureType.Travel}>{t('AdventureType_Travel')}</option>
+              <option value={AdventureType.Housing}>{t('AdventureType_Housing')}</option>
+              <option value={AdventureType.Event}>{t('AdventureType_Event')}</option>
+              <option value={AdventureType.Hiking}>{t('AdventureType_Hiking')}</option>
+              <option value={AdventureType.Camping}>{t('AdventureType_Camping')}</option>
+              <option value={AdventureType.Volunteering}>{t('AdventureType_Volunteering')}</option>
+              <option value={AdventureType.Cycling}>{t('AdventureType_Cycling')}</option>
             </select>
         </div>
         

@@ -1,41 +1,41 @@
 import React, { useState, useMemo } from 'react';
-import { User, HydratedPost, HydratedStory, PostType } from '../types';
+import { User, HydratedAdventure, HydratedStory, AdventureType } from '../types';
 import Header from './Header';
-import PostCard from './PostCard';
+import AdventureCard from './AdventureCard';
 import StoryReel from './StoryReel';
 import BellIcon from './icons/BellIcon';
 import MessageIcon from './icons/MessageIcon';
 import { useTranslation } from '../contexts/LanguageContext';
-import PostTypeFilterBar from './PostTypeFilterBar';
+import AdventureTypeFilterBar from './AdventureTypeFilterBar';
 
 interface FeedScreenProps {
-  posts: HydratedPost[];
+  adventures: HydratedAdventure[];
   stories: HydratedStory[];
   currentUser: User;
-  onSelectPost: (post: HydratedPost) => void;
+  onSelectAdventure: (adventure: HydratedAdventure) => void;
   onSendMessage: (user: User) => void;
-  onToggleInterest: (postId: string) => void;
+  onToggleInterest: (adventureId: string) => void;
   onSelectStories: (stories: HydratedStory[]) => void;
   onAddStory: () => void;
   onNotificationClick: () => void;
   hasUnreadNotifications: boolean;
   onNavigateToChat: () => void;
   onViewProfile: (user: User) => void;
-  onRepostToggle: (postId: string) => void;
-  onSaveToggle: (postId: string) => void;
-  onSharePost: (post: HydratedPost) => void;
-  onToggleCompleted: (postId: string) => void;
+  onRepostToggle: (adventureId: string) => void;
+  onSaveToggle: (adventureId: string) => void;
+  onShareAdventure: (adventure: HydratedAdventure) => void;
+  onToggleCompleted: (adventureId: string) => void;
   isGuest: boolean;
-  onViewLocationOnMap: (post: HydratedPost) => void;
-  onDeletePost: (postId: string) => void;
-  onEditPost: (post: HydratedPost) => void;
+  onViewLocationOnMap: (adventure: HydratedAdventure) => void;
+  onDeleteAdventure: (adventureId: string) => void;
+  onEditAdventure: (adventure: HydratedAdventure) => void;
 }
 
 const FeedScreen: React.FC<FeedScreenProps> = ({ 
-  posts, 
+  adventures, 
   stories, 
   currentUser, 
-  onSelectPost, 
+  onSelectAdventure, 
   onSendMessage, 
   onToggleInterest, 
   onSelectStories,
@@ -46,22 +46,22 @@ const FeedScreen: React.FC<FeedScreenProps> = ({
   onViewProfile,
   onRepostToggle,
   onSaveToggle,
-  onSharePost,
+  onShareAdventure,
   onToggleCompleted,
   isGuest,
   onViewLocationOnMap,
-  onDeletePost,
-  onEditPost,
+  onDeleteAdventure,
+  onEditAdventure,
 }) => {
   const { t } = useTranslation();
-  const [selectedPostType, setSelectedPostType] = useState<PostType | 'all'>('all');
+  const [selectedAdventureType, setSelectedAdventureType] = useState<AdventureType | 'all'>('all');
 
-  const filteredPosts = useMemo(() => {
-    if (selectedPostType === 'all') {
-      return posts;
+  const filteredAdventures = useMemo(() => {
+    if (selectedAdventureType === 'all') {
+      return adventures;
     }
-    return posts.filter(post => post.type === selectedPostType);
-  }, [posts, selectedPostType]);
+    return adventures.filter(adventure => adventure.type === selectedAdventureType);
+  }, [adventures, selectedAdventureType]);
 
   const headerActions = (
     <div className="flex items-center space-x-2">
@@ -85,35 +85,35 @@ const FeedScreen: React.FC<FeedScreenProps> = ({
       />
       <StoryReel stories={stories} currentUser={currentUser} onSelectStories={onSelectStories} onAddStory={onAddStory} />
       
-      <PostTypeFilterBar 
-        selectedType={selectedPostType} 
-        onSelectType={setSelectedPostType} 
+      <AdventureTypeFilterBar 
+        selectedType={selectedAdventureType} 
+        onSelectType={setSelectedAdventureType} 
       />
 
       <div className="px-2 pt-2">
-        {filteredPosts.map(post => (
-          <PostCard 
-            key={post.id} 
-            post={post} 
+        {filteredAdventures.map(adventure => (
+          <AdventureCard 
+            key={adventure.id} 
+            adventure={adventure} 
             currentUser={currentUser}
             isGuest={isGuest}
-            onCommentClick={onSelectPost}
+            onCommentClick={onSelectAdventure}
             onMessageClick={onSendMessage}
             onInterestToggle={onToggleInterest}
             onViewProfile={onViewProfile}
             onRepostToggle={onRepostToggle}
             onSaveToggle={onSaveToggle}
-            onSharePost={onSharePost}
+            onShareAdventure={onShareAdventure}
             onToggleCompleted={onToggleCompleted}
             onViewLocationOnMap={onViewLocationOnMap}
-            onDeletePost={onDeletePost}
-            onEditPost={onEditPost}
+            onDeleteAdventure={onDeleteAdventure}
+            onEditAdventure={onEditAdventure}
           />
         ))}
-        {filteredPosts.length === 0 && (
+        {filteredAdventures.length === 0 && (
           <div className="text-center py-10 px-4">
-            <p className="text-gray-600 dark:text-gray-400 font-semibold">{t('noPostsToShow')}</p>
-            <p className="text-gray-500 dark:text-gray-500 text-sm mt-1">{selectedPostType === 'all' ? t('checkPrivacySettings') : t('tryAdjustingFilters')}</p>
+            <p className="text-gray-600 dark:text-gray-400 font-semibold">{t('noAdventuresToShow')}</p>
+            <p className="text-gray-500 dark:text-gray-500 text-sm mt-1">{selectedAdventureType === 'all' ? t('checkPrivacySettings') : t('tryAdjustingFilters')}</p>
           </div>
         )}
       </div>

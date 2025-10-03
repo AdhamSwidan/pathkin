@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import { HydratedPost } from '../types';
+import { HydratedAdventure } from '../types';
 import StarIcon from './icons/StarIcon';
 import { useTranslation } from '../contexts/LanguageContext';
 
 interface RatingModalProps {
-  post: HydratedPost;
+  adventure: HydratedAdventure;
   onClose: () => void;
-  onSubmit: (postId: string, rating: number) => void;
+  onSubmit: (adventureId: string, rating: number) => void;
 }
 
-const RatingModal: React.FC<RatingModalProps> = ({ post, onClose, onSubmit }) => {
+const RatingModal: React.FC<RatingModalProps> = ({ adventure, onClose, onSubmit }) => {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const { t } = useTranslation();
@@ -19,7 +19,7 @@ const RatingModal: React.FC<RatingModalProps> = ({ post, onClose, onSubmit }) =>
       alert("Please select a rating.");
       return;
     }
-    onSubmit(post.id, rating);
+    onSubmit(adventure.id, rating);
   };
 
   return (
@@ -27,7 +27,7 @@ const RatingModal: React.FC<RatingModalProps> = ({ post, onClose, onSubmit }) =>
       <div className="bg-white dark:bg-neutral-900 rounded-lg shadow-xl w-full max-w-sm flex flex-col p-6 text-center">
         <h2 className="text-xl font-bold dark:text-white mb-2">{t('rateYourExperience')}</h2>
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-            {t('howWasExperience', { name: post.author.name, title: post.title })}
+            {t('howWasExperience', { name: adventure.author.name, title: adventure.title })}
         </p>
         
         <div className="flex justify-center items-center space-x-2 my-4">

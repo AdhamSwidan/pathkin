@@ -1,14 +1,14 @@
 import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
-import { Post } from '../types';
+import { Adventure } from '../types';
 import Header from './Header';
 import { useTranslation } from '../contexts/LanguageContext';
 
 interface MapScreenProps {
-  postsToShow: Post[];
+  adventuresToShow: Adventure[];
 }
 
-const MapScreen: React.FC<MapScreenProps> = ({ postsToShow }) => {
+const MapScreen: React.FC<MapScreenProps> = ({ adventuresToShow }) => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<L.Map | null>(null); // To store the map instance
   const { t } = useTranslation();
@@ -37,10 +37,10 @@ const MapScreen: React.FC<MapScreenProps> = ({ postsToShow }) => {
 
     // If map is not initialized, create it
     if (!map) {
-      const firstPostWithCoords = postsToShow.find(p => p.coordinates);
-      const centerLat = firstPostWithCoords?.coordinates?.lat ?? 51.505; // Default to London
-      const centerLng = firstPostWithCoords?.coordinates?.lng ?? -0.09;
-      const zoom = firstPostWithCoords ? 10 : 2;
+      const firstAdventureWithCoords = adventuresToShow.find(p => p.coordinates);
+      const centerLat = firstAdventureWithCoords?.coordinates?.lat ?? 51.505; // Default to London
+      const centerLng = firstAdventureWithCoords?.coordinates?.lng ?? -0.09;
+      const zoom = firstAdventureWithCoords ? 10 : 2;
 
       map = L.map(mapContainerRef.current).setView([centerLat, centerLng], zoom);
       mapInstanceRef.current = map;
@@ -53,12 +53,12 @@ const MapScreen: React.FC<MapScreenProps> = ({ postsToShow }) => {
     // Layer to hold markers, so we can clear it easily
     const markerLayer = L.layerGroup().addTo(map);
 
-    // Add markers for each post
+    // Add markers for each adventure
     const markers: L.Marker[] = [];
-    postsToShow.forEach(post => {
-      if (post.coordinates) {
-        const marker = L.marker([post.coordinates.lat, post.coordinates.lng])
-          .bindPopup(`<b>${post.title}</b><br>${post.location}`);
+    adventuresToShow.forEach(adventure => {
+      if (adventure.coordinates) {
+        const marker = L.marker([adventure.coordinates.lat, adventure.coordinates.lng])
+          .bindPopup(`<b>${adventure.title}</b><br>${adventure.location}`);
         markerLayer.addLayer(marker);
         markers.push(marker);
       }
@@ -71,11 +71,11 @@ const MapScreen: React.FC<MapScreenProps> = ({ postsToShow }) => {
     }
 
 
-    // Cleanup function: remove the markers layer when the component unmounts or postsToShow change.
+    // Cleanup function: remove the markers layer when the component unmounts or adventuresToShow change.
     return () => {
       markerLayer.clearLayers();
     };
-  }, [postsToShow]); // Re-run effect when postsToShow change
+  }, [adventuresToShow]); // Re-run effect when adventuresToShow change
 
   // Separate effect for map removal on unmount
   useEffect(() => {

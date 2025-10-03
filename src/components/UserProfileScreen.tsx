@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { User, ActivityStatus, HydratedPost } from '../types';
+import { User, ActivityStatus, HydratedAdventure } from '../types';
 import Header from './Header';
-import PostCard from './PostCard';
+import AdventureCard from './AdventureCard';
 import GridIcon from './icons/GridIcon';
 import RepostIcon from './icons/RepostIcon';
 import ShareIcon from './icons/ShareIcon';
@@ -16,33 +16,33 @@ import UserIcon from './icons/UserIcon';
 interface UserProfileScreenProps {
   user: User;
   currentUser: User;
-  allPosts: HydratedPost[];
+  allAdventures: HydratedAdventure[];
   onBack: () => void;
-  onSelectPost: (post: HydratedPost) => void;
+  onSelectAdventure: (adventure: HydratedAdventure) => void;
   onSendMessage: (user: User) => void;
-  onToggleInterest: (postId: string) => void;
+  onToggleInterest: (adventureId: string) => void;
   onFollowToggle: (userId: string) => void;
   onViewProfile: (user: User) => void;
-  onRepostToggle: (postId: string) => void;
-  onSaveToggle: (postId: string) => void;
+  onRepostToggle: (adventureId: string) => void;
+  onSaveToggle: (adventureId: string) => void;
   onShareProfile: (user: User) => void;
-  onSharePost: (post: HydratedPost) => void;
-  onToggleCompleted: (postId: string) => void;
+  onShareAdventure: (adventure: HydratedAdventure) => void;
+  onToggleCompleted: (adventureId: string) => void;
   onOpenFollowList: (user: User, listType: 'followers' | 'following') => void;
   isGuest: boolean;
-  onViewLocationOnMap: (post: HydratedPost) => void;
-  onDeletePost: (postId: string) => void;
-  onEditPost: (post: HydratedPost) => void;
+  onViewLocationOnMap: (adventure: HydratedAdventure) => void;
+  onDeleteAdventure: (adventureId: string) => void;
+  onEditAdventure: (adventure: HydratedAdventure) => void;
 }
 
-type ProfileTab = 'posts' | 'reposts' | 'completed' | 'stats';
+type ProfileTab = 'adventures' | 'reposts' | 'completed' | 'stats';
 
 const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ 
   user, 
   currentUser, 
-  allPosts,
+  allAdventures,
   onBack, 
-  onSelectPost, 
+  onSelectAdventure, 
   onSendMessage, 
   onToggleInterest,
   onFollowToggle,
@@ -50,15 +50,15 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
   onRepostToggle,
   onSaveToggle,
   onShareProfile,
-  onSharePost,
+  onShareAdventure,
   onToggleCompleted,
   onOpenFollowList,
   isGuest,
   onViewLocationOnMap,
-  onDeletePost,
-  onEditPost,
+  onDeleteAdventure,
+  onEditAdventure,
 }) => {
-  const [activeTab, setActiveTab] = useState<ProfileTab>('posts');
+  const [activeTab, setActiveTab] = useState<ProfileTab>('adventures');
   const { t } = useTranslation();
 
   const isFollowing = currentUser.following.includes(user.id);
@@ -70,35 +70,35 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
     </button>
   );
 
-  const { userPosts, repostedPosts, completedPosts } = useMemo(() => {
-    // Determine which posts are visible to the current user
-    const visibleUserPosts = allPosts.filter(post => {
-        if (post.author.id !== user.id) return false;
+  const { userAdventures, repostedAdventures, completedAdventures } = useMemo(() => {
+    // Determine which adventures are visible to the current user
+    const visibleUserAdventures = allAdventures.filter(adventure => {
+        if (adventure.author.id !== user.id) return false;
         
-        // If profile is private, only followers can see posts, respecting post-level privacy
+        // If profile is private, only followers can see adventures, respecting adventure-level privacy
         if(user.isPrivate && !isFollowing && !isGuest) return false;
         if(user.isPrivate && isGuest) return false;
 
-        if (post.privacy === 'Public') return true;
-        if(isGuest) return false; // Guests only see public posts
+        if (adventure.privacy === 'Public') return true;
+        if(isGuest) return false; // Guests only see public adventures
 
-        if (post.privacy === 'Followers' && isFollowing) return true;
-        if (post.privacy === 'Twins' && currentUser.birthday && user.birthday && currentUser.birthday.substring(5) === user.birthday.substring(5)) return true;
+        if (adventure.privacy === 'Followers' && isFollowing) return true;
+        if (adventure.privacy === 'Twins' && currentUser.birthday && user.birthday && currentUser.birthday.substring(5) === user.birthday.substring(5)) return true;
         return false;
     });
 
-    const repostedPosts = allPosts.filter(p => user.reposts.includes(p.id));
-    const completedPosts = allPosts.filter(p => 
-        user.activityLog.some(a => a.postId === p.id && a.status === ActivityStatus.Confirmed)
+    const repostedAdventures = allAdventures.filter(p => user.repostedAdventures.includes(p.id));
+    const completedAdventures = allAdventures.filter(p => 
+        user.activityLog.some(a => a.adventureId === p.id && a.status === ActivityStatus.Confirmed)
     );
-    return { userPosts: visibleUserPosts, repostedPosts, completedPosts };
-  }, [allPosts, user, currentUser, isFollowing, isGuest]);
+    return { userAdventures: visibleUserAdventures, repostedAdventures, completedAdventures };
+  }, [allAdventures, user, currentUser, isFollowing, isGuest]);
 
-  const renderedPosts = useMemo(() => {
-    if (activeTab === 'reposts') return repostedPosts;
-    if (activeTab === 'completed') return completedPosts;
-    return userPosts;
-  }, [activeTab, userPosts, repostedPosts, completedPosts]);
+  const renderedAdventures = useMemo(() => {
+    if (activeTab === 'reposts') return repostedAdventures;
+    if (activeTab === 'completed') return completedAdventures;
+    return userAdventures;
+  }, [activeTab, userAdventures, repostedAdventures, completedAdventures]);
 
   const TabButton: React.FC<{ tab: ProfileTab; icon: React.ReactNode; }> = ({ tab, icon }) => {
     const isActive = activeTab === tab;
@@ -125,33 +125,33 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
         );
     }
     if (activeTab === 'stats') {
-      return <StatsScreen user={user} allPosts={allPosts} />;
+      return <StatsScreen user={user} allAdventures={allAdventures} />;
     }
 
     return (
       <div className="mt-4 px-2">
         <div className="space-y-4">
-           {renderedPosts.map(post => (
-              <PostCard 
-                key={post.id} 
-                post={post} 
+           {renderedAdventures.map(adventure => (
+              <AdventureCard 
+                key={adventure.id} 
+                adventure={adventure} 
                 currentUser={currentUser}
                 isGuest={isGuest}
-                onCommentClick={onSelectPost}
+                onCommentClick={onSelectAdventure}
                 onMessageClick={onSendMessage}
                 onInterestToggle={onToggleInterest}
                 onViewProfile={onViewProfile}
                 onRepostToggle={onRepostToggle}
                 onSaveToggle={onSaveToggle}
-                onSharePost={onSharePost}
+                onShareAdventure={onShareAdventure}
                 onToggleCompleted={onToggleCompleted}
                 onViewLocationOnMap={onViewLocationOnMap}
-                onDeletePost={onDeletePost}
-                onEditPost={onEditPost}
+                onDeleteAdventure={onDeleteAdventure}
+                onEditAdventure={onEditAdventure}
               />
             ))}
-             {renderedPosts.length === 0 && (
-                <p className="text-center text-gray-500 dark:text-gray-400 py-8">{t('noPostsInSection')}</p>
+             {renderedAdventures.length === 0 && (
+                <p className="text-center text-gray-500 dark:text-gray-400 py-8">{t('noAdventuresInSection')}</p>
              )}
         </div>
       </div>
@@ -191,7 +191,7 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
             <div className="flex-grow ms-4 flex items-center">
               <div className="flex justify-around w-full">
                   <div className="text-center">
-                      <p className="font-bold text-lg text-gray-800 dark:text-gray-100">{userPosts.length}</p>
+                      <p className="font-bold text-lg text-gray-800 dark:text-gray-100">{userAdventures.length}</p>
                       <p className="text-xs font-semibold text-gray-600 dark:text-gray-500">{t('adventures')}</p>
                   </div>
                   <button className="text-center disabled:cursor-default" onClick={() => onOpenFollowList(user, 'followers')} disabled={!canViewProfile || !user.privacySettings.showFollowLists}>
@@ -242,7 +242,7 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
         {/* Tabs */}
         {canViewProfile &&
             <div className="mt-4 border-t border-b border-gray-200 dark:border-neutral-800 flex">
-                <TabButton tab="posts" icon={<GridIcon />} />
+                <TabButton tab="adventures" icon={<GridIcon />} />
                 <TabButton tab="reposts" icon={<RepostIcon />} />
                 {user.privacySettings.showCompletedActivities && <TabButton tab="completed" icon={<CheckCircleIcon />} />}
                 {user.privacySettings.showStats && <TabButton tab="stats" icon={<BarChartIcon />} />}

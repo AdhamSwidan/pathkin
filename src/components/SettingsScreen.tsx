@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import Header from './Header';
 import EditIcon from './icons/EditIcon';
@@ -50,8 +51,8 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack, onNavigate, onL
           />
            <SettingsItem 
             icon={<BookmarkIcon />} 
-            label={t('savedPosts')} 
-            onClick={() => onNavigate('savedPosts')}
+            label={t('savedAdventures')} 
+            onClick={() => onNavigate('savedAdventures')}
           />
            <SettingsItem 
             icon={<ShieldIcon />} 

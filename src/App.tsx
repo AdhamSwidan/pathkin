@@ -2,10 +2,10 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import BottomNav from './components/BottomNav';
 import FeedScreen from './components/FeedScreen';
 import MapScreen from './components/MapScreen';
-import CreatePostScreen from './components/CreatePostScreen';
+import CreateAdventureScreen from './components/CreateAdventureScreen';
 import ChatScreen from './components/ChatScreen';
 import ProfileScreen from './components/ProfileScreen';
-import PostDetailModal from './components/PostDetailModal';
+import AdventureDetailModal from './components/AdventureDetailModal';
 import ChatDetailScreen from './components/ChatDetailScreen';
 import FindTwinsScreen from './components/FindTwinsScreen';
 import StoryViewer from './components/StoryViewer';
@@ -24,12 +24,11 @@ import PrivacySecurityScreen from './components/settings/PrivacySecurityScreen';
 import LanguageScreen from './components/settings/LanguageScreen';
 import ForgotPasswordModal from './components/ForgotPasswordModal';
 import AddStoryModal from './components/AddStoryModal';
-// FIX: Import EditPostModal to handle post editing.
-import EditPostModal from './components/EditPostModal';
-import SavedPostsScreen from './components/settings/SavedPostsScreen';
+import EditAdventureModal from './components/EditAdventureModal';
+import SavedAdventuresScreen from './components/settings/SavedAdventuresScreen';
 import { useTranslation } from './contexts/LanguageContext';
 
-import { Screen, Post, PostType, User, Story, Notification, PostPrivacy, HydratedPost, HydratedStory, ActivityStatus, NotificationType, HydratedConversation, Conversation, Message, HydratedComment, Comment } from './types';
+import { Screen, Adventure, AdventureType, User, Story, Notification, AdventurePrivacy, HydratedAdventure, HydratedStory, ActivityStatus, NotificationType, HydratedConversation, Conversation, Message, HydratedComment, Comment } from './types';
 import {
   auth, db, storage,
   onAuthStateChanged,
@@ -53,12 +52,12 @@ const guestUser: User = {
     email: '',
     avatarUrl: `https://picsum.photos/seed/guest/200`,
     coverUrl: `https://picsum.photos/seed/guest-cover/800/200`,
-    bio: 'A guest exploring WanderLodge.',
+    bio: 'A guest exploring Pathkin.',
     interests: [],
     followers: [],
     following: [],
-    reposts: [],
-    savedPosts: [],
+    repostedAdventures: [],
+    savedAdventures: [],
     activityLog: [],
     isPrivate: false,
     privacySettings: {
@@ -76,21 +75,21 @@ const App: React.FC = () => {
   const [activeScreen, setActiveScreen] = useState<Screen>('feed');
   const [screenStack, setScreenStack] = useState<Screen[]>(['feed']);
 
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [adventures, setAdventures] = useState<Adventure[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [stories, setStories] = useState<Story[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
   
-  const [selectedPost, setSelectedPost] = useState<HydratedPost | null>(null);
+  const [selectedAdventure, setSelectedAdventure] = useState<HydratedAdventure | null>(null);
   const [selectedConversationUser, setSelectedConversationUser] = useState<User | null>(null);
   const [viewingStories, setViewingStories] = useState<HydratedStory[] | null>(null);
   const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
   const [viewingUser, setViewingUser] = useState<User | null>(null);
-  const [mapPostsToShow, setMapPostsToShow] = useState<Post[] | null>(null);
+  const [mapAdventuresToShow, setMapAdventuresToShow] = useState<Adventure[] | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [ratingModalPost, setRatingModalPost] = useState<HydratedPost | null>(null);
+  const [ratingModalAdventure, setRatingModalAdventure] = useState<HydratedAdventure | null>(null);
   const [followListModal, setFollowListModal] = useState<{
     isOpen: boolean;
     user: User | null;
@@ -98,8 +97,7 @@ const App: React.FC = () => {
   }>({ isOpen: false, user: null, listType: null });
   const [isForgotPasswordModalOpen, setIsForgotPasswordModalOpen] = useState(false);
   const [isAddStoryModalOpen, setIsAddStoryModalOpen] = useState(false);
-  // FIX: Add state to manage the post being edited.
-  const [editingPost, setEditingPost] = useState<HydratedPost | null>(null);
+  const [editingAdventure, setEditingAdventure] = useState<HydratedAdventure | null>(null);
   
   const mainContentRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
@@ -125,22 +123,22 @@ const App: React.FC = () => {
     return () => unsubscribe();
   }, []);
   
-  // Global Firestore Listeners (Users, Posts, Stories)
+  // Global Firestore Listeners (Users, Adventures, Stories)
   useEffect(() => {
     const usersQuery = query(collection(db, "users"));
     const unsubUsers = onSnapshot(usersQuery, (snapshot) => {
         setUsers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User)));
     });
 
-    const postsQuery = query(collection(db, "posts"), orderBy("createdAt", "desc"));
-    const unsubPosts = onSnapshot(postsQuery, (snapshot) => {
-        setPosts(snapshot.docs.map(doc => {
+    const adventuresQuery = query(collection(db, "adventures"), orderBy("createdAt", "desc"));
+    const unsubAdventures = onSnapshot(adventuresQuery, (snapshot) => {
+        setAdventures(snapshot.docs.map(doc => {
             const data = doc.data();
             return {
                 ...data,
                 id: doc.id,
                 createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() ?? new Date().toISOString(),
-            } as Post
+            } as Adventure
         }));
     });
 
@@ -158,7 +156,7 @@ const App: React.FC = () => {
 
     return () => {
         unsubUsers();
-        unsubPosts();
+        unsubAdventures();
         unsubStories();
     };
   }, []);
@@ -207,15 +205,15 @@ const App: React.FC = () => {
         unsubNotifications();
         unsubConversations();
     };
-  }, [currentUser, users, posts]);
+  }, [currentUser, users, adventures]);
 
-  // Listener for comments when a post detail modal is opened
+  // Listener for comments when an adventure detail modal is opened
   useEffect(() => {
-    if (!selectedPost) {
+    if (!selectedAdventure) {
       setComments([]);
       return;
     }
-    const commentsQuery = query(collection(db, 'posts', selectedPost.id, 'comments'), orderBy('createdAt', 'asc'));
+    const commentsQuery = query(collection(db, 'adventures', selectedAdventure.id, 'comments'), orderBy('createdAt', 'asc'));
     const unsubscribe = onSnapshot(commentsQuery, (snapshot) => {
       const fetchedComments = snapshot.docs.map(doc => ({
         id: doc.id,
@@ -225,16 +223,16 @@ const App: React.FC = () => {
       setComments(fetchedComments);
     });
     return () => unsubscribe();
-  }, [selectedPost]);
+  }, [selectedAdventure]);
 
-  const hydratedPosts = useMemo((): HydratedPost[] => {
-    return posts
-      .map(post => {
-        const author = users.find(u => u.id === post.authorId);
-        return author ? { ...post, author } : null;
+  const hydratedAdventures = useMemo((): HydratedAdventure[] => {
+    return adventures
+      .map(adventure => {
+        const author = users.find(u => u.id === adventure.authorId);
+        return author ? { ...adventure, author } : null;
       })
-      .filter((post): post is HydratedPost => post !== null);
-  }, [posts, users]);
+      .filter((adventure): adventure is HydratedAdventure => adventure !== null);
+  }, [adventures, users]);
   
   const hydratedStories = useMemo((): HydratedStory[] => {
       return stories
@@ -263,10 +261,10 @@ const App: React.FC = () => {
   }, [conversations, users, currentUser]);
 
   
-  const savedPosts = useMemo(() => {
+  const savedAdventures = useMemo(() => {
     if (!currentUser) return [];
-    return hydratedPosts.filter(p => currentUser.savedPosts.includes(p.id));
-  }, [hydratedPosts, currentUser]);
+    return hydratedAdventures.filter(p => currentUser.savedAdventures.includes(p.id));
+  }, [hydratedAdventures, currentUser]);
 
   const userNotifications = useMemo(() => {
     if (!currentUser) return [];
@@ -306,14 +304,13 @@ const App: React.FC = () => {
   const handleLogin = async (email: string, pass: string) => {
     try {
         await signInWithEmailAndPassword(auth, email, pass);
-        // Auth listener will handle setting user and guest state
     } catch (error) {
         console.error("Login failed:", error);
         alert(t('invalidCredentials'));
     }
   };
   
-  const handleSignUp = async (name: string, username: string, email: string, pass: string, birthday: string, gender: string) => {
+  const handleSignUp = async (name: string, username: string, email: string, pass: string, birthday: string, gender: string, country: string) => {
       try {
         const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
         const user = userCredential.user;
@@ -329,10 +326,11 @@ const App: React.FC = () => {
             interests: [],
             birthday,
             gender: gender as User['gender'],
+            country,
             followers: [],
             following: [],
-            reposts: [],
-            savedPosts: [],
+            repostedAdventures: [],
+            savedAdventures: [],
             activityLog: [],
             isPrivate: false,
             privacySettings: {
@@ -369,7 +367,6 @@ const App: React.FC = () => {
       const userDocRef = doc(db, 'users', user.uid);
       const docSnap = await getDoc(userDocRef);
 
-      // If user is new, create a document for them in Firestore
       if (!docSnap.exists()) {
         const newUser: Omit<User, 'id'> = {
             name: user.displayName || 'New User',
@@ -381,8 +378,8 @@ const App: React.FC = () => {
             interests: [],
             followers: [],
             following: [],
-            reposts: [],
-            savedPosts: [],
+            repostedAdventures: [],
+            savedAdventures: [],
             activityLog: [],
             isPrivate: false,
             privacySettings: {
@@ -462,11 +459,11 @@ const App: React.FC = () => {
     }
   };
 
-  const handleCreatePost = async (newPostData: Omit<Post, 'id' | 'authorId' | 'interestedUsers' | 'commentCount' | 'createdAt'>, mediaFile: File | null) => {
+  const handleCreateAdventure = async (newAdventureData: Omit<Adventure, 'id' | 'authorId' | 'interestedUsers' | 'commentCount' | 'createdAt'>, mediaFile: File | null) => {
     if (!currentUser) return;
     try {
-        const postToSave: any = {
-            ...newPostData,
+        const adventureToSave: any = {
+            ...newAdventureData,
             authorId: currentUser.id,
             interestedUsers: [],
             commentCount: 0,
@@ -474,20 +471,18 @@ const App: React.FC = () => {
         };
 
         if (mediaFile) {
-            const mediaUrl = await uploadFile(mediaFile, `posts/${currentUser.id}/${Date.now()}_${mediaFile.name}`);
-            postToSave.media = [{ url: mediaUrl, type: mediaFile.type.startsWith('video') ? 'video' : 'image' }];
-        } else {
-            delete postToSave.media;
+            const mediaUrl = await uploadFile(mediaFile, `adventures/${currentUser.id}/${Date.now()}_${mediaFile.name}`);
+            adventureToSave.media = [{ url: mediaUrl, type: mediaFile.type.startsWith('video') ? 'video' : 'image' }];
         }
         
-        const postsCollectionRef = collection(db, 'posts');
-        await addDoc(postsCollectionRef, postToSave);
+        const adventuresCollectionRef = collection(db, 'adventures');
+        await addDoc(adventuresCollectionRef, adventureToSave);
 
         handleSetActiveScreen('feed');
-        setToastMessage(t('postPublished'));
+        setToastMessage(t('adventurePublished'));
     } catch(e) {
-        console.error("Error creating post:", e);
-        setToastMessage("Failed to publish post.");
+        console.error("Error creating adventure:", e);
+        setToastMessage("Failed to publish adventure.");
     }
   };
   
@@ -540,16 +535,16 @@ const App: React.FC = () => {
     }
   };
 
-  const handleToggleInterest = async (postId: string) => {
+  const handleToggleInterest = async (adventureId: string) => {
     if (!currentUser) { showGuestToast(); return; }
-    const postRef = doc(db, "posts", postId);
-    const post = posts.find(p => p.id === postId);
-    if (!post) return;
+    const adventureRef = doc(db, "adventures", adventureId);
+    const adventure = adventures.find(p => p.id === adventureId);
+    if (!adventure) return;
     
-    const isInterested = post.interestedUsers.includes(currentUser.id);
+    const isInterested = adventure.interestedUsers.includes(currentUser.id);
     
     try {
-        await updateDoc(postRef, {
+        await updateDoc(adventureRef, {
             interestedUsers: isInterested ? arrayRemove(currentUser.id) : arrayUnion(currentUser.id)
         });
     } catch (e) {
@@ -557,24 +552,24 @@ const App: React.FC = () => {
     }
   };
   
-  const handleRepostToggle = async (postId: string) => {
+  const handleRepostToggle = async (adventureId: string) => {
     if (!currentUser) { showGuestToast(); return; }
     const userRef = doc(db, "users", currentUser.id);
-    const isReposted = currentUser.reposts.includes(postId);
+    const isReposted = currentUser.repostedAdventures.includes(adventureId);
     try {
         await updateDoc(userRef, {
-            reposts: isReposted ? arrayRemove(postId) : arrayUnion(postId)
+            repostedAdventures: isReposted ? arrayRemove(adventureId) : arrayUnion(adventureId)
         });
     } catch (e) { console.error("Error toggling repost:", e); }
   };
 
-  const handleSaveToggle = async (postId: string) => {
+  const handleSaveToggle = async (adventureId: string) => {
     if (!currentUser) { showGuestToast(); return; }
     const userRef = doc(db, "users", currentUser.id);
-    const isSaved = currentUser.savedPosts.includes(postId);
+    const isSaved = currentUser.savedAdventures.includes(adventureId);
     try {
         await updateDoc(userRef, {
-            savedPosts: isSaved ? arrayRemove(postId) : arrayUnion(postId)
+            savedAdventures: isSaved ? arrayRemove(adventureId) : arrayUnion(adventureId)
         });
     } catch (e) { console.error("Error toggling save:", e); }
   };
@@ -587,7 +582,6 @@ const App: React.FC = () => {
   const handleSendMessage = async (receiverId: string, text: string) => {
     if (!currentUser) return;
   
-    // Generate a consistent conversation ID
     const convoId = [currentUser.id, receiverId].sort().join('_');
     const convoRef = doc(db, 'conversations', convoId);
     const messagesRef = collection(convoRef, 'messages');
@@ -616,11 +610,11 @@ const App: React.FC = () => {
     }
   };
 
-  const handleAddComment = async (postId: string, text: string) => {
+  const handleAddComment = async (adventureId: string, text: string) => {
     if (!currentUser) { showGuestToast(); return; }
 
-    const postRef = doc(db, "posts", postId);
-    const commentsRef = collection(postRef, 'comments');
+    const adventureRef = doc(db, "adventures", adventureId);
+    const commentsRef = collection(adventureRef, 'comments');
     
     try {
         await addDoc(commentsRef, {
@@ -628,20 +622,20 @@ const App: React.FC = () => {
             text,
             createdAt: serverTimestamp(),
         });
-        await updateDoc(postRef, { commentCount: increment(1) });
+        await updateDoc(adventureRef, { commentCount: increment(1) });
     } catch (e) {
         console.error("Error adding comment:", e);
         setToastMessage("Failed to post comment.");
     }
   };
 
-  const handleSharePost = async (post: HydratedPost) => {
+  const handleShareAdventure = async (adventure: HydratedAdventure) => {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: post.title,
-          text: t('sharePostText', { authorName: post.author.name }),
-          url: window.location.href, // Or a direct link to the post if available
+          title: adventure.title,
+          text: t('shareAdventureText', { authorName: adventure.author.name }),
+          url: window.location.href,
         });
       } catch (error) {
         console.error('Error sharing:', error);
@@ -657,7 +651,7 @@ const App: React.FC = () => {
         await navigator.share({
           title: `${user.name}'s Profile`,
           text: t('shareProfileText', { name: user.name }),
-          url: window.location.href, // Or a direct link to the profile
+          url: window.location.href,
         });
       } catch (error) {
         console.error('Error sharing:', error);
@@ -684,19 +678,19 @@ const App: React.FC = () => {
     }
   };
 
-  const handleToggleCompleted = async (postId: string) => {
+  const handleToggleCompleted = async (adventureId: string) => {
     if (!currentUser) { showGuestToast(); return; }
 
-    const post = posts.find(p => p.id === postId);
-    if (!post) return;
+    const adventure = adventures.find(p => p.id === adventureId);
+    if (!adventure) return;
 
-    const endDate = post.endDate ? new Date(post.endDate) : new Date(post.startDate);
+    const endDate = adventure.endDate ? new Date(adventure.endDate) : new Date(adventure.startDate);
     if (endDate > new Date()) {
         setToastMessage(t('adventureNotEnded'));
         return;
     }
 
-    if (currentUser.activityLog.some(log => log.postId === postId)) {
+    if (currentUser.activityLog.some(log => log.adventureId === adventureId)) {
         setToastMessage(t('alreadyMarkedDone'));
         return;
     }
@@ -704,18 +698,18 @@ const App: React.FC = () => {
     try {
         const userRef = doc(db, "users", currentUser.id);
         await updateDoc(userRef, {
-            activityLog: arrayUnion({ postId: postId, status: ActivityStatus.Pending })
+            activityLog: arrayUnion({ adventureId: adventureId, status: ActivityStatus.Pending })
         });
 
         const notificationsRef = collection(db, "notifications");
         await addDoc(notificationsRef, {
             type: NotificationType.AttendanceRequest,
-            recipientId: post.authorId,
+            recipientId: adventure.authorId,
             userId: currentUser.id,
-            postId: post.id,
+            adventureId: adventure.id,
             attendeeId: currentUser.id,
             attendeeName: currentUser.name,
-            text: t('attendanceRequestNotification', { title: post.title }),
+            text: t('attendanceRequestNotification', { title: adventure.title }),
             createdAt: serverTimestamp(),
             read: false,
         });
@@ -727,29 +721,29 @@ const App: React.FC = () => {
     }
   };
 
-  const handleConfirmAttendance = async (notificationId: string, postId: string, attendeeId: string, didAttend: boolean) => {
+  const handleConfirmAttendance = async (notificationId: string, adventureId: string, attendeeId: string, didAttend: boolean) => {
       if (!currentUser) return;
 
       const attendeeRef = doc(db, "users", attendeeId);
       const notificationRef = doc(db, "notifications", notificationId);
-      const post = posts.find(p => p.id === postId);
-      if (!post) return;
+      const adventure = adventures.find(p => p.id === adventureId);
+      if (!adventure) return;
 
       try {
           const attendeeDoc = await getDoc(attendeeRef);
           if (!attendeeDoc.exists()) return;
 
           const attendeeData = attendeeDoc.data() as User;
-          let newActivityLog = attendeeData.activityLog.filter(log => log.postId !== postId);
+          let newActivityLog = attendeeData.activityLog.filter(log => log.adventureId !== adventureId);
 
           if (didAttend) {
-              newActivityLog.push({ postId, status: ActivityStatus.Confirmed });
+              newActivityLog.push({ adventureId, status: ActivityStatus.Confirmed });
               await addDoc(collection(db, "notifications"), {
                   type: NotificationType.AttendanceConfirmed,
                   recipientId: attendeeId,
                   userId: currentUser.id,
-                  postId: postId,
-                  text: t('attendanceConfirmedNotification', { title: post.title }),
+                  adventureId: adventureId,
+                  text: t('attendanceConfirmedNotification', { title: adventure.title }),
                   createdAt: serverTimestamp(),
                   read: false,
               });
@@ -757,8 +751,8 @@ const App: React.FC = () => {
                   type: NotificationType.RateExperience,
                   recipientId: attendeeId,
                   userId: currentUser.id,
-                  postId: postId,
-                  text: t('rateExperienceNotification', { title: post.title }),
+                  adventureId: adventureId,
+                  text: t('rateExperienceNotification', { title: adventure.title }),
                   createdAt: serverTimestamp(),
                   read: false,
               });
@@ -771,10 +765,10 @@ const App: React.FC = () => {
       }
   };
   
-  const handleSubmitRating = async (postId: string, rating: number) => {
-    const post = hydratedPosts.find(p => p.id === postId);
-    if (!post || !currentUser) return;
-    const authorRef = doc(db, "users", post.authorId);
+  const handleSubmitRating = async (adventureId: string, rating: number) => {
+    const adventure = hydratedAdventures.find(p => p.id === adventureId);
+    if (!adventure || !currentUser) return;
+    const authorRef = doc(db, "users", adventure.authorId);
     try {
         await runTransaction(db, async (transaction) => {
             const authorDoc = await transaction.get(authorRef);
@@ -794,7 +788,7 @@ const App: React.FC = () => {
         
         const q = query(collection(db, "notifications"), 
             where("type", "==", NotificationType.RateExperience),
-            where("postId", "==", postId),
+            where("adventureId", "==", adventureId),
             where("recipientId", "==", currentUser.id)
         );
         const querySnapshot = await getDocs(q);
@@ -802,7 +796,7 @@ const App: React.FC = () => {
             await deleteDoc(doc(db, "notifications", docSnapshot.id));
         });
 
-        setRatingModalPost(null);
+        setRatingModalAdventure(null);
         setToastMessage(t('feedbackThanks'));
     } catch (e) {
         console.error("Error submitting rating:", e);
@@ -810,79 +804,78 @@ const App: React.FC = () => {
     }
   };
   
-  // FIX: Add handlers for viewing location on map, editing, and deleting posts.
-  const handleViewLocationOnMap = (post: HydratedPost) => {
-    if (post.coordinates) {
-      setMapPostsToShow([post]);
+  const handleViewLocationOnMap = (adventure: HydratedAdventure) => {
+    if (adventure.coordinates) {
+      setMapAdventuresToShow([adventure]);
       handleSetActiveScreen('map');
     } else {
       setToastMessage(t('noCoordinatesOnMap'));
     }
   };
 
-  const handleEditPost = (post: HydratedPost) => {
-    setEditingPost(post);
+  const handleEditAdventure = (adventure: HydratedAdventure) => {
+    setEditingAdventure(adventure);
   };
   
-  const handleDeletePost = async (postId: string) => {
+  const handleDeleteAdventure = async (adventureId: string) => {
     if (!currentUser) return;
-    const postToDelete = posts.find(p => p.id === postId);
-    if (postToDelete?.authorId !== currentUser.id) {
-        setToastMessage("You can only delete your own posts.");
+    const adventureToDelete = adventures.find(p => p.id === adventureId);
+    if (adventureToDelete?.authorId !== currentUser.id) {
+        setToastMessage("You can only delete your own adventures.");
         return;
     }
 
     try {
-        await deleteDoc(doc(db, 'posts', postId));
-        setToastMessage(t('postDeletedSuccessfully'));
-        if (selectedPost?.id === postId) {
-            setSelectedPost(null);
+        await deleteDoc(doc(db, 'adventures', adventureId));
+        setToastMessage(t('adventureDeletedSuccessfully'));
+        if (selectedAdventure?.id === adventureId) {
+            setSelectedAdventure(null);
         }
     } catch (e) {
-        console.error("Error deleting post: ", e);
-        setToastMessage("Failed to delete post.");
+        console.error("Error deleting adventure: ", e);
+        setToastMessage("Failed to delete adventure.");
     }
   };
   
-  const handleUpdatePost = async (postId: string, updatedData: Partial<Post>) => {
+  const handleUpdateAdventure = async (adventureId: string, updatedData: Partial<Adventure>) => {
       try {
-          const postRef = doc(db, 'posts', postId);
-          await updateDoc(postRef, updatedData);
-          setToastMessage(t('postUpdatedSuccessfully'));
-          setEditingPost(null);
+          const adventureRef = doc(db, 'adventures', adventureId);
+          await updateDoc(adventureRef, updatedData);
+          setToastMessage(t('adventureUpdatedSuccessfully'));
+          setEditingAdventure(null);
       } catch(e) {
-          console.error("Error updating post: ", e);
-          setToastMessage("Failed to update post.");
+          console.error("Error updating adventure: ", e);
+          setToastMessage("Failed to update adventure.");
       }
   };
   
-  useEffect(() => { if (!['map', 'search'].includes(activeScreen)) setMapPostsToShow(null); }, [activeScreen]);
-  const handleSelectPost = (post: HydratedPost) => setSelectedPost(post);
-  const handleCloseModal = () => setSelectedPost(null);
-  const handleShowResultsOnMap = (results: Post[]) => { setMapPostsToShow(results); handleSetActiveScreen('map'); };
+  useEffect(() => { if (!['map', 'search'].includes(activeScreen)) setMapAdventuresToShow(null); }, [activeScreen]);
+  const handleSelectAdventure = (adventure: HydratedAdventure) => setSelectedAdventure(adventure);
+  const handleCloseModal = () => setSelectedAdventure(null);
+  const handleShowResultsOnMap = (results: Adventure[]) => { setMapAdventuresToShow(results); handleSetActiveScreen('map'); };
   const handleSelectStories = (storiesToShow: HydratedStory[]) => { if (storiesToShow.length > 0) setViewingStories(storiesToShow); };
   const handleAddStory = () => { if (isGuest) showGuestToast(); else setIsAddStoryModalOpen(true); };
   const handleOpenFollowList = (user: User, listType: 'followers' | 'following') => setFollowListModal({ isOpen: true, user, listType });
   const handleCloseFollowList = () => setFollowListModal({ isOpen: false, user: null, listType: null });
   
-  const visiblePosts = useMemo(() => {
-    if (isGuest) return hydratedPosts.filter(post => post.privacy === PostPrivacy.Public);
+  const visibleAdventures = useMemo(() => {
+    if (isGuest) return hydratedAdventures.filter(adventure => adventure.privacy === AdventurePrivacy.Public);
     if (!currentUser) return [];
     
-    return hydratedPosts.filter(post => {
-      if (post.author.id === currentUser.id) return true;
-      if (post.author.isPrivate && !currentUser.following.includes(post.author.id)) return false;
+    return hydratedAdventures.filter(adventure => {
+      if (adventure.author.id === currentUser.id) return true;
+      if (adventure.author.isPrivate && !currentUser.following.includes(adventure.author.id)) return false;
       
-      switch(post.privacy) {
-        case PostPrivacy.Public: return true;
-        case PostPrivacy.Followers: return currentUser.following.includes(post.author.id);
-        case PostPrivacy.Twins:
-          if (!currentUser.birthday || !post.author.birthday) return false;
-          return currentUser.birthday.substring(5) === post.author.birthday.substring(5);
+      switch(adventure.privacy) {
+        case AdventurePrivacy.Public: return true;
+        case AdventurePrivacy.Followers: return currentUser.following.includes(adventure.author.id);
+        case AdventurePrivacy.Twins:
+          if (!currentUser.birthday || !adventure.author.birthday) return false;
+          return currentUser.birthday.substring(5) === adventure.author.birthday.substring(5);
         default: return false;
       }
     });
-  }, [hydratedPosts, users, currentUser, isGuest]);
+  }, [hydratedAdventures, users, currentUser, isGuest]);
 
   const renderScreen = () => {
     const userForUI = currentUser ?? guestUser;
@@ -890,49 +883,46 @@ const App: React.FC = () => {
     switch (activeScreen) {
       case 'feed':
         return <FeedScreen 
-          posts={visiblePosts} 
+          adventures={visibleAdventures} 
           stories={hydratedStories}
           currentUser={userForUI}
           isGuest={isGuest}
-          onSelectPost={handleSelectPost} onSendMessage={handleSelectConversation} onToggleInterest={handleToggleInterest}
+          onSelectAdventure={handleSelectAdventure} onSendMessage={handleSelectConversation} onToggleInterest={handleToggleInterest}
           onSelectStories={handleSelectStories} onAddStory={handleAddStory} onNotificationClick={handleToggleNotifications}
           hasUnreadNotifications={!isGuest && hasUnreadNotifications} onNavigateToChat={() => navigateTo('chat')}
           onViewProfile={handleViewProfile} onRepostToggle={handleRepostToggle} onSaveToggle={handleSaveToggle}
-          onSharePost={handleSharePost} onToggleCompleted={handleToggleCompleted}
-          // FIX: Pass down missing props to FeedScreen.
+          onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted}
           onViewLocationOnMap={handleViewLocationOnMap}
-          onDeletePost={handleDeletePost}
-          onEditPost={handleEditPost}
+          onDeleteAdventure={handleDeleteAdventure}
+          onEditAdventure={handleEditAdventure}
         />;
       case 'map':
-        const eventPosts = hydratedPosts.filter(p => p.type === PostType.Event && p.coordinates && p.privacy === PostPrivacy.Public);
-        return <MapScreen postsToShow={mapPostsToShow ?? eventPosts} />;
+        const eventAdventures = hydratedAdventures.filter(p => p.type === AdventureType.Event && p.coordinates && p.privacy === AdventurePrivacy.Public);
+        return <MapScreen adventuresToShow={mapAdventuresToShow ?? eventAdventures} />;
       case 'create':
         if (isGuest || !currentUser) return null;
-        return <CreatePostScreen onCreatePost={handleCreatePost} currentUser={currentUser} />;
+        return <CreateAdventureScreen onCreateAdventure={handleCreateAdventure} currentUser={currentUser} />;
       case 'search':
-        return <SearchScreen posts={hydratedPosts} currentUser={userForUI} isGuest={isGuest} onSelectPost={handleSelectPost}
+        return <SearchScreen adventures={hydratedAdventures} currentUser={userForUI} isGuest={isGuest} onSelectAdventure={handleSelectAdventure}
             onSendMessage={handleSelectConversation} onToggleInterest={handleToggleInterest} onNavigateToFindTwins={() => navigateTo('findTwins')}
             onViewProfile={handleViewProfile} onShowResultsOnMap={handleShowResultsOnMap} onRepostToggle={handleRepostToggle}
-            onSaveToggle={handleSaveToggle} onSharePost={handleSharePost} onToggleCompleted={handleToggleCompleted}
-            // FIX: Pass down missing props to SearchScreen.
+            onSaveToggle={handleSaveToggle} onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted}
             onViewLocationOnMap={handleViewLocationOnMap}
-            onDeletePost={handleDeletePost}
-            onEditPost={handleEditPost}
+            onDeleteAdventure={handleDeleteAdventure}
+            onEditAdventure={handleEditAdventure}
         />;
       case 'chat':
         if (isGuest || !currentUser) return null;
         return <ChatScreen conversations={hydratedConversations} onSelectConversation={handleSelectConversation} onBack={goBack} />;
       case 'profile':
         if (isGuest || !currentUser) return null;
-        return <ProfileScreen user={currentUser} allPosts={hydratedPosts} onSelectPost={handleSelectPost} onSendMessage={handleSelectConversation}
+        return <ProfileScreen user={currentUser} allAdventures={hydratedAdventures} onSelectAdventure={handleSelectAdventure} onSendMessage={handleSelectConversation}
           onToggleInterest={handleToggleInterest} onViewProfile={handleViewProfile} onRepostToggle={handleRepostToggle} onSaveToggle={handleSaveToggle}
-          onShareProfile={handleShareProfile} onSharePost={handleSharePost} onToggleCompleted={handleToggleCompleted}
+          onShareProfile={handleShareProfile} onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted}
           onOpenFollowList={handleOpenFollowList} onNavigateToSettings={() => navigateTo('settings')}
-          // FIX: Pass down missing props to ProfileScreen.
           onViewLocationOnMap={handleViewLocationOnMap}
-          onDeletePost={handleDeletePost}
-          onEditPost={handleEditPost}
+          onDeleteAdventure={handleDeleteAdventure}
+          onEditAdventure={handleEditAdventure}
         />;
       case 'chatDetail':
         if (isGuest || !currentUser || !selectedConversationUser) return null;
@@ -942,15 +932,14 @@ const App: React.FC = () => {
         return <FindTwinsScreen allUsers={users} currentUser={currentUser} onSendMessage={handleSelectConversation} onBack={goBack} onFollowToggle={handleFollowToggle} onViewProfile={handleViewProfile} />;
       case 'userProfile':
         if(viewingUser) {
-           return <UserProfileScreen user={viewingUser} currentUser={userForUI} isGuest={isGuest} allPosts={hydratedPosts} onBack={goBack} 
-            onSelectPost={handleSelectPost} onSendMessage={handleSelectConversation} onToggleInterest={handleToggleInterest}
+           return <UserProfileScreen user={viewingUser} currentUser={userForUI} isGuest={isGuest} allAdventures={hydratedAdventures} onBack={goBack} 
+            onSelectAdventure={handleSelectAdventure} onSendMessage={handleSelectConversation} onToggleInterest={handleToggleInterest}
             onFollowToggle={handleFollowToggle} onViewProfile={handleViewProfile} onRepostToggle={handleRepostToggle}
-            onSaveToggle={handleSaveToggle} onShareProfile={handleShareProfile} onSharePost={handleSharePost}
+            onSaveToggle={handleSaveToggle} onShareProfile={handleShareProfile} onShareAdventure={handleShareAdventure}
             onToggleCompleted={handleToggleCompleted} onOpenFollowList={handleOpenFollowList}
-            // FIX: Pass down missing props to UserProfileScreen.
             onViewLocationOnMap={handleViewLocationOnMap}
-            onDeletePost={handleDeletePost}
-            onEditPost={handleEditPost}
+            onDeleteAdventure={handleDeleteAdventure}
+            onEditAdventure={handleEditAdventure}
            />;
         }
         return null;
@@ -966,24 +955,23 @@ const App: React.FC = () => {
       case 'language':
         if (isGuest || !currentUser) return null;
         return <LanguageScreen onBack={goBack} />;
-      case 'savedPosts':
+      case 'savedAdventures':
         if (isGuest || !currentUser) return null;
-        return <SavedPostsScreen 
+        return <SavedAdventuresScreen 
             onBack={goBack} 
-            posts={savedPosts}
+            adventures={savedAdventures}
             currentUser={currentUser}
-            onSelectPost={handleSelectPost}
+            onSelectAdventure={handleSelectAdventure}
             onSendMessage={handleSelectConversation}
             onToggleInterest={handleToggleInterest}
             onViewProfile={handleViewProfile}
             onRepostToggle={handleRepostToggle}
             onSaveToggle={handleSaveToggle}
-            onSharePost={handleSharePost}
+            onShareAdventure={handleShareAdventure}
             onToggleCompleted={handleToggleCompleted}
-            // FIX: Pass down missing props to SavedPostsScreen.
             onViewLocationOnMap={handleViewLocationOnMap}
-            onDeletePost={handleDeletePost}
-            onEditPost={handleEditPost}
+            onDeleteAdventure={handleDeleteAdventure}
+            onEditAdventure={handleEditAdventure}
         />;
       default: return null;
     }
@@ -1022,19 +1010,18 @@ const App: React.FC = () => {
       </main>
       
       <AddStoryModal isOpen={isAddStoryModalOpen} onClose={() => setIsAddStoryModalOpen(false)} onStoryCreate={handleCreateStory} />
-      {selectedPost && <PostDetailModal post={selectedPost} comments={hydratedComments} onAddComment={handleAddComment} currentUser={currentUser} onClose={handleCloseModal} />}
+      {selectedAdventure && <AdventureDetailModal adventure={selectedAdventure} comments={hydratedComments} onAddComment={handleAddComment} currentUser={currentUser} onClose={handleCloseModal} />}
       {viewingStories && <StoryViewer stories={viewingStories} onClose={() => setViewingStories(null)} />}
       {isNotificationPanelOpen && (
           <div className="absolute top-0 right-0 z-50 w-full max-w-sm mt-2 mr-2">
               <NotificationPanel notifications={userNotifications} onClose={handleToggleNotifications} onConfirmAttendance={handleConfirmAttendance} 
-                  onRateExperience={(postId) => setRatingModalPost(hydratedPosts.find(p => p.id === postId) || null)} 
+                  onRateExperience={(adventureId) => setRatingModalAdventure(hydratedAdventures.find(p => p.id === adventureId) || null)} 
               />
           </div>
       )}
       {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage(null)} />}
-      {ratingModalPost && <RatingModal post={ratingModalPost} onClose={() => setRatingModalPost(null)} onSubmit={handleSubmitRating} />}
-      {/* FIX: Render the EditPostModal when a post is being edited. */}
-      {editingPost && <EditPostModal post={editingPost} onClose={() => setEditingPost(null)} onUpdatePost={handleUpdatePost} />}
+      {ratingModalAdventure && <RatingModal adventure={ratingModalAdventure} onClose={() => setRatingModalAdventure(null)} onSubmit={handleSubmitRating} />}
+      {editingAdventure && <EditAdventureModal adventure={editingAdventure} onClose={() => setEditingAdventure(null)} onUpdateAdventure={handleUpdateAdventure} />}
       {followListModal.isOpen && followListModal.user && followListModal.listType && (currentUser || isGuest) && (
           <FollowListModal title={t(followListModal.listType)} listOwner={followListModal.user} currentUser={currentUser}
               users={

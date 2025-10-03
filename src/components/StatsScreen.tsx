@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Post, PostType, User, ActivityStatus } from '../types';
+import { Adventure, AdventureType, User, ActivityStatus } from '../types';
 import { getCountryFromLocation, getFlagUrl } from '../utils/countryUtils';
 import HikingIcon from './icons/HikingIcon';
 import TentIcon from './icons/TentIcon';
@@ -12,51 +12,51 @@ import { useTranslation } from '../contexts/LanguageContext';
 
 interface StatsScreenProps {
   user: User;
-  allPosts: Post[];
+  allAdventures: Adventure[];
 }
 
-const activityIcons: Record<PostType, React.ReactNode> = {
-  [PostType.Hiking]: <HikingIcon />,
-  [PostType.Camping]: <TentIcon />,
-  [PostType.Cycling]: <BicycleIcon />,
-  [PostType.Volunteering]: <HeartIcon />,
-  [PostType.Event]: <MessageIcon />,
-  [PostType.Travel]: <PlaneIcon />,
-  [PostType.Housing]: <HomeIcon />,
+const activityIcons: Record<AdventureType, React.ReactNode> = {
+  [AdventureType.Hiking]: <HikingIcon />,
+  [AdventureType.Camping]: <TentIcon />,
+  [AdventureType.Cycling]: <BicycleIcon />,
+  [AdventureType.Volunteering]: <HeartIcon />,
+  [AdventureType.Event]: <MessageIcon />,
+  [AdventureType.Travel]: <PlaneIcon />,
+  [AdventureType.Housing]: <HomeIcon />,
 };
 
 
-const StatsScreen: React.FC<StatsScreenProps> = ({ user, allPosts }) => {
+const StatsScreen: React.FC<StatsScreenProps> = ({ user, allAdventures }) => {
   const { t } = useTranslation();
   const stats = useMemo(() => {
     // Only count activities that have been confirmed by the host
-    const confirmedActivityPostIds = new Set(
+    const confirmedActivityAdventureIds = new Set(
         user.activityLog
             .filter(a => a.status === ActivityStatus.Confirmed)
-            .map(a => a.postId)
+            .map(a => a.adventureId)
     );
 
-    const completed = allPosts.filter(post => confirmedActivityPostIds.has(post.id));
+    const completed = allAdventures.filter(adventure => confirmedActivityAdventureIds.has(adventure.id));
     
     const countries = new Set<string>();
-    completed.forEach(post => {
-      const country = getCountryFromLocation(post.location);
+    completed.forEach(adventure => {
+      const country = getCountryFromLocation(adventure.location);
       if (country) {
         countries.add(country);
       }
     });
 
-    const activityCounts = completed.reduce((acc, post) => {
-      acc[post.type] = (acc[post.type] || 0) + 1;
+    const activityCounts = completed.reduce((acc, adventure) => {
+      acc[adventure.type] = (acc[adventure.type] || 0) + 1;
       return acc;
-    }, {} as Record<PostType, number>);
+    }, {} as Record<AdventureType, number>);
 
     return {
       totalCompleted: completed.length,
       countriesVisited: Array.from(countries).sort(),
       activityCounts,
     };
-  }, [user, allPosts]);
+  }, [user, allAdventures]);
 
   const StatCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
     <div className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-lg shadow-sm p-4">
@@ -65,11 +65,11 @@ const StatsScreen: React.FC<StatsScreenProps> = ({ user, allPosts }) => {
     </div>
   );
   
-  const ActivityCard: React.FC<{ type: PostType, count: number }> = ({ type, count }) => (
+  const ActivityCard: React.FC<{ type: AdventureType, count: number }> = ({ type, count }) => (
     <div className="bg-slate-100 dark:bg-neutral-800/50 rounded-lg p-3 flex flex-col items-center justify-center text-center">
         <div className="text-orange-500 mb-1 w-6 h-6">{activityIcons[type]}</div>
         <p className="font-bold text-xl text-gray-800 dark:text-gray-100">{count}</p>
-        <p className="text-xs text-gray-500 dark:text-gray-400">{t(`PostType_${type}`)}</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400">{t(`AdventureType_${type}`)}</p>
     </div>
   );
 
@@ -114,7 +114,7 @@ const StatsScreen: React.FC<StatsScreenProps> = ({ user, allPosts }) => {
         {Object.keys(stats.activityCounts).length > 0 ? (
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
             {Object.entries(stats.activityCounts).map(([type, count]) => (
-              <ActivityCard key={type} type={type as PostType} count={count} />
+              <ActivityCard key={type} type={type as AdventureType} count={count} />
             ))}
           </div>
         ) : (

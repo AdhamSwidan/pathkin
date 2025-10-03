@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { Screen } from '../types';
 import HomeIcon from './icons/HomeIcon';
@@ -51,7 +52,7 @@ const SideNav: React.FC<SideNavProps> = ({ activeScreen, setActiveScreen, onNoti
     { screen: 'feed' as Screen, label: t('feed'), icon: <HomeIcon /> },
     { screen: 'map' as Screen, label: t('map'), icon: <MapIcon /> },
     { screen: 'search' as Screen, label: t('search'), icon: <SearchIcon /> },
-    { screen: 'create' as Screen, label: t('post'), icon: <PlusCircleIcon />, requiresAuth: true },
+    { screen: 'create' as Screen, label: t('adventure'), icon: <PlusCircleIcon />, requiresAuth: true },
   ];
   
    const secondaryNavItems = [
@@ -106,7 +107,7 @@ const SideNav: React.FC<SideNavProps> = ({ activeScreen, setActiveScreen, onNoti
             </nav>
         </div>
          <div className="text-center text-xs text-gray-400">
-            <p>&copy; 2024 WanderLodge</p>
+            <p>&copy; 2024 Pathkin</p>
         </div>
     </div>
   );

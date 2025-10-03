@@ -1,4 +1,4 @@
-export enum PostType {
+export enum AdventureType {
   Travel = 'Travel',
   Housing = 'Housing',
   Event = 'Event',
@@ -17,7 +17,7 @@ export enum NotificationType {
   RateExperience = 'rateExperience',
 }
 
-export enum PostPrivacy {
+export enum AdventurePrivacy {
   Public = 'Public',
   Followers = 'Followers',
   Twins = 'Twins',
@@ -29,7 +29,7 @@ export enum ActivityStatus {
 }
 
 export interface ActivityLogEntry {
-  postId: string;
+  adventureId: string;
   status: ActivityStatus;
 }
 
@@ -54,8 +54,8 @@ export interface User {
   country?: string;
   followers: string[]; // array of user ids
   following: string[]; // array of user ids
-  reposts: string[]; // array of post ids
-  savedPosts: string[]; // array of post ids
+  repostedAdventures: string[]; // array of adventure ids
+  savedAdventures: string[]; // array of adventure ids
   activityLog: ActivityLogEntry[]; // Replaces completedActivities
   averageRating?: number;
   totalRatings?: number;
@@ -68,9 +68,9 @@ export interface Media {
   type: 'image' | 'video';
 }
 
-export interface Post {
+export interface Adventure {
   id: string;
-  type: PostType;
+  type: AdventureType;
   authorId: string;
   author?: User; // This is added during hydration, not in DB
   title: string;
@@ -84,11 +84,11 @@ export interface Post {
   commentCount: number; // Replaces storing comments array directly
   createdAt: string;
   media?: Media[];
-  privacy: PostPrivacy;
+  privacy: AdventurePrivacy;
 }
 
-// A Post that has been "hydrated" with its author's data
-export type HydratedPost = Omit<Post, 'author'> & {
+// An Adventure that has been "hydrated" with its author's data
+export type HydratedAdventure = Omit<Adventure, 'author'> & {
   author: User;
 };
 
@@ -143,8 +143,8 @@ export interface Notification {
   type: NotificationType;
   recipientId: string; // The user who should receive this notification
   user: User; // The user who triggered the notification
-  post?: Post;
-  postId?: string;
+  adventure?: Adventure;
+  adventureId?: string;
   text: string;
   createdAt: string;
   read: boolean;
@@ -167,4 +167,4 @@ export type Screen =
   | 'editProfile'
   | 'privacySecurity'
   | 'language'
-  | 'savedPosts';
+  | 'savedAdventures';

@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { User, PostType, HydratedPost } from '../types';
+import { User, AdventureType, HydratedAdventure } from '../types';
 import Header from './Header';
-import PostCard from './PostCard';
+import AdventureCard from './AdventureCard';
 import FilterBar from './FilterBar';
 import SearchIcon from './icons/SearchIcon';
 import CakeIcon from './icons/CakeIcon';
@@ -9,27 +9,27 @@ import MapIcon from './icons/MapIcon';
 import { useTranslation } from '../contexts/LanguageContext';
 
 interface SearchScreenProps {
-  posts: HydratedPost[];
+  adventures: HydratedAdventure[];
   currentUser: User;
-  onSelectPost: (post: HydratedPost) => void;
+  onSelectAdventure: (adventure: HydratedAdventure) => void;
   onSendMessage: (user: User) => void;
-  onToggleInterest: (postId: string) => void;
+  onToggleInterest: (adventureId: string) => void;
   onNavigateToFindTwins: () => void;
   onViewProfile: (user: User) => void;
-  onShowResultsOnMap: (posts: HydratedPost[]) => void;
-  onRepostToggle: (postId: string) => void;
-  onSaveToggle: (postId: string) => void;
-  onSharePost: (post: HydratedPost) => void;
-  onToggleCompleted: (postId: string) => void;
+  onShowResultsOnMap: (adventures: HydratedAdventure[]) => void;
+  onRepostToggle: (adventureId: string) => void;
+  onSaveToggle: (adventureId: string) => void;
+  onShareAdventure: (adventure: HydratedAdventure) => void;
+  onToggleCompleted: (adventureId: string) => void;
   isGuest: boolean;
-  onViewLocationOnMap: (post: HydratedPost) => void;
-  onDeletePost: (postId: string) => void;
-  onEditPost: (post: HydratedPost) => void;
+  onViewLocationOnMap: (adventure: HydratedAdventure) => void;
+  onDeleteAdventure: (adventureId: string) => void;
+  onEditAdventure: (adventure: HydratedAdventure) => void;
 }
 
 interface AppliedFilters {
   query: string;
-  type: PostType | 'all';
+  type: AdventureType | 'all';
   city: string;
   budget: string;
   startDate: string;
@@ -37,9 +37,9 @@ interface AppliedFilters {
 }
 
 const SearchScreen: React.FC<SearchScreenProps> = ({
-  posts,
+  adventures,
   currentUser,
-  onSelectPost,
+  onSelectAdventure,
   onSendMessage,
   onToggleInterest,
   onNavigateToFindTwins,
@@ -47,16 +47,16 @@ const SearchScreen: React.FC<SearchScreenProps> = ({
   onShowResultsOnMap,
   onRepostToggle,
   onSaveToggle,
-  onSharePost,
+  onShareAdventure,
   onToggleCompleted,
   isGuest,
   onViewLocationOnMap,
-  onDeletePost,
-  onEditPost,
+  onDeleteAdventure,
+  onEditAdventure,
 }) => {
   // Input states
   const [searchQuery, setSearchQuery] = useState('');
-  const [type, setType] = useState<PostType | 'all'>('all');
+  const [type, setType] = useState<AdventureType | 'all'>('all');
   const [city, setCity] = useState('');
   const [budget, setBudget] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -76,36 +76,36 @@ const SearchScreen: React.FC<SearchScreenProps> = ({
     });
   };
 
-  const filteredPosts = useMemo(() => {
+  const filteredAdventures = useMemo(() => {
     if (!appliedFilters) {
-      return []; // Don't show any posts until a search is performed
+      return []; // Don't show any adventures until a search is performed
     }
     
-    return posts.filter(post => {
+    return adventures.filter(adventure => {
       // Keyword filter
       const lowerQuery = appliedFilters.query.toLowerCase().trim();
       if (lowerQuery && !(
-        post.title.toLowerCase().includes(lowerQuery) ||
-        post.description.toLowerCase().includes(lowerQuery) ||
-        post.location.toLowerCase().includes(lowerQuery)
+        adventure.title.toLowerCase().includes(lowerQuery) ||
+        adventure.description.toLowerCase().includes(lowerQuery) ||
+        adventure.location.toLowerCase().includes(lowerQuery)
       )) {
         return false;
       }
 
       // Type filter
-      if (appliedFilters.type !== 'all' && post.type !== appliedFilters.type) {
+      if (appliedFilters.type !== 'all' && adventure.type !== appliedFilters.type) {
         return false;
       }
 
       // City filter
       const lowerCity = appliedFilters.city.toLowerCase().trim();
-      if (lowerCity && !post.location.toLowerCase().includes(lowerCity)) {
+      if (lowerCity && !adventure.location.toLowerCase().includes(lowerCity)) {
         return false;
       }
       
       // Budget filter
       const numBudget = parseInt(appliedFilters.budget, 10);
-      if (!isNaN(numBudget) && post.budget > numBudget) {
+      if (!isNaN(numBudget) && adventure.budget > numBudget) {
         return false;
       }
 
@@ -113,11 +113,11 @@ const SearchScreen: React.FC<SearchScreenProps> = ({
       if (!appliedFilters.startDate && !appliedFilters.endDate) {
           // No date filter applied
       } else {
-        const postStart = new Date(post.startDate);
-        postStart.setUTCHours(0, 0, 0, 0);
+        const adventureStart = new Date(adventure.startDate);
+        adventureStart.setUTCHours(0, 0, 0, 0);
         
-        const postEnd = post.endDate ? new Date(post.endDate) : new Date(post.startDate);
-        postEnd.setUTCHours(0, 0, 0, 0);
+        const adventureEnd = adventure.endDate ? new Date(adventure.endDate) : new Date(adventure.startDate);
+        adventureEnd.setUTCHours(0, 0, 0, 0);
         
         const filterStart = appliedFilters.startDate ? new Date(appliedFilters.startDate) : null;
         if(filterStart) filterStart.setUTCHours(0, 0, 0, 0);
@@ -129,22 +129,22 @@ const SearchScreen: React.FC<SearchScreenProps> = ({
             // Invalid date input, don't filter by date
         } else {
             if (filterStart && filterEnd) {
-                if (!(postStart <= filterEnd && postEnd >= filterStart)) return false;
+                if (!(adventureStart <= filterEnd && adventureEnd >= filterStart)) return false;
             } else if (filterStart) {
-                if (!(postEnd >= filterStart)) return false;
+                if (!(adventureEnd >= filterStart)) return false;
             } else if (filterEnd) {
-                if (!(postStart <= filterEnd)) return false;
+                if (!(adventureStart <= filterEnd)) return false;
             }
         }
       }
 
       return true; // if all filters pass
     });
-  }, [posts, appliedFilters]);
+  }, [adventures, appliedFilters]);
   
   const resultsHaveCoordinates = useMemo(() => {
-    return filteredPosts.some(p => !!p.coordinates);
-  }, [filteredPosts]);
+    return filteredAdventures.some(p => !!p.coordinates);
+  }, [filteredAdventures]);
 
   const inputBaseClasses = "w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500 dark:bg-neutral-800 dark:border-neutral-700 dark:text-gray-200 dark:placeholder-gray-400";
   
@@ -159,7 +159,7 @@ const SearchScreen: React.FC<SearchScreenProps> = ({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className={`${inputBaseClasses} ps-10`}
-              aria-label="Search posts"
+              aria-label="Search adventures"
             />
             <SearchIcon className="absolute start-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
         </div>
@@ -184,10 +184,10 @@ const SearchScreen: React.FC<SearchScreenProps> = ({
           {t('search')}
         </button>
       </div>
-       {appliedFilters && filteredPosts.length > 0 && resultsHaveCoordinates && (
+       {appliedFilters && filteredAdventures.length > 0 && resultsHaveCoordinates && (
          <div className="p-2 border-b dark:border-neutral-800 bg-slate-50 dark:bg-neutral-900">
             <button
-              onClick={() => onShowResultsOnMap(filteredPosts)}
+              onClick={() => onShowResultsOnMap(filteredAdventures)}
               className="w-full flex items-center justify-center space-x-2 bg-sky-600 text-white font-semibold py-2 rounded-md hover:bg-sky-700 transition-colors"
             >
               <MapIcon className="w-5 h-5" />
@@ -211,28 +211,28 @@ const SearchScreen: React.FC<SearchScreenProps> = ({
             <p className="text-gray-500 dark:text-gray-500 text-sm mt-1">{t('useFiltersPrompt')}</p>
           </div>
         )}
-        {appliedFilters !== null && filteredPosts.length > 0 && filteredPosts.map(post => (
-          <PostCard
-            key={post.id}
-            post={post}
+        {appliedFilters !== null && filteredAdventures.length > 0 && filteredAdventures.map(adventure => (
+          <AdventureCard
+            key={adventure.id}
+            adventure={adventure}
             currentUser={currentUser}
             isGuest={isGuest}
-            onCommentClick={onSelectPost}
+            onCommentClick={onSelectAdventure}
             onMessageClick={onSendMessage}
             onInterestToggle={onToggleInterest}
             onViewProfile={onViewProfile}
             onRepostToggle={onRepostToggle}
             onSaveToggle={onSaveToggle}
-            onSharePost={onSharePost}
+            onShareAdventure={onShareAdventure}
             onToggleCompleted={onToggleCompleted}
             onViewLocationOnMap={onViewLocationOnMap}
-            onDeletePost={onDeletePost}
-            onEditPost={onEditPost}
+            onDeleteAdventure={onDeleteAdventure}
+            onEditAdventure={onEditAdventure}
           />
         ))}
-        {appliedFilters !== null && filteredPosts.length === 0 && (
+        {appliedFilters !== null && filteredAdventures.length === 0 && (
           <div className="text-center py-10 px-4">
-            <p className="text-gray-600 dark:text-gray-400 font-semibold">{t('noPostsFound')}</p>
+            <p className="text-gray-600 dark:text-gray-400 font-semibold">{t('noAdventuresFound')}</p>
             <p className="text-gray-500 dark:text-gray-500 text-sm mt-1">{t('tryAdjustingFilters')}</p>
           </div>
         )}

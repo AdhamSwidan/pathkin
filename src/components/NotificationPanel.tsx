@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { Notification, NotificationType } from '../types';
 import HeartIcon from './icons/HeartIcon';
@@ -11,8 +12,8 @@ import { useTranslation } from '../contexts/LanguageContext';
 interface NotificationPanelProps {
   notifications: Notification[];
   onClose: () => void;
-  onConfirmAttendance: (notificationId: string, postId: string, attendeeId: string, didAttend: boolean) => void;
-  onRateExperience: (postId: string) => void;
+  onConfirmAttendance: (notificationId: string, adventureId: string, attendeeId: string, didAttend: boolean) => void;
+  onRateExperience: (adventureId: string) => void;
 }
 
 const NotificationIcon: React.FC<{ type: NotificationType }> = ({ type }) => {
@@ -53,10 +54,10 @@ const TimeAgo: React.FC<{ date: string }> = ({ date }) => {
 const NotificationPanel: React.FC<NotificationPanelProps> = ({ notifications, onClose, onConfirmAttendance, onRateExperience }) => {
   const { t } = useTranslation();
   
-  const handleRateClick = (e: React.MouseEvent, postId?: string) => {
+  const handleRateClick = (e: React.MouseEvent, adventureId?: string) => {
     e.stopPropagation();
-    if (postId) {
-      onRateExperience(postId);
+    if (adventureId) {
+      onRateExperience(adventureId);
       onClose();
     }
   };
@@ -66,7 +67,7 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({ notifications, on
 
     return (
       <li 
-        onClick={(e) => isClickable && handleRateClick(e, notif.postId)}
+        onClick={(e) => isClickable && handleRateClick(e, notif.adventureId)}
         className={`p-3 flex items-start space-x-3 transition-colors ${!notif.read ? 'bg-orange-50 dark:bg-orange-900/20' : ''} ${isClickable ? 'hover:bg-gray-50 dark:hover:bg-neutral-800/50 cursor-pointer' : ''}`}
       >
         <div className="flex-shrink-0 mt-1">
@@ -80,16 +81,16 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({ notifications, on
             </p>
           </div>
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-1"><TimeAgo date={notif.createdAt} /></p>
-          {notif.type === NotificationType.AttendanceRequest && notif.postId && notif.attendeeId && (
+          {notif.type === NotificationType.AttendanceRequest && notif.adventureId && notif.attendeeId && (
             <div className="mt-2 flex items-center space-x-2">
               <button 
-                onClick={() => onConfirmAttendance(notif.id, notif.postId!, notif.attendeeId!, true)}
+                onClick={() => onConfirmAttendance(notif.id, notif.adventureId!, notif.attendeeId!, true)}
                 className="text-xs bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 px-2 py-1 rounded-full hover:bg-green-200"
               >
                 {t('confirm')}
               </button>
               <button 
-                onClick={() => onConfirmAttendance(notif.id, notif.postId!, notif.attendeeId!, false)}
+                onClick={() => onConfirmAttendance(notif.id, notif.adventureId!, notif.attendeeId!, false)}
                 className="text-xs bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300 px-2 py-1 rounded-full hover:bg-red-200"
               >
                 {t('deny')}

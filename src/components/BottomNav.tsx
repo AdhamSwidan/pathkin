@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { Screen } from '../types';
 import HomeIcon from './icons/HomeIcon';
@@ -43,7 +44,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeScreen, setActiveScreen, is
   const navItems = [
     { screen: 'feed' as Screen, label: t('feed'), icon: <HomeIcon /> },
     { screen: 'map' as Screen, label: t('map'), icon: <MapIcon /> },
-    { screen: 'create' as Screen, label: t('post'), icon: <PlusCircleIcon className="w-8 h-8" />, requiresAuth: true },
+    { screen: 'create' as Screen, label: t('adventure'), icon: <PlusCircleIcon className="w-8 h-8" />, requiresAuth: true },
     { screen: 'search' as Screen, label: t('search'), icon: <SearchIcon /> },
     { screen: 'profile' as Screen, label: t('profile'), icon: <UserIcon />, requiresAuth: true },
   ];
