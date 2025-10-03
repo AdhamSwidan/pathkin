@@ -26,7 +26,7 @@ Pathkin هو تطبيق ويب مصمم خصيصًا للمسافرين والم
 
 - **الواجهة الأمامية (Frontend):** React, TypeScript, Tailwind CSS
 - **الخلفية والبيانات (Backend & Database):** Firebase (Authentication, Firestore, Storage)
-- **الخرائط:** Leaflet.js
+- **الخرائط:** Google Maps Platform
 - **الذكاء الاصطناعي:** Google Gemini API (لتوليد أوصاف المغامرات)
 
 ---

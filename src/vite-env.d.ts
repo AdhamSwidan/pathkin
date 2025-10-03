@@ -2,6 +2,7 @@
 // The necessary types for `import.meta.env` are explicitly defined below, which is sufficient for the app's needs.
 
 interface ImportMetaEnv {
+  readonly VITE_GOOGLE_MAPS_API_KEY: string;
   readonly VITE_GEMINI_API_KEY: string;
   readonly VITE_FIREBASE_API_KEY: string;
   readonly VITE_FIREBASE_AUTH_DOMAIN: string;

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { User, AdventureType, HydratedAdventure } from '../types';
 import Header from './Header';
 import AdventureCard from './AdventureCard';
@@ -69,38 +69,41 @@ const SearchScreen: React.FC<SearchScreenProps> = ({
   
   const [locationSuggestions, setLocationSuggestions] = useState<any[]>([]);
   const [isFetchingLocation, setIsFetchingLocation] = useState(false);
-  const [selectedCityName, setSelectedCityName] = useState(''); // To check against input
+  const [selectedCityName, setSelectedCityName] = useState('');
   const locationRef = useRef<HTMLDivElement>(null);
   
   const [appliedFilters, setAppliedFilters] = useState<AppliedFilters | null>(null);
   const { t, language } = useTranslation();
 
-  // Debounce effect for location search
-  useEffect(() => {
-    // If the input text is the same as the full name we selected, do nothing.
-    if (city.trim() === selectedCityName) {
-        setLocationSuggestions([]);
-        return;
+  const fetchLocations = useCallback(async (input: string) => {
+    if (input.trim().length < 3) {
+      setLocationSuggestions([]);
+      return;
     }
+    setIsFetchingLocation(true);
+    try {
+      const response = await fetch(`https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&types=(cities)&key=${process.env.VITE_GOOGLE_MAPS_API_KEY}&language=${language}`);
+      const data = await response.json();
+      if (data.predictions) {
+        setLocationSuggestions(data.predictions);
+      }
+    } catch (error) {
+      console.error("Failed to fetch locations:", error);
+    }
+    setIsFetchingLocation(false);
+  }, [language]);
 
-    const fetchLocations = async () => {
-        if (city.trim().length < 3) {
-            setLocationSuggestions([]);
-            return;
-        }
-        setIsFetchingLocation(true);
-        try {
-            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}&limit=5&accept-language=${language}`);
-            const data = await response.json();
-            setLocationSuggestions(data);
-        } catch (error) { console.error("Failed to fetch locations:", error); }
-        setIsFetchingLocation(false);
-    };
-    const timerId = setTimeout(fetchLocations, 500);
+  useEffect(() => {
+    const timerId = setTimeout(() => {
+      if (city.trim() !== selectedCityName) {
+        fetchLocations(city);
+      } else {
+        setLocationSuggestions([]);
+      }
+    }, 500);
     return () => clearTimeout(timerId);
-  }, [city, selectedCityName, language]);
+  }, [city, selectedCityName, fetchLocations]);
 
-  // Click outside effect to close suggestions
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
         if (locationRef.current && !locationRef.current.contains(event.target as Node)) {
@@ -112,11 +115,8 @@ const SearchScreen: React.FC<SearchScreenProps> = ({
   }, []);
 
   const handleSelectLocation = (suggestion: any) => {
-    // Helper is inside FilterBar, so we just set the raw value here.
-    // The FilterBar will format it for display.
-    const displayName = suggestion.display_name;
-    setCity(displayName); 
-    setSelectedCityName(displayName);
+    setCity(suggestion.description); 
+    setSelectedCityName(suggestion.description);
     setLocationSuggestions([]);
   };
 
@@ -137,7 +137,7 @@ const SearchScreen: React.FC<SearchScreenProps> = ({
 
       if (appliedFilters.type !== 'all' && adventure.type !== appliedFilters.type) return false;
       const lowerCity = appliedFilters.city.toLowerCase().trim();
-      if (lowerCity && !adventure.location.toLowerCase().includes(lowerCity)) return false;
+      if (lowerCity && !adventure.location.toLowerCase().includes(lowerCity.split(',')[0])) return false;
       const numBudget = parseInt(appliedFilters.budget, 10);
       if (!isNaN(numBudget) && adventure.budget > numBudget) return false;
 

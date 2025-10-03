@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Adventure, AdventurePrivacy, AdventureType, HydratedAdventure } from '../types';
 import { useTranslation } from '../contexts/LanguageContext';
 
@@ -27,44 +27,36 @@ const EditAdventureModal: React.FC<EditAdventureModalProps> = ({ adventure, onCl
   const [endDate, setEndDate] = useState(adventure.endDate || '');
 
   const locationRef = useRef<HTMLDivElement>(null);
-  
-  const formatLocation = (suggestion: any) => {
-    const { address } = suggestion;
-    if (!address) return suggestion.display_name;
-    const parts = [
-      address.city || address.town || address.village || address.suburb || address.county,
-      address.state,
-      address.country
-    ];
-    return parts.filter(Boolean).join(', ');
-  }
+
+  const fetchLocations = useCallback(async (input: string) => {
+    if (input.trim().length < 3) {
+      setLocationSuggestions([]);
+      return;
+    }
+    setIsFetchingLocation(true);
+    try {
+      const response = await fetch(`https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&key=${process.env.VITE_GOOGLE_MAPS_API_KEY}&language=${language}`);
+      const data = await response.json();
+      if (data.predictions) {
+        setLocationSuggestions(data.predictions);
+      }
+    } catch (error) {
+      console.error("Failed to fetch locations:", error);
+    }
+    setIsFetchingLocation(false);
+  }, [language]);
 
   // Debounce effect for location search
   useEffect(() => {
-    if (locationInput.trim() === location) {
+    const timerId = setTimeout(() => {
+      if (locationInput.trim() !== location) {
+        fetchLocations(locationInput);
+      } else {
         setLocationSuggestions([]);
-        return;
-    }
-
-    const fetchLocations = async () => {
-        if (locationInput.trim().length < 3) {
-            setLocationSuggestions([]);
-            return;
-        }
-        setIsFetchingLocation(true);
-        try {
-            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationInput)}&limit=5&accept-language=${language}`);
-            const data = await response.json();
-            setLocationSuggestions(data);
-        } catch (error) {
-            console.error("Failed to fetch locations:", error);
-        }
-        setIsFetchingLocation(false);
-    };
-
-    const timerId = setTimeout(fetchLocations, 500);
+      }
+    }, 500);
     return () => clearTimeout(timerId);
-  }, [locationInput, location, language]);
+  }, [locationInput, location, fetchLocations]);
 
   // Effect to close suggestions on outside click
   useEffect(() => {
@@ -77,12 +69,19 @@ const EditAdventureModal: React.FC<EditAdventureModalProps> = ({ adventure, onCl
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSelectLocation = (suggestion: any) => {
-    const formattedName = formatLocation(suggestion);
-    setLocation(formattedName);
-    setLocationInput(formattedName);
-    setSelectedCoordinates({ lat: parseFloat(suggestion.lat), lng: parseFloat(suggestion.lon) });
+  const handleSelectLocation = async (suggestion: any) => {
+    setLocation(suggestion.description);
+    setLocationInput(suggestion.description);
     setLocationSuggestions([]);
+    try {
+        const response = await fetch(`https://maps.googleapis.com/maps/api/place/details/json?place_id=${suggestion.place_id}&fields=geometry&key=${process.env.VITE_GOOGLE_MAPS_API_KEY}`);
+        const data = await response.json();
+        if(data.result.geometry) {
+            setSelectedCoordinates(data.result.geometry.location);
+        }
+    } catch (error) {
+        console.error("Failed to fetch place details:", error);
+    }
   };
 
   const handleSubmit = () => {
@@ -170,7 +169,7 @@ const EditAdventureModal: React.FC<EditAdventureModalProps> = ({ adventure, onCl
                     <ul className="absolute z-10 w-full mt-1 bg-white dark:bg-neutral-800 border dark:border-neutral-700 rounded-md shadow-lg max-h-60 overflow-y-auto">
                         {locationSuggestions.map(s => (
                             <li key={s.place_id} onClick={() => handleSelectLocation(s)} className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-700 cursor-pointer">
-                                {formatLocation(s)}
+                                {s.description}
                             </li>
                         ))}
                     </ul>
