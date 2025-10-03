@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Header from './Header';
 import { PostType, Media, PostPrivacy, Post, User } from '../types';
 import { generateDescription } from '../services/geminiService';
@@ -16,8 +16,10 @@ const CreatePostScreen: React.FC<CreatePostScreenProps> = ({ onCreatePost }) => 
   const [keywords, setKeywords] = useState('');
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
-  const [lat, setLat] = useState('');
-  const [lng, setLng] = useState('');
+  const [locationInput, setLocationInput] = useState('');
+  const [locationSuggestions, setLocationSuggestions] = useState<any[]>([]);
+  const [selectedCoordinates, setSelectedCoordinates] = useState<{ lat: number; lng: number } | null>(null);
+  const [isFetchingLocation, setIsFetchingLocation] = useState(false);
   const [budget, setBudget] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -26,7 +28,53 @@ const CreatePostScreen: React.FC<CreatePostScreenProps> = ({ onCreatePost }) => 
   
   const [isGenerating, setIsGenerating] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const locationRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
+
+  // Debounce effect for location search
+  useEffect(() => {
+    if (locationInput.trim() === location) {
+        setLocationSuggestions([]);
+        return;
+    }
+
+    const fetchLocations = async () => {
+        if (locationInput.trim().length < 3) {
+            setLocationSuggestions([]);
+            return;
+        }
+        setIsFetchingLocation(true);
+        try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationInput)}&limit=5`);
+            const data = await response.json();
+            setLocationSuggestions(data);
+        } catch (error) {
+            console.error("Failed to fetch locations:", error);
+        }
+        setIsFetchingLocation(false);
+    };
+
+    const timerId = setTimeout(fetchLocations, 500);
+    return () => clearTimeout(timerId);
+  }, [locationInput, location]);
+
+  // Effect to close suggestions on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+        if (locationRef.current && !locationRef.current.contains(event.target as Node)) {
+            setLocationSuggestions([]);
+        }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleSelectLocation = (suggestion: any) => {
+    setLocation(suggestion.display_name);
+    setLocationInput(suggestion.display_name);
+    setSelectedCoordinates({ lat: parseFloat(suggestion.lat), lng: parseFloat(suggestion.lon) });
+    setLocationSuggestions([]);
+  };
 
   const handleGenerateDescription = async () => {
     if (!title || !keywords) {
@@ -54,13 +102,16 @@ const CreatePostScreen: React.FC<CreatePostScreenProps> = ({ onCreatePost }) => 
   };
   
   const handleSubmit = () => {
-    if (!title || !description || !location || !startDate || !budget) {
-      alert("Please fill in all required fields: Title, Description, Location, Start Date, and Budget.");
+    if (!title || !description || !startDate || !budget) {
+      alert("Please fill in all required fields: Title, Description, Start Date, and Budget.");
       return;
     }
-    
-    const coordinates = (lat && lng) ? { lat: parseFloat(lat), lng: parseFloat(lng) } : undefined;
 
+    if (!location || !selectedCoordinates) {
+        alert(t('selectValidLocation'));
+        return;
+    }
+    
     // @ts-ignore
     const newPostData = {
       type: postType,
@@ -68,7 +119,7 @@ const CreatePostScreen: React.FC<CreatePostScreenProps> = ({ onCreatePost }) => 
       title,
       description,
       location,
-      coordinates,
+      coordinates: selectedCoordinates,
       startDate,
       endDate: endDate || undefined,
       budget: parseInt(budget, 10),
@@ -150,19 +201,29 @@ const CreatePostScreen: React.FC<CreatePostScreenProps> = ({ onCreatePost }) => 
           )}
         </div>
         
-        <div>
+        <div ref={locationRef} className="relative">
           <label className={labelBaseClasses}>{t('location')}</label>
-          <input type="text" value={location} onChange={e => setLocation(e.target.value)} className={inputBaseClasses} placeholder="e.g., Cusco, Peru" />
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={labelBaseClasses}>{t('latitude')}</label>
-              <input type="number" value={lat} onChange={e => setLat(e.target.value)} className={inputBaseClasses} placeholder="e.g., -13.531" />
-            </div>
-            <div>
-              <label className={labelBaseClasses}>{t('longitude')}</label>
-              <input type="number" value={lng} onChange={e => setLng(e.target.value)} className={inputBaseClasses} placeholder="e.g., -71.967" />
-            </div>
+          <input 
+              type="text" 
+              value={locationInput} 
+              onChange={e => {
+                  setLocationInput(e.target.value);
+                  setSelectedCoordinates(null);
+                  setLocation('');
+              }} 
+              className={inputBaseClasses} 
+              placeholder="e.g., Barcelona, Spain" 
+          />
+          {isFetchingLocation && <div className="p-2 text-xs text-gray-500">{t('searching')}</div>}
+          {locationSuggestions.length > 0 && (
+              <ul className="absolute z-10 w-full mt-1 bg-white dark:bg-neutral-800 border dark:border-neutral-700 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                  {locationSuggestions.map(s => (
+                      <li key={s.place_id} onClick={() => handleSelectLocation(s)} className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-700 cursor-pointer">
+                          {s.display_name}
+                      </li>
+                  ))}
+              </ul>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-4">

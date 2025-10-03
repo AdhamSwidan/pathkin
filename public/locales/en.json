@@ -155,13 +155,14 @@
   "savedPosts": "Saved Posts",
   "noSavedPosts": "You have no saved posts.",
   "country": "Country",
-  "latitude": "Latitude (Optional)",
-  "longitude": "Longitude (Optional)",
   "editPost": "Edit Post",
   "deletePost": "Delete Post",
   "confirmDelete": "Are you sure you want to delete this post? This action cannot be undone.",
   "postUpdated": "Post updated successfully!",
   "postDeleted": "Post deleted successfully.",
   "homeCountry": "Home Country",
-  "followsYou": "Follows you"
+  "followsYou": "Follows you",
+  "searchForCountry": "Search for a country...",
+  "searching": "Searching...",
+  "selectValidLocation": "Please select a valid location from the suggestions."
 }

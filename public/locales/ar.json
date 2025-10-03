@@ -155,13 +155,14 @@
   "savedPosts": "المنشورات المحفوظة",
   "noSavedPosts": "ليس لديك منشورات محفوظة.",
   "country": "الدولة",
-  "latitude": "خط العرض (اختياري)",
-  "longitude": "خط الطول (اختياري)",
   "editPost": "تعديل المنشور",
   "deletePost": "حذف المنشور",
   "confirmDelete": "هل أنت متأكد من أنك تريد حذف هذا المنشور؟ لا يمكن التراجع عن هذا الإجراء.",
   "postUpdated": "تم تحديث المنشور بنجاح!",
   "postDeleted": "تم حذف المنشور بنجاح.",
   "homeCountry": "الدولة الأم",
-  "followsYou": "يتابعك"
+  "followsYou": "يتابعك",
+  "searchForCountry": "ابحث عن دولة...",
+  "searching": "جارٍ البحث...",
+  "selectValidLocation": "الرجاء اختيار موقع صحيح من الاقتراحات."
 }

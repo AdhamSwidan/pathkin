@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import GoogleIcon from './icons/GoogleIcon';
 import FacebookIcon from './icons/FacebookIcon';
 import { useTranslation } from '../contexts/LanguageContext';
@@ -25,11 +25,33 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onSignUp, onSocialLogi
   const [gender, setGender] = useState('');
   const [country, setCountry] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  
+  const [countrySearch, setCountrySearch] = useState('');
+  const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
+  const countryRef = useRef<HTMLDivElement>(null);
+  
   const { t } = useTranslation();
 
   const inputClasses = "w-full px-4 py-3 rounded-md bg-gray-100 dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-800 dark:text-gray-200";
   const buttonClasses = "w-full py-3 rounded-md font-semibold text-white transition-colors";
   const socialButtonClasses = "w-full flex items-center justify-center py-3 rounded-md border border-gray-300 dark:border-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-800 transition-colors";
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+        if (countryRef.current && !countryRef.current.contains(event.target as Node)) {
+            setIsCountryDropdownOpen(false);
+        }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filteredCountries = useMemo(() => 
+    countries.filter(c => 
+        c.toLowerCase().includes(countrySearch.toLowerCase())
+    ), 
+    [countrySearch]
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,12 +120,39 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onSignUp, onSocialLogi
                     <option value="prefer_not_to_say">{t('preferNotToSay')}</option>
                   </select>
                 </div>
-                <div>
+                <div ref={countryRef} className="relative">
                   <label htmlFor="country" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 ms-1">{t('country')}</label>
-                  <select id="country" className={`${inputClasses} text-gray-500`} value={country} onChange={e => setCountry(e.target.value)} required>
-                    <option value="" disabled>{t('selectOption')}</option>
-                    {countries.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
+                  <button type="button" onClick={() => setIsCountryDropdownOpen(prev => !prev)} className={`${inputClasses} text-left ${country ? 'text-gray-800 dark:text-gray-200' : 'text-gray-500'}`}>
+                    {country || t('selectOption')}
+                  </button>
+                  {isCountryDropdownOpen && (
+                    <div className="absolute z-10 w-full mt-1 bg-white dark:bg-neutral-800 border dark:border-neutral-700 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                      <div className="p-2">
+                        <input 
+                          type="text" 
+                          placeholder={t('searchForCountry')}
+                          className={inputClasses}
+                          value={countrySearch}
+                          onChange={e => setCountrySearch(e.target.value)}
+                          autoFocus
+                        />
+                      </div>
+                      <ul className="py-1">
+                        {filteredCountries.map(c => (
+                          <li key={c}
+                            onClick={() => {
+                              setCountry(c);
+                              setIsCountryDropdownOpen(false);
+                              setCountrySearch('');
+                            }}
+                            className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-700 cursor-pointer"
+                          >
+                            {c}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               </div>
             </>

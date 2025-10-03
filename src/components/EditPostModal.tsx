@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Post, PostPrivacy, PostType, HydratedPost } from '../types';
 import { useTranslation } from '../contexts/LanguageContext';
 
@@ -15,15 +15,69 @@ const EditPostModal: React.FC<EditPostModalProps> = ({ post, onClose, onUpdatePo
   const [privacy, setPrivacy] = useState<PostPrivacy>(post.privacy);
   const [title, setTitle] = useState(post.title);
   const [description, setDescription] = useState(post.description);
+  
   const [location, setLocation] = useState(post.location);
-  const [lat, setLat] = useState(post.coordinates?.lat.toString() || '');
-  const [lng, setLng] = useState(post.coordinates?.lng.toString() || '');
+  const [locationInput, setLocationInput] = useState(post.location);
+  const [locationSuggestions, setLocationSuggestions] = useState<any[]>([]);
+  const [selectedCoordinates, setSelectedCoordinates] = useState(post.coordinates || null);
+  const [isFetchingLocation, setIsFetchingLocation] = useState(false);
+  
   const [budget, setBudget] = useState(post.budget.toString());
   const [startDate, setStartDate] = useState(post.startDate);
   const [endDate, setEndDate] = useState(post.endDate || '');
 
+  const locationRef = useRef<HTMLDivElement>(null);
+
+  // Debounce effect for location search
+  useEffect(() => {
+    if (locationInput.trim() === location) {
+        setLocationSuggestions([]);
+        return;
+    }
+
+    const fetchLocations = async () => {
+        if (locationInput.trim().length < 3) {
+            setLocationSuggestions([]);
+            return;
+        }
+        setIsFetchingLocation(true);
+        try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationInput)}&limit=5`);
+            const data = await response.json();
+            setLocationSuggestions(data);
+        } catch (error) {
+            console.error("Failed to fetch locations:", error);
+        }
+        setIsFetchingLocation(false);
+    };
+
+    const timerId = setTimeout(fetchLocations, 500);
+    return () => clearTimeout(timerId);
+  }, [locationInput, location]);
+
+  // Effect to close suggestions on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+        if (locationRef.current && !locationRef.current.contains(event.target as Node)) {
+            setLocationSuggestions([]);
+        }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleSelectLocation = (suggestion: any) => {
+    setLocation(suggestion.display_name);
+    setLocationInput(suggestion.display_name);
+    setSelectedCoordinates({ lat: parseFloat(suggestion.lat), lng: parseFloat(suggestion.lon) });
+    setLocationSuggestions([]);
+  };
+
   const handleSubmit = () => {
-    const coordinates = (lat && lng) ? { lat: parseFloat(lat), lng: parseFloat(lng) } : undefined;
+    if (!location || !selectedCoordinates) {
+        alert(t('selectValidLocation'));
+        return;
+    }
 
     const updatedData: Partial<Post> = {
       type: postType,
@@ -31,7 +85,7 @@ const EditPostModal: React.FC<EditPostModalProps> = ({ post, onClose, onUpdatePo
       title,
       description,
       location,
-      coordinates,
+      coordinates: selectedCoordinates,
       startDate,
       endDate: endDate || undefined,
       budget: parseInt(budget, 10),
@@ -86,19 +140,29 @@ const EditPostModal: React.FC<EditPostModalProps> = ({ post, onClose, onUpdatePo
                 <textarea id="description" value={description} onChange={e => setDescription(e.target.value)} rows={4} className={inputBaseClasses}></textarea>
             </div>
             
-             <div>
+             <div ref={locationRef} className="relative">
                 <label className={labelBaseClasses}>{t('location')}</label>
-                <input type="text" value={location} onChange={e => setLocation(e.target.value)} className={inputBaseClasses} />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-                <div>
-                    <label className={labelBaseClasses}>{t('latitude')}</label>
-                    <input type="number" value={lat} onChange={e => setLat(e.target.value)} className={inputBaseClasses} />
-                </div>
-                <div>
-                    <label className={labelBaseClasses}>{t('longitude')}</label>
-                    <input type="number" value={lng} onChange={e => setLng(e.target.value)} className={inputBaseClasses} />
-                </div>
+                 <input 
+                    type="text" 
+                    value={locationInput} 
+                    onChange={e => {
+                        setLocationInput(e.target.value);
+                        setSelectedCoordinates(null);
+                        setLocation('');
+                    }} 
+                    className={inputBaseClasses} 
+                    placeholder="e.g., Barcelona, Spain" 
+                />
+                {isFetchingLocation && <div className="p-2 text-xs text-gray-500">{t('searching')}</div>}
+                {locationSuggestions.length > 0 && (
+                    <ul className="absolute z-10 w-full mt-1 bg-white dark:bg-neutral-800 border dark:border-neutral-700 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                        {locationSuggestions.map(s => (
+                            <li key={s.place_id} onClick={() => handleSelectLocation(s)} className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-700 cursor-pointer">
+                                {s.display_name}
+                            </li>
+                        ))}
+                    </ul>
+                )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
