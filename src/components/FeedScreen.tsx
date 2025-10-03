@@ -1,11 +1,12 @@
-import React from 'react';
-import { User, HydratedPost, HydratedStory } from '../types';
+import React, { useState, useMemo } from 'react';
+import { User, HydratedPost, HydratedStory, PostType } from '../types';
 import Header from './Header';
 import PostCard from './PostCard';
 import StoryReel from './StoryReel';
 import BellIcon from './icons/BellIcon';
 import MessageIcon from './icons/MessageIcon';
 import { useTranslation } from '../contexts/LanguageContext';
+import PostTypeFilterBar from './PostTypeFilterBar';
 
 interface FeedScreenProps {
   posts: HydratedPost[];
@@ -53,6 +54,15 @@ const FeedScreen: React.FC<FeedScreenProps> = ({
   onEditPost,
 }) => {
   const { t } = useTranslation();
+  const [selectedPostType, setSelectedPostType] = useState<PostType | 'all'>('all');
+
+  const filteredPosts = useMemo(() => {
+    if (selectedPostType === 'all') {
+      return posts;
+    }
+    return posts.filter(post => post.type === selectedPostType);
+  }, [posts, selectedPostType]);
+
   const headerActions = (
     <div className="flex items-center space-x-2">
       <button onClick={onNavigateToChat} className="p-2 text-gray-600 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 relative">
@@ -74,8 +84,14 @@ const FeedScreen: React.FC<FeedScreenProps> = ({
         rightAction={headerActions}
       />
       <StoryReel stories={stories} currentUser={currentUser} onSelectStories={onSelectStories} onAddStory={onAddStory} />
+      
+      <PostTypeFilterBar 
+        selectedType={selectedPostType} 
+        onSelectType={setSelectedPostType} 
+      />
+
       <div className="px-2 pt-2">
-        {posts.map(post => (
+        {filteredPosts.map(post => (
           <PostCard 
             key={post.id} 
             post={post} 
@@ -94,10 +110,10 @@ const FeedScreen: React.FC<FeedScreenProps> = ({
             onEditPost={onEditPost}
           />
         ))}
-        {posts.length === 0 && (
+        {filteredPosts.length === 0 && (
           <div className="text-center py-10 px-4">
             <p className="text-gray-600 dark:text-gray-400 font-semibold">{t('noPostsToShow')}</p>
-            <p className="text-gray-500 dark:text-gray-500 text-sm mt-1">{t('checkPrivacySettings')}</p>
+            <p className="text-gray-500 dark:text-gray-500 text-sm mt-1">{selectedPostType === 'all' ? t('checkPrivacySettings') : t('tryAdjustingFilters')}</p>
           </div>
         )}
       </div>
