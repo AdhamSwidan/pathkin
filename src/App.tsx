@@ -130,7 +130,7 @@ const App: React.FC = () => {
         setUsers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User)));
     });
 
-    const adventuresQuery = query(collection(db, "adventures"), orderBy("createdAt", "desc"));
+    const adventuresQuery = query(collection(db, "posts"), orderBy("createdAt", "desc"));
     const unsubAdventures = onSnapshot(adventuresQuery, (snapshot) => {
         setAdventures(snapshot.docs.map(doc => {
             const data = doc.data();
@@ -213,7 +213,7 @@ const App: React.FC = () => {
       setComments([]);
       return;
     }
-    const commentsQuery = query(collection(db, 'adventures', selectedAdventure.id, 'comments'), orderBy('createdAt', 'asc'));
+    const commentsQuery = query(collection(db, 'posts', selectedAdventure.id, 'comments'), orderBy('createdAt', 'asc'));
     const unsubscribe = onSnapshot(commentsQuery, (snapshot) => {
       const fetchedComments = snapshot.docs.map(doc => ({
         id: doc.id,
@@ -475,7 +475,7 @@ const App: React.FC = () => {
             adventureToSave.media = [{ url: mediaUrl, type: mediaFile.type.startsWith('video') ? 'video' : 'image' }];
         }
         
-        const adventuresCollectionRef = collection(db, 'adventures');
+        const adventuresCollectionRef = collection(db, 'posts');
         await addDoc(adventuresCollectionRef, adventureToSave);
 
         handleSetActiveScreen('feed');
@@ -537,7 +537,7 @@ const App: React.FC = () => {
 
   const handleToggleInterest = async (adventureId: string) => {
     if (!currentUser) { showGuestToast(); return; }
-    const adventureRef = doc(db, "adventures", adventureId);
+    const adventureRef = doc(db, "posts", adventureId);
     const adventure = adventures.find(p => p.id === adventureId);
     if (!adventure) return;
     
@@ -613,7 +613,7 @@ const App: React.FC = () => {
   const handleAddComment = async (adventureId: string, text: string) => {
     if (!currentUser) { showGuestToast(); return; }
 
-    const adventureRef = doc(db, "adventures", adventureId);
+    const adventureRef = doc(db, "posts", adventureId);
     const commentsRef = collection(adventureRef, 'comments');
     
     try {
@@ -826,7 +826,7 @@ const App: React.FC = () => {
     }
 
     try {
-        await deleteDoc(doc(db, 'adventures', adventureId));
+        await deleteDoc(doc(db, 'posts', adventureId));
         setToastMessage(t('adventureDeletedSuccessfully'));
         if (selectedAdventure?.id === adventureId) {
             setSelectedAdventure(null);
@@ -839,7 +839,7 @@ const App: React.FC = () => {
   
   const handleUpdateAdventure = async (adventureId: string, updatedData: Partial<Adventure>) => {
       try {
-          const adventureRef = doc(db, 'adventures', adventureId);
+          const adventureRef = doc(db, 'posts', adventureId);
           await updateDoc(adventureRef, updatedData);
           setToastMessage(t('adventureUpdatedSuccessfully'));
           setEditingAdventure(null);
