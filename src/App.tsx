@@ -465,21 +465,21 @@ const App: React.FC = () => {
   const handleCreatePost = async (newPostData: Omit<Post, 'id' | 'authorId' | 'interestedUsers' | 'commentCount' | 'createdAt'>, mediaFile: File | null) => {
     if (!currentUser) return;
     try {
-        let media: Media[] | undefined = undefined;
-        if (mediaFile) {
-            const mediaUrl = await uploadFile(mediaFile, `posts/${currentUser.id}/${Date.now()}_${mediaFile.name}`);
-            media = [{ url: mediaUrl, type: mediaFile.type.startsWith('video') ? 'video' : 'image' }];
-        }
-        
-        const postsCollectionRef = collection(db, 'posts');
-        await addDoc(postsCollectionRef, {
+        const postToSave: any = {
             ...newPostData,
             authorId: currentUser.id,
             interestedUsers: [],
             commentCount: 0,
             createdAt: serverTimestamp(),
-            media
-        });
+        };
+
+        if (mediaFile) {
+            const mediaUrl = await uploadFile(mediaFile, `posts/${currentUser.id}/${Date.now()}_${mediaFile.name}`);
+            postToSave.media = [{ url: mediaUrl, type: mediaFile.type.startsWith('video') ? 'video' : 'image' }];
+        }
+        
+        const postsCollectionRef = collection(db, 'posts');
+        await addDoc(postsCollectionRef, postToSave);
 
         handleSetActiveScreen('feed');
         setToastMessage(t('postPublished'));
