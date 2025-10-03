@@ -29,7 +29,7 @@ import EditPostModal from './components/EditPostModal';
 import SavedPostsScreen from './components/settings/SavedPostsScreen';
 import { useTranslation } from './contexts/LanguageContext';
 
-import { Screen, Post, PostType, User, Story, Notification, PostPrivacy, Media, HydratedPost, HydratedStory, ActivityStatus, NotificationType, HydratedConversation, Conversation, Message, HydratedComment, Comment } from './types';
+import { Screen, Post, PostType, User, Story, Notification, PostPrivacy, HydratedPost, HydratedStory, ActivityStatus, NotificationType, HydratedConversation, Conversation, Message, HydratedComment, Comment } from './types';
 import {
   auth, db, storage,
   onAuthStateChanged,
@@ -476,6 +476,8 @@ const App: React.FC = () => {
         if (mediaFile) {
             const mediaUrl = await uploadFile(mediaFile, `posts/${currentUser.id}/${Date.now()}_${mediaFile.name}`);
             postToSave.media = [{ url: mediaUrl, type: mediaFile.type.startsWith('video') ? 'video' : 'image' }];
+        } else {
+            delete postToSave.media;
         }
         
         const postsCollectionRef = collection(db, 'posts');
