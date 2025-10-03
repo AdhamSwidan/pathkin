@@ -1,7 +1,7 @@
 // @google/genai-api-key
 import { GoogleGenAI } from "@google/genai";
 
-// Fix: Initialize the GoogleGenAI client with the API key from environment variables.
+// Fix: Initialize the GoogleGenAI client with the API key from environment variables as per the coding guidelines.
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const generateDescription = async (title: string, keywords: string): Promise<string> => {
