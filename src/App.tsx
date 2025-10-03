@@ -271,7 +271,6 @@ const App: React.FC = () => {
   
   const savedAdventures = useMemo(() => {
     if (!currentUser) return [];
-    // Fix: Add fallback for currentUser.savedAdventures to prevent crash on older user data.
     return hydratedAdventures.filter(p => (currentUser.savedAdventures || []).includes(p.id));
   }, [hydratedAdventures, currentUser]);
 
@@ -457,6 +456,8 @@ const App: React.FC = () => {
         
         const userDocRef = doc(db, 'users', currentUser.id);
         await updateDoc(userDocRef, updatePayload);
+        
+        setCurrentUser(prev => prev ? { ...prev, ...updatePayload } : null);
 
         setToastMessage(t('settingsSaved'));
         goBack();
@@ -512,11 +513,21 @@ const App: React.FC = () => {
   
   const handleFollowToggle = async (userIdToFollow: string) => {
     if (!currentUser) { showGuestToast(); return; }
+
+    const isFollowing = (currentUser.following || []).includes(userIdToFollow);
+
+    // Optimistic UI Update
+    const originalFollowing = currentUser.following || [];
+    const newFollowing = isFollowing
+        ? originalFollowing.filter(id => id !== userIdToFollow)
+        : [...originalFollowing, userIdToFollow];
+
+    setCurrentUser(prev => prev ? { ...prev, following: newFollowing } : null);
+
+    // Firebase update
     const currentUserRef = doc(db, "users", currentUser.id);
     const userToFollowRef = doc(db, "users", userIdToFollow);
-    
-    const isFollowing = (currentUser.following || []).includes(userIdToFollow);
-    
+
     try {
         await updateDoc(currentUserRef, {
             following: isFollowing ? arrayRemove(userIdToFollow) : arrayUnion(userIdToFollow)
@@ -526,6 +537,9 @@ const App: React.FC = () => {
         });
     } catch (e) {
         console.error("Error toggling follow:", e);
+        setToastMessage("Failed to update follow status.");
+        // Rollback on failure
+        setCurrentUser(prev => prev ? { ...prev, following: originalFollowing } : null);
     }
   };
 
@@ -869,7 +883,6 @@ const App: React.FC = () => {
     if (isGuest) return hydratedAdventures.filter(adventure => adventure.privacy === AdventurePrivacy.Public);
     if (!currentUser) return [];
     
-    // Fix: Add defensive fallback for currentUser.following
     const userFollowing = currentUser.following || [];
     
     return hydratedAdventures.filter(adventure => {

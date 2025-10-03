@@ -9,7 +9,7 @@ interface EditAdventureModalProps {
 }
 
 const EditAdventureModal: React.FC<EditAdventureModalProps> = ({ adventure, onClose, onUpdateAdventure }) => {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   
   const [adventureType, setAdventureType] = useState<AdventureType>(adventure.type);
   const [privacy, setPrivacy] = useState<AdventurePrivacy>(adventure.privacy);
@@ -27,6 +27,17 @@ const EditAdventureModal: React.FC<EditAdventureModalProps> = ({ adventure, onCl
   const [endDate, setEndDate] = useState(adventure.endDate || '');
 
   const locationRef = useRef<HTMLDivElement>(null);
+  
+  const formatLocation = (suggestion: any) => {
+    const { address } = suggestion;
+    if (!address) return suggestion.display_name;
+    const parts = [
+      address.city || address.town || address.village || address.suburb || address.county,
+      address.state,
+      address.country
+    ];
+    return parts.filter(Boolean).join(', ');
+  }
 
   // Debounce effect for location search
   useEffect(() => {
@@ -42,7 +53,7 @@ const EditAdventureModal: React.FC<EditAdventureModalProps> = ({ adventure, onCl
         }
         setIsFetchingLocation(true);
         try {
-            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationInput)}&limit=5`);
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationInput)}&limit=5&accept-language=${language}`);
             const data = await response.json();
             setLocationSuggestions(data);
         } catch (error) {
@@ -53,7 +64,7 @@ const EditAdventureModal: React.FC<EditAdventureModalProps> = ({ adventure, onCl
 
     const timerId = setTimeout(fetchLocations, 500);
     return () => clearTimeout(timerId);
-  }, [locationInput, location]);
+  }, [locationInput, location, language]);
 
   // Effect to close suggestions on outside click
   useEffect(() => {
@@ -67,8 +78,9 @@ const EditAdventureModal: React.FC<EditAdventureModalProps> = ({ adventure, onCl
   }, []);
 
   const handleSelectLocation = (suggestion: any) => {
-    setLocation(suggestion.display_name);
-    setLocationInput(suggestion.display_name);
+    const formattedName = formatLocation(suggestion);
+    setLocation(formattedName);
+    setLocationInput(formattedName);
     setSelectedCoordinates({ lat: parseFloat(suggestion.lat), lng: parseFloat(suggestion.lon) });
     setLocationSuggestions([]);
   };
@@ -158,7 +170,7 @@ const EditAdventureModal: React.FC<EditAdventureModalProps> = ({ adventure, onCl
                     <ul className="absolute z-10 w-full mt-1 bg-white dark:bg-neutral-800 border dark:border-neutral-700 rounded-md shadow-lg max-h-60 overflow-y-auto">
                         {locationSuggestions.map(s => (
                             <li key={s.place_id} onClick={() => handleSelectLocation(s)} className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-700 cursor-pointer">
-                                {s.display_name}
+                                {formatLocation(s)}
                             </li>
                         ))}
                     </ul>

@@ -27,8 +27,9 @@ const MapScreen: React.FC<MapScreenProps> = ({ adventuresToShow, language }) => 
     });
   }, []);
 
-  const formatLocation = (address: any) => {
-    if (!address) return '';
+  const formatLocation = (data: any) => {
+    const { address } = data;
+    if (!address) return data.display_name.split(',').slice(0, 3).join(', ');;
     const parts = [
       address.city || address.town || address.village || address.suburb || address.county,
       address.state,
@@ -72,10 +73,8 @@ const MapScreen: React.FC<MapScreenProps> = ({ adventuresToShow, language }) => 
                 try {
                     const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${adventure.coordinates.lat}&lon=${adventure.coordinates.lng}&accept-language=${language}&zoom=10`);
                     const data = await response.json();
-                    if (data && data.address) {
-                        locationName = formatLocation(data.address);
-                    } else if (data && data.display_name) {
-                        locationName = data.display_name.split(',').slice(0, 3).join(','); // Simpler fallback if no address object
+                    if (data) {
+                        locationName = formatLocation(data);
                     }
                 } catch (error) {
                     console.error("Reverse geocoding failed:", error);

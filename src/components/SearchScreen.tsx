@@ -75,17 +75,6 @@ const SearchScreen: React.FC<SearchScreenProps> = ({
   const [appliedFilters, setAppliedFilters] = useState<AppliedFilters | null>(null);
   const { t, language } = useTranslation();
 
-  const formatLocation = (suggestion: any) => {
-    const { address } = suggestion;
-    if (!address) return suggestion.display_name;
-    const parts = [
-      address.city || address.town || address.village || address.suburb || address.county,
-      address.state,
-      address.country
-    ];
-    return parts.filter(Boolean).join(', ');
-  }
-
   // Debounce effect for location search
   useEffect(() => {
     // If the input text is the same as the full name we selected, do nothing.
@@ -123,9 +112,11 @@ const SearchScreen: React.FC<SearchScreenProps> = ({
   }, []);
 
   const handleSelectLocation = (suggestion: any) => {
-    const formattedName = formatLocation(suggestion);
-    setCity(formattedName);
-    setSelectedCityName(formattedName); // Store the full name to prevent re-fetch
+    // Helper is inside FilterBar, so we just set the raw value here.
+    // The FilterBar will format it for display.
+    const displayName = suggestion.display_name;
+    setCity(displayName); 
+    setSelectedCityName(displayName);
     setLocationSuggestions([]);
   };
 
