@@ -48,12 +48,12 @@ const AdventureCard: React.FC<AdventureCardProps> = ({
   const { t, language } = useTranslation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const isInterested = currentUser ? adventure.interestedUsers.includes(currentUser.id) : false;
-  const isReposted = currentUser ? currentUser.repostedAdventures.includes(adventure.id) : false;
-  const isSaved = currentUser ? currentUser.savedAdventures.includes(adventure.id) : false;
+  const isInterested = currentUser ? (adventure.interestedUsers || []).includes(currentUser.id) : false;
+  const isReposted = currentUser ? (currentUser.repostedAdventures || []).includes(adventure.id) : false;
+  const isSaved = currentUser ? (currentUser.savedAdventures || []).includes(adventure.id) : false;
   const isAuthor = currentUser?.id === adventure.author.id;
   
-  const activityLogEntry = currentUser ? currentUser.activityLog.find(a => a.adventureId === adventure.id) : undefined;
+  const activityLogEntry = currentUser ? (currentUser.activityLog || []).find(a => a.adventureId === adventure.id) : undefined;
   const activityStatus = activityLogEntry?.status;
 
 

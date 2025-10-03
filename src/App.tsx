@@ -271,7 +271,7 @@ const App: React.FC = () => {
   
   const savedAdventures = useMemo(() => {
     if (!currentUser) return [];
-    return hydratedAdventures.filter(p => currentUser.savedAdventures.includes(p.id));
+    return hydratedAdventures.filter(p => (currentUser.savedAdventures || []).includes(p.id));
   }, [hydratedAdventures, currentUser]);
 
   const userNotifications = useMemo(() => {
@@ -516,7 +516,7 @@ const App: React.FC = () => {
     const currentUserRef = doc(db, "users", currentUser.id);
     const userToFollowRef = doc(db, "users", userIdToFollow);
     
-    const isFollowing = currentUser.following.includes(userIdToFollow);
+    const isFollowing = (currentUser.following || []).includes(userIdToFollow);
     
     try {
         await updateDoc(currentUserRef, {
@@ -549,7 +549,7 @@ const App: React.FC = () => {
     const adventure = adventures.find(p => p.id === adventureId);
     if (!adventure) return;
     
-    const isInterested = adventure.interestedUsers.includes(currentUser.id);
+    const isInterested = (adventure.interestedUsers || []).includes(currentUser.id);
     
     try {
         await updateDoc(adventureRef, {
@@ -563,7 +563,7 @@ const App: React.FC = () => {
   const handleRepostToggle = async (adventureId: string) => {
     if (!currentUser) { showGuestToast(); return; }
     const userRef = doc(db, "users", currentUser.id);
-    const isReposted = currentUser.repostedAdventures.includes(adventureId);
+    const isReposted = (currentUser.repostedAdventures || []).includes(adventureId);
     try {
         await updateDoc(userRef, {
             repostedAdventures: isReposted ? arrayRemove(adventureId) : arrayUnion(adventureId)
@@ -574,7 +574,7 @@ const App: React.FC = () => {
   const handleSaveToggle = async (adventureId: string) => {
     if (!currentUser) { showGuestToast(); return; }
     const userRef = doc(db, "users", currentUser.id);
-    const isSaved = currentUser.savedAdventures.includes(adventureId);
+    const isSaved = (currentUser.savedAdventures || []).includes(adventureId);
     try {
         await updateDoc(userRef, {
             savedAdventures: isSaved ? arrayRemove(adventureId) : arrayUnion(adventureId)
@@ -698,7 +698,7 @@ const App: React.FC = () => {
         return;
     }
 
-    if (currentUser.activityLog.some(log => log.adventureId === adventureId)) {
+    if ((currentUser.activityLog || []).some(log => log.adventureId === adventureId)) {
         setToastMessage(t('alreadyMarkedDone'));
         return;
     }
@@ -742,7 +742,7 @@ const App: React.FC = () => {
           if (!attendeeDoc.exists()) return;
 
           const attendeeData = attendeeDoc.data() as User;
-          let newActivityLog = attendeeData.activityLog.filter(log => log.adventureId !== adventureId);
+          let newActivityLog = (attendeeData.activityLog || []).filter(log => log.adventureId !== adventureId);
 
           if (didAttend) {
               newActivityLog.push({ adventureId, status: ActivityStatus.Confirmed });
@@ -870,20 +870,22 @@ const App: React.FC = () => {
     if (isGuest) return hydratedAdventures.filter(adventure => adventure.privacy === AdventurePrivacy.Public);
     if (!currentUser) return [];
     
+    const userFollowing = currentUser.following || [];
+    
     return hydratedAdventures.filter(adventure => {
       if (adventure.author.id === currentUser.id) return true;
-      if (adventure.author.isPrivate && !currentUser.following.includes(adventure.author.id)) return false;
+      if (adventure.author.isPrivate && !userFollowing.includes(adventure.author.id)) return false;
       
       switch(adventure.privacy) {
         case AdventurePrivacy.Public: return true;
-        case AdventurePrivacy.Followers: return currentUser.following.includes(adventure.author.id);
+        case AdventurePrivacy.Followers: return userFollowing.includes(adventure.author.id);
         case AdventurePrivacy.Twins:
           if (!currentUser.birthday || !adventure.author.birthday) return false;
           return currentUser.birthday.substring(5) === adventure.author.birthday.substring(5);
         default: return false;
       }
     });
-  }, [hydratedAdventures, users, currentUser, isGuest]);
+  }, [hydratedAdventures, currentUser, isGuest]);
 
   const renderScreen = () => {
     const userForUI = currentUser ?? guestUser;
@@ -1034,8 +1036,8 @@ const App: React.FC = () => {
           <FollowListModal title={t(followListModal.listType)} listOwner={followListModal.user} currentUser={currentUser}
               users={
                   followListModal.listType === 'followers'
-                      ? users.filter(u => followListModal.user!.followers.includes(u.id))
-                      : users.filter(u => followListModal.user!.following.includes(u.id))
+                      ? users.filter(u => (followListModal.user!.followers || []).includes(u.id))
+                      : users.filter(u => (followListModal.user!.following || []).includes(u.id))
               }
               listType={followListModal.listType} onClose={handleCloseFollowList} onViewProfile={(user) => { handleCloseFollowList(); handleViewProfile(user); }}
               onFollowToggle={handleFollowToggle} onRemoveFollower={handleRemoveFollower}

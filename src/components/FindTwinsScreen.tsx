@@ -96,8 +96,8 @@ const FindTwinsScreen: React.FC<FindTwinsScreenProps> = ({
             <div className="space-y-3">
               <h3 className="font-bold text-lg dark:text-white">{t('foundTwins', { count: results.length })}</h3>
               {results.map(user => {
-                const isFollowing = currentUser.following.includes(user.id);
-                const followsYou = user.following.includes(currentUser.id);
+                const isFollowing = (currentUser.following || []).includes(user.id);
+                const followsYou = (user.following || []).includes(currentUser.id);
                 return (
                   <div key={user.id} className="bg-white dark:bg-neutral-900 p-3 rounded-lg border dark:border-neutral-800 flex flex-col sm:flex-row sm:items-center sm:justify-between">
                     <button onClick={() => onViewProfile(user)} className="flex items-center mb-2 sm:mb-0 text-left">

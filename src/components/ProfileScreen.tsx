@@ -70,9 +70,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   
   const { userAdventures, savedAdventures, repostedAdventures, completedAdventures } = useMemo(() => {
     const userAdventures = allAdventures.filter(p => p.author.id === user.id);
-    const savedAdventures = allAdventures.filter(p => user.savedAdventures.includes(p.id));
-    const repostedAdventures = allAdventures.filter(p => user.repostedAdventures.includes(p.id));
-    const completedAdventures = allAdventures.filter(p => user.activityLog.some(a => a.adventureId === p.id && a.status === ActivityStatus.Confirmed));
+    const savedAdventures = allAdventures.filter(p => (user.savedAdventures || []).includes(p.id));
+    const repostedAdventures = allAdventures.filter(p => (user.repostedAdventures || []).includes(p.id));
+    const completedAdventures = allAdventures.filter(p => (user.activityLog || []).some(a => a.adventureId === p.id && a.status === ActivityStatus.Confirmed));
     return { userAdventures, savedAdventures, repostedAdventures, completedAdventures };
   }, [allAdventures, user]);
   
@@ -160,11 +160,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                         <p className="text-xs font-semibold text-gray-600 dark:text-gray-500">{t('adventures')}</p>
                     </div>
                     <button className="text-center" onClick={() => onOpenFollowList(user, 'followers')}>
-                        <p className="font-bold text-lg text-gray-800 dark:text-gray-100">{user.followers.length}</p>
+                        <p className="font-bold text-lg text-gray-800 dark:text-gray-100">{(user.followers || []).length}</p>
                         <p className="text-xs font-semibold text-gray-600 dark:text-gray-500">{t('followers')}</p>
                     </button>
                     <button className="text-center" onClick={() => onOpenFollowList(user, 'following')}>
-                        <p className="font-bold text-lg text-gray-800 dark:text-gray-100">{user.following.length}</p>
+                        <p className="font-bold text-lg text-gray-800 dark:text-gray-100">{(user.following || []).length}</p>
                         <p className="text-xs font-semibold text-gray-600 dark:text-gray-500">{t('following')}</p>
                     </button>
                 </div>

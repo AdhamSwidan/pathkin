@@ -61,7 +61,7 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
   const [activeTab, setActiveTab] = useState<ProfileTab>('adventures');
   const { t } = useTranslation();
 
-  const isFollowing = currentUser.following.includes(user.id);
+  const isFollowing = (currentUser.following || []).includes(user.id);
   const canViewProfile = !user.isPrivate || (isFollowing && !isGuest);
 
   const headerActions = (
@@ -87,9 +87,9 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
         return false;
     });
 
-    const repostedAdventures = allAdventures.filter(p => user.repostedAdventures.includes(p.id));
+    const repostedAdventures = allAdventures.filter(p => (user.repostedAdventures || []).includes(p.id));
     const completedAdventures = allAdventures.filter(p => 
-        user.activityLog.some(a => a.adventureId === p.id && a.status === ActivityStatus.Confirmed)
+        (user.activityLog || []).some(a => a.adventureId === p.id && a.status === ActivityStatus.Confirmed)
     );
     return { userAdventures: visibleUserAdventures, repostedAdventures, completedAdventures };
   }, [allAdventures, user, currentUser, isFollowing, isGuest]);
@@ -195,11 +195,11 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
                       <p className="text-xs font-semibold text-gray-600 dark:text-gray-500">{t('adventures')}</p>
                   </div>
                   <button className="text-center disabled:cursor-default" onClick={() => onOpenFollowList(user, 'followers')} disabled={!canViewProfile || !user.privacySettings.showFollowLists}>
-                      <p className="font-bold text-lg text-gray-800 dark:text-gray-100">{canViewProfile && user.privacySettings.showFollowLists ? user.followers.length : '-'}</p>
+                      <p className="font-bold text-lg text-gray-800 dark:text-gray-100">{canViewProfile && user.privacySettings.showFollowLists ? (user.followers || []).length : '-'}</p>
                       <p className="text-xs font-semibold text-gray-600 dark:text-gray-500">{t('followers')}</p>
                   </button>
                   <button className="text-center disabled:cursor-default" onClick={() => onOpenFollowList(user, 'following')} disabled={!canViewProfile || !user.privacySettings.showFollowLists}>
-                      <p className="font-bold text-lg text-gray-800 dark:text-gray-100">{canViewProfile && user.privacySettings.showFollowLists ? user.following.length : '-'}</p>
+                      <p className="font-bold text-lg text-gray-800 dark:text-gray-100">{canViewProfile && user.privacySettings.showFollowLists ? (user.following || []).length : '-'}</p>
                       <p className="text-xs font-semibold text-gray-600 dark:text-gray-500">{t('following')}</p>
                   </button>
               </div>
