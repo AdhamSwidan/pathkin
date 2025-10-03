@@ -62,7 +62,10 @@ const SideNav: React.FC<SideNavProps> = ({ activeScreen, setActiveScreen, onNoti
   return (
     <div className="w-64 border-e border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 flex-col justify-between hidden xl:flex">
         <div>
-            <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-8 px-2">{t('appName')}</h1>
+            <div className="flex items-center mb-8 px-2">
+                <img src="/logo.svg" alt="Pathkin Logo" className="w-8 h-8 mr-2" />
+                <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">{t('appName')}</h1>
+            </div>
             <nav>
             {mainNavItems.map((item) => (
                 <NavItem
@@ -107,7 +110,7 @@ const SideNav: React.FC<SideNavProps> = ({ activeScreen, setActiveScreen, onNoti
             </nav>
         </div>
          <div className="text-center text-xs text-gray-400">
-            <p>&copy; 2024 Pathkin</p>
+            <p>&copy; 2025 Pathkin</p>
         </div>
     </div>
   );

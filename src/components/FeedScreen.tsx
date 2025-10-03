@@ -80,7 +80,7 @@ const FeedScreen: React.FC<FeedScreenProps> = ({
   return (
     <>
       <Header 
-        title={t('appName')}
+        title=""
         rightAction={headerActions}
       />
       <StoryReel stories={stories} currentUser={currentUser} onSelectStories={onSelectStories} onAddStory={onAddStory} />
