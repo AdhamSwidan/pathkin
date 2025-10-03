@@ -584,24 +584,54 @@ const App: React.FC = () => {
   
   const handleRepostToggle = async (adventureId: string) => {
     if (!currentUser) { showGuestToast(); return; }
+
+    const originalReposted = currentUser.repostedAdventures || [];
+    const isReposted = originalReposted.includes(adventureId);
+
+    // Optimistic UI Update
+    const newReposted = isReposted
+        ? originalReposted.filter(id => id !== adventureId)
+        : [...originalReposted, adventureId];
+    setCurrentUser(prev => prev ? { ...prev, repostedAdventures: newReposted } : null);
+    
+    // Firebase update
     const userRef = doc(db, "users", currentUser.id);
-    const isReposted = (currentUser.repostedAdventures || []).includes(adventureId);
     try {
         await updateDoc(userRef, {
             repostedAdventures: isReposted ? arrayRemove(adventureId) : arrayUnion(adventureId)
         });
-    } catch (e) { console.error("Error toggling repost:", e); }
+    } catch (e) { 
+        console.error("Error toggling repost:", e);
+        setToastMessage("Failed to update repost status.");
+        // Rollback on failure
+        setCurrentUser(prev => prev ? { ...prev, repostedAdventures: originalReposted } : null);
+    }
   };
 
   const handleSaveToggle = async (adventureId: string) => {
     if (!currentUser) { showGuestToast(); return; }
+
+    const originalSaved = currentUser.savedAdventures || [];
+    const isSaved = originalSaved.includes(adventureId);
+    
+    // Optimistic UI Update
+    const newSaved = isSaved 
+        ? originalSaved.filter(id => id !== adventureId)
+        : [...originalSaved, adventureId];
+    setCurrentUser(prev => prev ? { ...prev, savedAdventures: newSaved } : null);
+
+    // Firebase update
     const userRef = doc(db, "users", currentUser.id);
-    const isSaved = (currentUser.savedAdventures || []).includes(adventureId);
     try {
         await updateDoc(userRef, {
             savedAdventures: isSaved ? arrayRemove(adventureId) : arrayUnion(adventureId)
         });
-    } catch (e) { console.error("Error toggling save:", e); }
+    } catch (e) { 
+        console.error("Error toggling save:", e);
+        setToastMessage("Failed to update save status.");
+        // Rollback on failure
+        setCurrentUser(prev => prev ? { ...prev, savedAdventures: originalSaved } : null);
+    }
   };
   
   const handleSelectConversation = (user: User) => {
@@ -719,12 +749,19 @@ const App: React.FC = () => {
         setToastMessage(t('adventureNotEnded'));
         return;
     }
-
-    if ((currentUser.activityLog || []).some(log => log.adventureId === adventureId)) {
+    
+    const originalActivityLog = currentUser.activityLog || [];
+    if (originalActivityLog.some(log => log.adventureId === adventureId)) {
         setToastMessage(t('alreadyMarkedDone'));
         return;
     }
 
+    // Optimistic UI Update
+    const newActivityLog = [...originalActivityLog, { adventureId: adventureId, status: ActivityStatus.Pending }];
+    setCurrentUser(prev => prev ? { ...prev, activityLog: newActivityLog } : null);
+    setToastMessage(t('confirmationRequested'));
+
+    // Firebase update
     try {
         const userRef = doc(db, "users", currentUser.id);
         await updateDoc(userRef, {
@@ -744,10 +781,11 @@ const App: React.FC = () => {
             read: false,
         });
 
-        setToastMessage(t('confirmationRequested'));
     } catch (e) {
         console.error("Error toggling completed status:", e);
         setToastMessage("Failed to mark as completed.");
+        // Rollback on failure
+        setCurrentUser(prev => prev ? { ...prev, activityLog: originalActivityLog } : null);
     }
   };
 
