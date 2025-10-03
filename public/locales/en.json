@@ -178,5 +178,12 @@
   "notifications.yesterday": "Yesterday",
   "notifications.thisWeek": "This Week",
   "notifications.older": "Older",
-  "notifications.markAllAsRead": "Mark all as read"
+  "notifications.markAllAsRead": "Mark all as read",
+  "showMyLocation": "Show My Location",
+  "selectOnMap": "Select on Map",
+  "confirmLocation": "Confirm Location",
+  "searchForLocation": "Search for a location...",
+  "noAddressFound": "No address found for this location.",
+  "locationPermissionDenied": "Location permission was denied. Please enable it in your browser settings.",
+  "locationUnavailable": "Location information is unavailable."
 }

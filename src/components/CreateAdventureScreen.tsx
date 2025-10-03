@@ -3,6 +3,8 @@ import Header from './Header';
 import { AdventureType, Media, AdventurePrivacy, Adventure, User } from '../types';
 import { generateDescription } from '../services/geminiService';
 import { useTranslation } from '../contexts/LanguageContext';
+import LocationPickerModal from './LocationPickerModal';
+import MapPinIcon from './icons/MapPinIcon';
 
 interface CreateAdventureScreenProps {
   currentUser: User;
@@ -28,6 +30,7 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ onCreateA
   const [mediaPreview, setMediaPreview] = useState<Media | null>(null);
   
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const locationRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
@@ -97,6 +100,13 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ onCreateA
         });
       }
     });
+  };
+  
+  const handleLocationSelectFromMap = (address: string, coords: { lat: number, lng: number }) => {
+    setLocation(address);
+    setLocationInput(address);
+    setSelectedCoordinates(coords);
+    setIsLocationPickerOpen(false);
   };
 
   const handleGenerateDescription = async () => {
@@ -223,29 +233,36 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ onCreateA
           )}
         </div>
         
-        <div ref={locationRef} className="relative">
+        <div>
           <label className={labelBaseClasses}>{t('location')}</label>
-          <input 
-              type="text" 
-              value={locationInput} 
-              onChange={e => {
-                  setLocationInput(e.target.value);
-                  setSelectedCoordinates(null);
-                  setLocation('');
-              }} 
-              className={inputBaseClasses} 
-              placeholder="e.g., Barcelona, Spain" 
-          />
-          {isFetchingLocation && <div className="p-2 text-xs text-gray-500">{t('searching')}</div>}
-          {locationSuggestions.length > 0 && (
-              <ul className="absolute z-10 w-full mt-1 bg-white dark:bg-neutral-800 border dark:border-neutral-700 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                  {locationSuggestions.map(s => (
-                      <li key={s.place_id} onClick={() => handleSelectLocation(s)} className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-700 cursor-pointer">
-                          {s.description}
-                      </li>
-                  ))}
-              </ul>
-          )}
+          <div className="flex items-center space-x-2">
+            <div ref={locationRef} className="relative flex-grow">
+              <input 
+                  type="text" 
+                  value={locationInput} 
+                  onChange={e => {
+                      setLocationInput(e.target.value);
+                      setSelectedCoordinates(null);
+                      setLocation('');
+                  }} 
+                  className={inputBaseClasses} 
+                  placeholder="e.g., Barcelona, Spain" 
+              />
+              {isFetchingLocation && <div className="p-2 text-xs text-gray-500">{t('searching')}</div>}
+              {locationSuggestions.length > 0 && (
+                  <ul className="absolute z-10 w-full mt-1 bg-white dark:bg-neutral-800 border dark:border-neutral-700 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                      {locationSuggestions.map(s => (
+                          <li key={s.place_id} onClick={() => handleSelectLocation(s)} className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-700 cursor-pointer">
+                              {s.description}
+                          </li>
+                      ))}
+                  </ul>
+              )}
+            </div>
+            <button onClick={() => setIsLocationPickerOpen(true)} className="p-2 bg-gray-200 dark:bg-neutral-700 rounded-md hover:bg-gray-300 dark:hover:bg-neutral-600" aria-label={t('selectOnMap')}>
+              <MapPinIcon className="w-5 h-5 text-gray-600 dark:text-gray-200" />
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -268,6 +285,13 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ onCreateA
         </button>
       </div>
       <div ref={placesAttributionRef} style={{ display: 'none' }}></div>
+      {isLoaded && (
+        <LocationPickerModal 
+          isOpen={isLocationPickerOpen}
+          onClose={() => setIsLocationPickerOpen(false)}
+          onLocationSelect={handleLocationSelectFromMap}
+        />
+      )}
     </>
   );
 };

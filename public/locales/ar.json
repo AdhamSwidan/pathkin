@@ -178,5 +178,12 @@
   "notifications.yesterday": "الأمس",
   "notifications.thisWeek": "هذا الأسبوع",
   "notifications.older": "أقدم",
-  "notifications.markAllAsRead": "تحديد الكل كمقروء"
+  "notifications.markAllAsRead": "تحديد الكل كمقروء",
+  "showMyLocation": "عرض موقعي",
+  "selectOnMap": "اختر من الخريطة",
+  "confirmLocation": "تأكيد الموقع",
+  "searchForLocation": "ابحث عن موقع...",
+  "noAddressFound": "لم يتم العثور على عنوان لهذا الموقع.",
+  "locationPermissionDenied": "تم رفض إذن الوصول للموقع. يرجى تمكينه من إعدادات المتصفح.",
+  "locationUnavailable": "معلومات الموقع غير متوفرة."
 }

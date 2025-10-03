@@ -901,7 +901,7 @@ const App: React.FC = () => {
                     onEditAdventure={setEditingAdventure}
                 />;
       case 'map':
-        return <MapScreen adventuresToShow={mapAdventuresToShow || adventures} isLoaded={isLoaded} />;
+        return <MapScreen adventuresToShow={mapAdventuresToShow || adventures} isLoaded={isLoaded} onShowToast={setToastMessage} />;
       case 'create':
         return <CreateAdventureScreen onCreateAdventure={handleCreateAdventure} currentUser={currentUser!} isLoaded={isLoaded} />;
       case 'search':

@@ -19,7 +19,59 @@ interface ImportMeta {
 // Fix: Add minimal type definitions for the Google Maps JavaScript API.
 // This resolves "Cannot find namespace 'google'" and related errors across the components
 // that use the Places API for location autocompletion.
+// Fix: Expanded Google Maps type definitions to include missing members like Map, LatLngLiteral, Geocoder, and SearchBox, resolving multiple TypeScript errors.
 declare namespace google.maps {
+  interface LatLngLiteral {
+    lat: number;
+    lng: number;
+  }
+
+  class Map {
+    constructor(mapDiv: Element, opts?: any);
+    panTo(latLng: LatLngLiteral | any): void;
+    setZoom(zoom: number): void;
+  }
+
+  enum SymbolPath {
+    CIRCLE = 0,
+    FORWARD_CLOSED_ARROW = 1,
+    FORWARD_OPEN_ARROW = 2,
+    BACKWARD_CLOSED_ARROW = 3,
+    BACKWARD_OPEN_ARROW = 4,
+  }
+
+  interface MapMouseEvent {
+    latLng: {
+      lat: () => number;
+      lng: () => number;
+    } | null;
+  }
+
+  class Geocoder {
+    geocode(
+      request: GeocoderRequest,
+      callback: (results: GeocoderResult[] | null, status: GeocoderStatus) => void
+    ): void;
+  }
+
+  interface GeocoderRequest {
+    location: LatLngLiteral;
+  }
+
+  interface GeocoderResult {
+    formatted_address: string;
+  }
+
+  enum GeocoderStatus {
+    OK = 'OK',
+    ZERO_RESULTS = 'ZERO_RESULTS',
+    ERROR = 'ERROR',
+    INVALID_REQUEST = 'INVALID_REQUEST',
+    OVER_QUERY_LIMIT = 'OVER_QUERY_LIMIT',
+    REQUEST_DENIED = 'REQUEST_DENIED',
+    UNKNOWN_ERROR = 'UNKNOWN_ERROR',
+  }
+
   namespace places {
     interface AutocompletePrediction {
       description: string;
@@ -50,6 +102,11 @@ declare namespace google.maps {
           status: PlacesServiceStatus
         ) => void
       ): void;
+    }
+
+    class SearchBox {
+      constructor(inputElement: HTMLInputElement);
+      getPlaces(): PlaceResult[] | undefined;
     }
 
     interface PlaceDetailsRequest {
