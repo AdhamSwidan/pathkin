@@ -1,4 +1,5 @@
-import { initializeApp } from "firebase/app";
+// Fix: Changed import to a namespace import to resolve potential module resolution issues.
+import * as firebase from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
@@ -9,12 +10,15 @@ export {
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
   signOut, 
-  sendPasswordResetEmail 
+  sendPasswordResetEmail,
+  GoogleAuthProvider,
+  signInWithPopup
 } from "firebase/auth";
 export { 
   collection, 
   doc, 
-  getDoc, 
+  getDoc,
+  getDocs,
   setDoc, 
   updateDoc, 
   onSnapshot, 
@@ -25,7 +29,10 @@ export {
   serverTimestamp, 
   arrayUnion, 
   arrayRemove, 
-  Timestamp 
+  Timestamp,
+  deleteDoc,
+  runTransaction,
+  increment
 } from "firebase/firestore";
 export { 
   ref, 
@@ -34,6 +41,7 @@ export {
 } from "firebase/storage";
 
 
+// Fix: Use import.meta.env for Vite environment variables on the client-side.
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -44,7 +52,8 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// Fix: Use the namespace to call initializeApp.
+const app = firebase.initializeApp(firebaseConfig);
 
 // Initialize and export Firebase services
 export const auth = getAuth(app);

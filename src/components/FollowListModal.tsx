@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { User } from '../types';
 import { useTranslation } from '../contexts/LanguageContext';
@@ -41,6 +42,7 @@ const FollowButton: React.FC<FollowButtonProps> = ({
 
     const isFollowingThisUser = currentUser.following.includes(userInList.id);
 
+    // If I am viewing my own followers list, I can remove them.
     if (listOwner.id === currentUser.id && listType === 'followers') {
         return (
             <button
@@ -52,25 +54,19 @@ const FollowButton: React.FC<FollowButtonProps> = ({
         );
     }
     
-    if (isFollowingThisUser) {
-        return (
-             <button
-                onClick={() => onFollowToggle(userInList.id)}
-                className="bg-neutral-200 text-neutral-700 hover:bg-neutral-300 dark:bg-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-600 px-4 py-1 rounded-md font-semibold text-sm w-24 text-center"
-            >
-                {t('following')}
-            </button>
-        );
-    } else {
-        return (
-            <button
-                onClick={() => onFollowToggle(userInList.id)}
-                className="bg-orange-500 text-white hover:bg-orange-600 px-4 py-1 rounded-md font-semibold text-sm w-24 text-center"
-            >
-                {t('follow')}
-            </button>
-        );
-    }
+    // In any other list (my following list, or anyone else's lists), I see a Follow/Following button.
+    return (
+        <button
+            onClick={() => onFollowToggle(userInList.id)}
+            className={`px-4 py-1 rounded-md font-semibold text-sm w-24 text-center ${
+                isFollowingThisUser
+                    ? 'bg-neutral-200 text-neutral-700 hover:bg-neutral-300 dark:bg-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-600'
+                    : 'bg-orange-500 text-white hover:bg-orange-600'
+            }`}
+        >
+            {isFollowingThisUser ? t('following') : t('follow')}
+        </button>
+    );
 };
 
 

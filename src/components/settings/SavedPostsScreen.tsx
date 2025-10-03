@@ -14,7 +14,7 @@ interface SavedPostsScreenProps {
   onViewProfile: (user: User) => void;
   onRepostToggle: (postId: string) => void;
   onSaveToggle: (postId: string) => void;
-  onSharePost: (postId: string) => void;
+  onSharePost: (post: HydratedPost) => void;
   onToggleCompleted: (postId: string) => void;
 }
 

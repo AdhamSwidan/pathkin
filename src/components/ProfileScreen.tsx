@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { User, HydratedPost } from '../types';
+import { User, HydratedPost, ActivityStatus } from '../types';
 import Header from './Header';
 import PostCard from './PostCard';
 import GridIcon from './icons/GridIcon';
@@ -25,7 +25,8 @@ interface ProfileScreenProps {
   onRepostToggle: (postId: string) => void;
   onSaveToggle: (postId: string) => void;
   onShareProfile: (user: User) => void;
-  onSharePost: (postId: string) => void;
+  // Fix: Changed `postId: string` to `post: HydratedPost` to match the expected type from PostCard.
+  onSharePost: (post: HydratedPost) => void;
   onToggleCompleted: (postId: string) => void;
   onOpenFollowList: (user: User, listType: 'followers' | 'following') => void;
   onNavigateToSettings: () => void;
@@ -66,7 +67,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
     const userPosts = allPosts.filter(p => p.author.id === user.id);
     const savedPosts = allPosts.filter(p => user.savedPosts.includes(p.id));
     const repostedPosts = allPosts.filter(p => user.reposts.includes(p.id));
-    const completedPosts = allPosts.filter(p => user.activityLog.some(a => a.postId === p.id));
+    const completedPosts = allPosts.filter(p => user.activityLog.some(a => a.postId === p.id && a.status === ActivityStatus.Confirmed));
     return { userPosts, savedPosts, repostedPosts, completedPosts };
   }, [allPosts, user]);
   

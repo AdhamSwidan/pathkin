@@ -1,18 +1,8 @@
 import { GoogleGenAI } from "@google/genai";
 
-const API_KEY = import.meta.env.VITE_API_KEY;
-
-const ai = API_KEY ? new GoogleGenAI({ apiKey: API_KEY }) : null;
-
-if (!ai) {
-  console.warn("VITE_API_KEY environment variable not set. Gemini API calls will fail.");
-}
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const generateDescription = async (title: string, keywords: string): Promise<string> => {
-  if (!ai) {
-    return Promise.resolve("AI functionality is currently unavailable. Please try again later.");
-  }
-
   const prompt = `
     Create a friendly and engaging post description for a travel and housing app.
     The post should be inviting and clear. Do not use hashtags.

@@ -1,5 +1,6 @@
 
 
+
 import React, { useState } from 'react';
 import GoogleIcon from './icons/GoogleIcon';
 import FacebookIcon from './icons/FacebookIcon';
@@ -10,7 +11,7 @@ import EyeOffIcon from './icons/EyeOffIcon';
 interface AuthScreenProps {
   onLogin: (email: string, pass: string) => void;
   onSignUp: (name: string, username: string, email: string, pass: string, birthday: string, gender: string) => void;
-  onSocialLogin: (provider: 'google' | 'facebook') => {name: string, email: string};
+  onSocialLogin: (provider: 'google' | 'facebook') => void;
   onGuestLogin: () => void;
   onForgotPassword: () => void;
 }
@@ -42,13 +43,6 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onSignUp, onSocialLogi
       }
       onSignUp(fullName, username, email, password, birthday, gender);
     }
-  };
-
-  const handleSocialClick = (provider: 'google' | 'facebook') => {
-    const socialData = onSocialLogin(provider);
-    setFullName(socialData.name);
-    setEmail(socialData.email);
-    setIsLogin(false); // Switch to sign-up view with pre-filled data
   };
 
   return (
@@ -136,11 +130,11 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onSignUp, onSocialLogi
         </div>
 
         <div className="space-y-3">
-          <button onClick={() => handleSocialClick('google')} className={socialButtonClasses}>
+          <button onClick={() => onSocialLogin('google')} className={socialButtonClasses}>
             <GoogleIcon className="w-6 h-6 mx-3" />
             <span className="font-semibold text-gray-700 dark:text-gray-300">{t('continueWithGoogle')}</span>
           </button>
-          <button onClick={() => handleSocialClick('facebook')} className={socialButtonClasses}>
+          <button onClick={() => onSocialLogin('facebook')} className={socialButtonClasses}>
             <FacebookIcon className="w-6 h-6 mx-3" />
             <span className="font-semibold text-gray-700 dark:text-gray-300">{t('continueWithFacebook')}</span>
           </button>

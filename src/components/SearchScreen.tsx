@@ -19,7 +19,7 @@ interface SearchScreenProps {
   onShowResultsOnMap: (posts: HydratedPost[]) => void;
   onRepostToggle: (postId: string) => void;
   onSaveToggle: (postId: string) => void;
-  onSharePost: (postId: string) => void;
+  onSharePost: (post: HydratedPost) => void;
   onToggleCompleted: (postId: string) => void;
   isGuest: boolean;
 }

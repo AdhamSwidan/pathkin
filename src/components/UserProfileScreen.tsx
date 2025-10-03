@@ -26,7 +26,7 @@ interface UserProfileScreenProps {
   onRepostToggle: (postId: string) => void;
   onSaveToggle: (postId: string) => void;
   onShareProfile: (user: User) => void;
-  onSharePost: (postId: string) => void;
+  onSharePost: (post: HydratedPost) => void;
   onToggleCompleted: (postId: string) => void;
   onOpenFollowList: (user: User, listType: 'followers' | 'following') => void;
   isGuest: boolean;

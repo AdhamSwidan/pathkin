@@ -72,7 +72,7 @@ export interface Post {
   id: string;
   type: PostType;
   authorId: string;
-  author?: User;
+  author?: User; // This is added during hydration, not in DB
   title: string;
   description: string;
   location: string;
@@ -81,14 +81,14 @@ export interface Post {
   endDate?: string;
   budget: number;
   interestedUsers: string[]; // array of user ids
-  comments: Comment[];
+  commentCount: number; // Replaces storing comments array directly
   createdAt: string;
   media?: Media[];
   privacy: PostPrivacy;
 }
 
 // A Post that has been "hydrated" with its author's data
-export type HydratedPost = Post & {
+export type HydratedPost = Omit<Post, 'author'> & {
   author: User;
 };
 
@@ -107,24 +107,36 @@ export type HydratedStory = Story & {
 
 export interface Comment {
   id: string;
-  author: User;
+  authorId: string; // Changed from full User object
+  author?: User; // Added during hydration
   text: string;
   createdAt: string;
 }
+
+export type HydratedComment = Omit<Comment, 'author'> & {
+  author: User;
+};
+
 
 export interface Message {
   id: string;
   senderId: string;
   text: string;
-  timestamp: string;
+  createdAt: string;
 }
 
 export interface Conversation {
   id: string;
-  participant: User;
-  messages: Message[];
-  lastMessage: Message;
+  participants: string[]; // Array of two user IDs
+  lastMessage?: Message;
+  updatedAt: string;
 }
+
+// Fix: Changed from Omit<Conversation, 'participants'> to Conversation to resolve a type predicate error in App.tsx.
+export type HydratedConversation = Conversation & {
+    participant: User; // The other user in the chat
+};
+
 
 export interface Notification {
   id: string;

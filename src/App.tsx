@@ -27,18 +27,20 @@ import AddStoryModal from './components/AddStoryModal';
 import SavedPostsScreen from './components/settings/SavedPostsScreen';
 import { useTranslation } from './contexts/LanguageContext';
 
-import { Screen, Post, PostType, User, Conversation, Story, Notification, PostPrivacy, Media, HydratedPost, HydratedStory } from './types';
+import { Screen, Post, PostType, User, Story, Notification, PostPrivacy, Media, HydratedPost, HydratedStory, ActivityStatus, NotificationType, HydratedConversation, Conversation, Message, HydratedComment, Comment } from './types';
 import {
   auth, db, storage,
   onAuthStateChanged,
-  doc, getDoc, signOut,
+  doc, getDoc, getDocs, signOut,
   collection, onSnapshot, query, orderBy, where,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword, setDoc,
   sendPasswordResetEmail,
   ref, uploadBytes, getDownloadURL,
   updateDoc,
-  addDoc, serverTimestamp, arrayUnion, arrayRemove, Timestamp
+  addDoc, serverTimestamp, arrayUnion, arrayRemove, Timestamp,
+  runTransaction, deleteDoc,
+  GoogleAuthProvider, signInWithPopup, increment
 } from './services/firebase';
 
 
@@ -77,9 +79,10 @@ const App: React.FC = () => {
   const [stories, setStories] = useState<Story[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [comments, setComments] = useState<Comment[]>([]);
   
   const [selectedPost, setSelectedPost] = useState<HydratedPost | null>(null);
-  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+  const [selectedConversationUser, setSelectedConversationUser] = useState<User | null>(null);
   const [viewingStories, setViewingStories] = useState<HydratedStory[] | null>(null);
   const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
   const [viewingUser, setViewingUser] = useState<User | null>(null);
@@ -105,6 +108,7 @@ const App: React.FC = () => {
             const docSnap = await getDoc(userDocRef);
             if (docSnap.exists()) {
                 setCurrentUser({ id: docSnap.id, ...docSnap.data() } as User);
+                 setIsGuest(false);
             } else {
                 console.error("User document not found in Firestore for UID:", user.uid);
                 await signOut(auth); // Log out if profile is missing
@@ -163,7 +167,6 @@ const App: React.FC = () => {
         return;
     }
 
-    // Listener for Notifications
     const notificationsQuery = query(collection(db, "notifications"), where("recipientId", "==", currentUser.id), orderBy("createdAt", "desc"));
     const unsubNotifications = onSnapshot(notificationsQuery, (snapshot) => {
         const fetchedNotifications = snapshot.docs.map(doc => {
@@ -179,17 +182,46 @@ const App: React.FC = () => {
         setNotifications(fetchedNotifications.filter(n => n.user));
     });
 
-    // Listener for Conversations (placeholder logic)
-    const conversationsQuery = query(collection(db, "conversations")); 
+    const conversationsQuery = query(collection(db, "conversations"), where("participants", "array-contains", currentUser.id), orderBy("updatedAt", "desc"));
     const unsubConversations = onSnapshot(conversationsQuery, (snapshot) => {
-        setConversations(snapshot.docs.map(doc => doc.data() as Conversation));
+        const fetchedConversations = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                ...data,
+                id: doc.id,
+                updatedAt: (data.updatedAt as Timestamp)?.toDate().toISOString() ?? new Date().toISOString(),
+                lastMessage: data.lastMessage ? {
+                    ...data.lastMessage,
+                    createdAt: (data.lastMessage.createdAt as Timestamp)?.toDate().toISOString() ?? new Date().toISOString(),
+                } : undefined
+            } as Conversation
+        });
+        setConversations(fetchedConversations);
     });
 
     return () => {
         unsubNotifications();
         unsubConversations();
     };
-}, [currentUser, users]);
+  }, [currentUser, users, posts]);
+
+  // Listener for comments when a post detail modal is opened
+  useEffect(() => {
+    if (!selectedPost) {
+      setComments([]);
+      return;
+    }
+    const commentsQuery = query(collection(db, 'posts', selectedPost.id, 'comments'), orderBy('createdAt', 'asc'));
+    const unsubscribe = onSnapshot(commentsQuery, (snapshot) => {
+      const fetchedComments = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: (doc.data().createdAt as Timestamp)?.toDate().toISOString() ?? new Date().toISOString(),
+      } as Comment));
+      setComments(fetchedComments);
+    });
+    return () => unsubscribe();
+  }, [selectedPost]);
 
   const hydratedPosts = useMemo((): HydratedPost[] => {
     return posts
@@ -208,6 +240,24 @@ const App: React.FC = () => {
         })
         .filter((story): story is HydratedStory => story !== null);
   }, [stories, users]);
+  
+  const hydratedComments = useMemo((): HydratedComment[] => {
+    return comments.map(comment => {
+      const author = users.find(u => u.id === comment.authorId);
+      return author ? { ...comment, author } : null;
+    }).filter((comment): comment is HydratedComment => comment !== null);
+  }, [comments, users]);
+
+   const hydratedConversations = useMemo((): HydratedConversation[] => {
+    if (!currentUser) return [];
+    return conversations.map(convo => {
+      const participantId = convo.participants.find(p => p !== currentUser.id);
+      const participant = users.find(u => u.id === participantId);
+      if (!participant) return null;
+      return { ...convo, participant };
+    }).filter((c): c is HydratedConversation => c !== null);
+  }, [conversations, users, currentUser]);
+
   
   const savedPosts = useMemo(() => {
     if (!currentUser) return [];
@@ -252,8 +302,7 @@ const App: React.FC = () => {
   const handleLogin = async (email: string, pass: string) => {
     try {
         await signInWithEmailAndPassword(auth, email, pass);
-        setIsGuest(false);
-        handleSetActiveScreen('feed');
+        // Auth listener will handle setting user and guest state
     } catch (error) {
         console.error("Login failed:", error);
         alert(t('invalidCredentials'));
@@ -291,8 +340,6 @@ const App: React.FC = () => {
         };
 
         await setDoc(doc(db, 'users', user.uid), newUser);
-        setIsGuest(false);
-        handleSetActiveScreen('feed');
         setToastMessage(t('emailConfirmationSent'));
       } catch(error: any) {
         if(error.code === 'auth/email-already-in-use') {
@@ -304,10 +351,49 @@ const App: React.FC = () => {
       }
   };
   
-  const handleSocialLogin = (provider: 'google' | 'facebook'): {name: string, email: string} => {
-    // Firebase social login logic would go here.
-    if (provider === 'google') return { name: 'Alex Doe', email: 'alex@example.com' };
-    else return { name: 'Brenda Smith', email: 'brenda@example.com' };
+  const handleSocialLogin = async (provider: 'google' | 'facebook') => {
+    if (provider !== 'google') {
+      alert('Facebook login is not implemented yet.');
+      return;
+    }
+
+    try {
+      const googleProvider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+
+      const userDocRef = doc(db, 'users', user.uid);
+      const docSnap = await getDoc(userDocRef);
+
+      // If user is new, create a document for them in Firestore
+      if (!docSnap.exists()) {
+        const newUser: Omit<User, 'id'> = {
+            name: user.displayName || 'New User',
+            username: user.email?.split('@')[0] || user.uid,
+            email: user.email || '',
+            avatarUrl: user.photoURL || `https://picsum.photos/seed/${user.uid}/200`,
+            coverUrl: `https://picsum.photos/seed/${user.uid}-cover/800/200`,
+            bio: '',
+            interests: [],
+            followers: [],
+            following: [],
+            reposts: [],
+            savedPosts: [],
+            activityLog: [],
+            isPrivate: false,
+            privacySettings: {
+              showFollowLists: true,
+              showStats: true,
+              showCompletedActivities: true,
+              allowTwinSearch: true,
+            },
+        };
+         await setDoc(userDocRef, newUser);
+      }
+    } catch(error: any) {
+      console.error("Social login failed:", error);
+      alert("Failed to sign in with Google.");
+    }
   };
 
   const handleGuestLogin = () => {
@@ -372,7 +458,7 @@ const App: React.FC = () => {
     }
   };
 
-  const handleCreatePost = async (newPostData: Omit<Post, 'id' | 'authorId' | 'interestedUsers' | 'comments' | 'createdAt'>, mediaFile: File | null) => {
+  const handleCreatePost = async (newPostData: Omit<Post, 'id' | 'authorId' | 'interestedUsers' | 'commentCount' | 'createdAt'>, mediaFile: File | null) => {
     if (!currentUser) return;
     try {
         let media: Media[] | undefined = undefined;
@@ -386,7 +472,7 @@ const App: React.FC = () => {
             ...newPostData,
             authorId: currentUser.id,
             interestedUsers: [],
-            comments: [],
+            commentCount: 0,
             createdAt: serverTimestamp(),
             media
         });
@@ -410,7 +496,6 @@ const App: React.FC = () => {
           };
           const storiesCollectionRef = collection(db, 'stories');
           await addDoc(storiesCollectionRef, newStory);
-          // The onSnapshot listener will handle displaying the new story.
       } catch(e) {
           console.error("Error creating story:", e);
           setToastMessage("Failed to add story.");
@@ -418,7 +503,7 @@ const App: React.FC = () => {
   };
   
   const handleFollowToggle = async (userIdToFollow: string) => {
-    if (!currentUser) return;
+    if (!currentUser) { showGuestToast(); return; }
     const currentUserRef = doc(db, "users", currentUser.id);
     const userToFollowRef = doc(db, "users", userIdToFollow);
     
@@ -435,9 +520,22 @@ const App: React.FC = () => {
         console.error("Error toggling follow:", e);
     }
   };
-  
-  const handleToggleInterest = async (postId: string) => {
+
+  const handleRemoveFollower = async (followerIdToRemove: string) => {
     if (!currentUser) return;
+    const currentUserRef = doc(db, "users", currentUser.id);
+    const followerToRemoveRef = doc(db, "users", followerIdToRemove);
+    try {
+        await updateDoc(currentUserRef, { followers: arrayRemove(followerIdToRemove) });
+        await updateDoc(followerToRemoveRef, { following: arrayRemove(currentUser.id) });
+        setToastMessage(t('followerRemoved'));
+    } catch (e) {
+        console.error("Error removing follower:", e);
+    }
+  };
+
+  const handleToggleInterest = async (postId: string) => {
+    if (!currentUser) { showGuestToast(); return; }
     const postRef = doc(db, "posts", postId);
     const post = posts.find(p => p.id === postId);
     if (!post) return;
@@ -454,7 +552,7 @@ const App: React.FC = () => {
   };
   
   const handleRepostToggle = async (postId: string) => {
-    if (!currentUser) return;
+    if (!currentUser) { showGuestToast(); return; }
     const userRef = doc(db, "users", currentUser.id);
     const isReposted = currentUser.reposts.includes(postId);
     try {
@@ -465,7 +563,7 @@ const App: React.FC = () => {
   };
 
   const handleSaveToggle = async (postId: string) => {
-    if (!currentUser) return;
+    if (!currentUser) { showGuestToast(); return; }
     const userRef = doc(db, "users", currentUser.id);
     const isSaved = currentUser.savedPosts.includes(postId);
     try {
@@ -476,21 +574,93 @@ const App: React.FC = () => {
   };
   
   const handleSelectConversation = (user: User) => {
-    const conversation = conversations.find(c => c.participant.id === user.id);
-    if(conversation) {
-        setSelectedConversation(conversation);
-        navigateTo('chatDetail');
-    } else {
-        const newConversation: Conversation = {
-            id: user.id,
-            participant: user,
-            messages: [],
-            lastMessage: {id: '1', senderId: '', text: `Start a conversation with ${user.name}`, timestamp: new Date().toISOString()}
+     setSelectedConversationUser(user);
+     navigateTo('chatDetail');
+  };
+
+  const handleSendMessage = async (receiverId: string, text: string) => {
+    if (!currentUser) return;
+  
+    // Generate a consistent conversation ID
+    const convoId = [currentUser.id, receiverId].sort().join('_');
+    const convoRef = doc(db, 'conversations', convoId);
+    const messagesRef = collection(convoRef, 'messages');
+  
+    const newMessage: Omit<Message, 'id' | 'createdAt'> = {
+        senderId: currentUser.id,
+        text: text,
+    };
+
+    try {
+        await addDoc(messagesRef, { ...newMessage, createdAt: serverTimestamp() });
+        
+        const lastMessageForConvo = {
+            ...newMessage,
+            createdAt: serverTimestamp()
         };
-        setSelectedConversation(newConversation);
-        navigateTo('chatDetail');
+
+        await setDoc(convoRef, {
+            participants: [currentUser.id, receiverId],
+            lastMessage: lastMessageForConvo,
+            updatedAt: serverTimestamp(),
+        }, { merge: true });
+    } catch(e) {
+        console.error("Error sending message:", e);
+        setToastMessage("Failed to send message.");
     }
   };
+
+  const handleAddComment = async (postId: string, text: string) => {
+    if (!currentUser) { showGuestToast(); return; }
+
+    const postRef = doc(db, "posts", postId);
+    const commentsRef = collection(postRef, 'comments');
+    
+    try {
+        await addDoc(commentsRef, {
+            authorId: currentUser.id,
+            text,
+            createdAt: serverTimestamp(),
+        });
+        await updateDoc(postRef, { commentCount: increment(1) });
+    } catch (e) {
+        console.error("Error adding comment:", e);
+        setToastMessage("Failed to post comment.");
+    }
+  };
+
+  const handleSharePost = async (post: HydratedPost) => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: post.title,
+          text: t('sharePostText', { authorName: post.author.name }),
+          url: window.location.href, // Or a direct link to the post if available
+        });
+      } catch (error) {
+        console.error('Error sharing:', error);
+      }
+    } else {
+      setToastMessage(t('sharingNotSupported'));
+    }
+  };
+
+  const handleShareProfile = async (user: User) => {
+     if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${user.name}'s Profile`,
+          text: t('shareProfileText', { name: user.name }),
+          url: window.location.href, // Or a direct link to the profile
+        });
+      } catch (error) {
+        console.error('Error sharing:', error);
+      }
+    } else {
+      setToastMessage(t('sharingNotSupported'));
+    }
+  };
+
 
   const handleToggleNotifications = () => setIsNotificationPanelOpen(p => !p);
 
@@ -508,8 +678,131 @@ const App: React.FC = () => {
     }
   };
 
-  // Other handlers like handleToggleCompleted, handleConfirmAttendance, handleSubmitRating would also need to be converted.
-  // For brevity in this refactor, some handlers remain as stubs.
+  const handleToggleCompleted = async (postId: string) => {
+    if (!currentUser) { showGuestToast(); return; }
+
+    const post = posts.find(p => p.id === postId);
+    if (!post) return;
+
+    const endDate = post.endDate ? new Date(post.endDate) : new Date(post.startDate);
+    if (endDate > new Date()) {
+        setToastMessage(t('adventureNotEnded'));
+        return;
+    }
+
+    if (currentUser.activityLog.some(log => log.postId === postId)) {
+        setToastMessage(t('alreadyMarkedDone'));
+        return;
+    }
+
+    try {
+        const userRef = doc(db, "users", currentUser.id);
+        await updateDoc(userRef, {
+            activityLog: arrayUnion({ postId: postId, status: ActivityStatus.Pending })
+        });
+
+        const notificationsRef = collection(db, "notifications");
+        await addDoc(notificationsRef, {
+            type: NotificationType.AttendanceRequest,
+            recipientId: post.authorId,
+            userId: currentUser.id,
+            postId: post.id,
+            attendeeId: currentUser.id,
+            attendeeName: currentUser.name,
+            text: t('attendanceRequestNotification', { title: post.title }),
+            createdAt: serverTimestamp(),
+            read: false,
+        });
+
+        setToastMessage(t('confirmationRequested'));
+    } catch (e) {
+        console.error("Error toggling completed status:", e);
+        setToastMessage("Failed to mark as completed.");
+    }
+  };
+
+  const handleConfirmAttendance = async (notificationId: string, postId: string, attendeeId: string, didAttend: boolean) => {
+      if (!currentUser) return;
+
+      const attendeeRef = doc(db, "users", attendeeId);
+      const notificationRef = doc(db, "notifications", notificationId);
+      const post = posts.find(p => p.id === postId);
+      if (!post) return;
+
+      try {
+          const attendeeDoc = await getDoc(attendeeRef);
+          if (!attendeeDoc.exists()) return;
+
+          const attendeeData = attendeeDoc.data() as User;
+          let newActivityLog = attendeeData.activityLog.filter(log => log.postId !== postId);
+
+          if (didAttend) {
+              newActivityLog.push({ postId, status: ActivityStatus.Confirmed });
+              await addDoc(collection(db, "notifications"), {
+                  type: NotificationType.AttendanceConfirmed,
+                  recipientId: attendeeId,
+                  userId: currentUser.id,
+                  postId: postId,
+                  text: t('attendanceConfirmedNotification', { title: post.title }),
+                  createdAt: serverTimestamp(),
+                  read: false,
+              });
+              await addDoc(collection(db, "notifications"), {
+                  type: NotificationType.RateExperience,
+                  recipientId: attendeeId,
+                  userId: currentUser.id,
+                  postId: postId,
+                  text: t('rateExperienceNotification', { title: post.title }),
+                  createdAt: serverTimestamp(),
+                  read: false,
+              });
+          }
+          await updateDoc(attendeeRef, { activityLog: newActivityLog });
+          await deleteDoc(notificationRef);
+      } catch (e) {
+          console.error("Error confirming attendance:", e);
+          setToastMessage("Failed to confirm attendance.");
+      }
+  };
+  
+  const handleSubmitRating = async (postId: string, rating: number) => {
+    const post = hydratedPosts.find(p => p.id === postId);
+    if (!post || !currentUser) return;
+    const authorRef = doc(db, "users", post.authorId);
+    try {
+        await runTransaction(db, async (transaction) => {
+            const authorDoc = await transaction.get(authorRef);
+            if (!authorDoc.exists()) throw "Author document not found!";
+
+            const authorData = authorDoc.data() as User;
+            const currentTotalRatings = authorData.totalRatings || 0;
+            const currentAverageRating = authorData.averageRating || 0;
+            const newTotalRatings = currentTotalRatings + 1;
+            const newAverageRating = ((currentAverageRating * currentTotalRatings) + rating) / newTotalRatings;
+            
+            transaction.update(authorRef, {
+                totalRatings: newTotalRatings,
+                averageRating: newAverageRating
+            });
+        });
+        
+        const q = query(collection(db, "notifications"), 
+            where("type", "==", NotificationType.RateExperience),
+            where("postId", "==", postId),
+            where("recipientId", "==", currentUser.id)
+        );
+        const querySnapshot = await getDocs(q);
+        querySnapshot.forEach(async (docSnapshot) => {
+            await deleteDoc(doc(db, "notifications", docSnapshot.id));
+        });
+
+        setRatingModalPost(null);
+        setToastMessage(t('feedbackThanks'));
+    } catch (e) {
+        console.error("Error submitting rating:", e);
+        setToastMessage("Failed to submit rating.");
+    }
+  };
   
   useEffect(() => { if (!['map', 'search'].includes(activeScreen)) setMapPostsToShow(null); }, [activeScreen]);
   const handleSelectPost = (post: HydratedPost) => setSelectedPost(post);
@@ -517,15 +810,8 @@ const App: React.FC = () => {
   const handleShowResultsOnMap = (results: Post[]) => { setMapPostsToShow(results); handleSetActiveScreen('map'); };
   const handleSelectStories = (storiesToShow: HydratedStory[]) => { if (storiesToShow.length > 0) setViewingStories(storiesToShow); };
   const handleAddStory = () => { if (isGuest) showGuestToast(); else setIsAddStoryModalOpen(true); };
-  const handleSharePost = async (postId: string) => { console.log("Sharing post", postId) };
-  const handleShareProfile = async (user: User) => { console.log("Sharing user", user.id) };
   const handleOpenFollowList = (user: User, listType: 'followers' | 'following') => setFollowListModal({ isOpen: true, user, listType });
   const handleCloseFollowList = () => setFollowListModal({ isOpen: false, user: null, listType: null });
-  const handleRemoveFollower = (followerIdToRemove: string) => { console.log("Removing follower", followerIdToRemove) };
-  const handleToggleCompleted = (postId: string) => { console.log("Toggling completed", postId) };
-  const handleConfirmAttendance = (notificationId: string, postId: string, attendeeId: string, didAttend: boolean) => { console.log("Confirming attendance") };
-  const handleSubmitRating = (postId: string, rating: number) => { console.log("Submitting rating") };
-  const handleSendMessage = (user: User) => { console.log("Sending message to", user.id) };
   
   const visiblePosts = useMemo(() => {
     if (isGuest) return hydratedPosts.filter(post => post.privacy === PostPrivacy.Public);
@@ -556,7 +842,7 @@ const App: React.FC = () => {
           stories={hydratedStories}
           currentUser={userForUI}
           isGuest={isGuest}
-          onSelectPost={handleSelectPost} onSendMessage={handleSendMessage} onToggleInterest={handleToggleInterest}
+          onSelectPost={handleSelectPost} onSendMessage={handleSelectConversation} onToggleInterest={handleToggleInterest}
           onSelectStories={handleSelectStories} onAddStory={handleAddStory} onNotificationClick={handleToggleNotifications}
           hasUnreadNotifications={!isGuest && hasUnreadNotifications} onNavigateToChat={() => navigateTo('chat')}
           onViewProfile={handleViewProfile} onRepostToggle={handleRepostToggle} onSaveToggle={handleSaveToggle}
@@ -570,30 +856,30 @@ const App: React.FC = () => {
         return <CreatePostScreen onCreatePost={handleCreatePost} currentUser={currentUser} />;
       case 'search':
         return <SearchScreen posts={hydratedPosts} currentUser={userForUI} isGuest={isGuest} onSelectPost={handleSelectPost}
-            onSendMessage={handleSendMessage} onToggleInterest={handleToggleInterest} onNavigateToFindTwins={() => navigateTo('findTwins')}
+            onSendMessage={handleSelectConversation} onToggleInterest={handleToggleInterest} onNavigateToFindTwins={() => navigateTo('findTwins')}
             onViewProfile={handleViewProfile} onShowResultsOnMap={handleShowResultsOnMap} onRepostToggle={handleRepostToggle}
             onSaveToggle={handleSaveToggle} onSharePost={handleSharePost} onToggleCompleted={handleToggleCompleted}
         />;
       case 'chat':
         if (isGuest || !currentUser) return null;
-        return <ChatScreen conversations={conversations} onSelectConversation={handleSelectConversation} onBack={goBack} />;
+        return <ChatScreen conversations={hydratedConversations} onSelectConversation={handleSelectConversation} onBack={goBack} />;
       case 'profile':
         if (isGuest || !currentUser) return null;
-        return <ProfileScreen user={currentUser} allPosts={hydratedPosts} onSelectPost={handleSelectPost} onSendMessage={handleSendMessage}
+        return <ProfileScreen user={currentUser} allPosts={hydratedPosts} onSelectPost={handleSelectPost} onSendMessage={handleSelectConversation}
           onToggleInterest={handleToggleInterest} onViewProfile={handleViewProfile} onRepostToggle={handleRepostToggle} onSaveToggle={handleSaveToggle}
           onShareProfile={handleShareProfile} onSharePost={handleSharePost} onToggleCompleted={handleToggleCompleted}
           onOpenFollowList={handleOpenFollowList} onNavigateToSettings={() => navigateTo('settings')}
         />;
       case 'chatDetail':
-        if (isGuest || !currentUser || !selectedConversation) return null;
-        return <ChatDetailScreen conversation={selectedConversation} currentUser={currentUser} onBack={goBack} />;
+        if (isGuest || !currentUser || !selectedConversationUser) return null;
+        return <ChatDetailScreen participant={selectedConversationUser} currentUser={currentUser} onBack={goBack} onSendMessage={handleSendMessage} />;
       case 'findTwins':
          if (isGuest || !currentUser) return null;
-        return <FindTwinsScreen allUsers={users} currentUser={currentUser} onSendMessage={handleSendMessage} onBack={goBack} onFollowToggle={handleFollowToggle} onViewProfile={handleViewProfile} />;
+        return <FindTwinsScreen allUsers={users} currentUser={currentUser} onSendMessage={handleSelectConversation} onBack={goBack} onFollowToggle={handleFollowToggle} onViewProfile={handleViewProfile} />;
       case 'userProfile':
         if(viewingUser) {
            return <UserProfileScreen user={viewingUser} currentUser={userForUI} isGuest={isGuest} allPosts={hydratedPosts} onBack={goBack} 
-            onSelectPost={handleSelectPost} onSendMessage={handleSendMessage} onToggleInterest={handleToggleInterest}
+            onSelectPost={handleSelectPost} onSendMessage={handleSelectConversation} onToggleInterest={handleToggleInterest}
             onFollowToggle={handleFollowToggle} onViewProfile={handleViewProfile} onRepostToggle={handleRepostToggle}
             onSaveToggle={handleSaveToggle} onShareProfile={handleShareProfile} onSharePost={handleSharePost}
             onToggleCompleted={handleToggleCompleted} onOpenFollowList={handleOpenFollowList}
@@ -619,7 +905,7 @@ const App: React.FC = () => {
             posts={savedPosts}
             currentUser={currentUser}
             onSelectPost={handleSelectPost}
-            onSendMessage={handleSendMessage}
+            onSendMessage={handleSelectConversation}
             onToggleInterest={handleToggleInterest}
             onViewProfile={handleViewProfile}
             onRepostToggle={handleRepostToggle}
@@ -664,7 +950,7 @@ const App: React.FC = () => {
       </main>
       
       <AddStoryModal isOpen={isAddStoryModalOpen} onClose={() => setIsAddStoryModalOpen(false)} onStoryCreate={handleCreateStory} />
-      {selectedPost && <PostDetailModal post={selectedPost} onClose={handleCloseModal} />}
+      {selectedPost && <PostDetailModal post={selectedPost} comments={hydratedComments} onAddComment={handleAddComment} currentUser={currentUser} onClose={handleCloseModal} />}
       {viewingStories && <StoryViewer stories={viewingStories} onClose={() => setViewingStories(null)} />}
       {isNotificationPanelOpen && (
           <div className="absolute top-0 right-0 z-50 w-full max-w-sm mt-2 mr-2">

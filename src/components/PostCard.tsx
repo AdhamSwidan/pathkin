@@ -21,7 +21,7 @@ interface PostCardProps {
   onViewProfile: (user: User) => void;
   onRepostToggle: (postId: string) => void;
   onSaveToggle: (postId: string) => void;
-  onSharePost: (postId: string) => void;
+  onSharePost: (post: HydratedPost) => void;
   onToggleCompleted: (postId: string) => void;
 }
 
@@ -167,7 +167,7 @@ const PostCard: React.FC<PostCardProps> = ({
           className={`${actionButtonClasses} ${isGuest ? disabledClasses : 'hover:text-sky-500'}`}
         >
           <CommentIcon />
-          <span>{post.comments.length}</span>
+          <span>{post.commentCount || 0}</span>
         </button>
         <button
           onClick={() => onToggleCompleted(post.id)}
@@ -178,7 +178,7 @@ const PostCard: React.FC<PostCardProps> = ({
           <CheckCircleIcon className={activityStatus ? 'fill-current' : ''} />
         </button>
         <button 
-          onClick={() => onSharePost(post.id)}
+          onClick={() => onSharePost(post)}
           className={`${actionButtonClasses} hover:text-blue-500`}
         >
           <ShareIcon />

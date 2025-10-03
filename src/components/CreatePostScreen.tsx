@@ -6,7 +6,7 @@ import { useTranslation } from '../contexts/LanguageContext';
 
 interface CreatePostScreenProps {
   currentUser: User;
-  onCreatePost: (post: Omit<Post, 'id' | 'authorId' | 'interestedUsers' | 'comments' | 'createdAt'>, mediaFile: File | null) => void;
+  onCreatePost: (post: Omit<Post, 'id' | 'authorId' | 'interestedUsers' | 'commentCount' | 'createdAt'>, mediaFile: File | null) => void;
 }
 
 const CreatePostScreen: React.FC<CreatePostScreenProps> = ({ onCreatePost }) => {
@@ -57,6 +57,7 @@ const CreatePostScreen: React.FC<CreatePostScreenProps> = ({ onCreatePost }) => 
       return;
     }
     
+    // @ts-ignore
     const newPostData = {
       type: postType,
       privacy,
