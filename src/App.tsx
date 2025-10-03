@@ -1032,7 +1032,7 @@ const App: React.FC = () => {
 
   return (
     <div className="h-screen w-full bg-slate-50 dark:bg-neutral-950">
-      <div className="max-w-7xl mx-auto h-full flex flex-col md:flex-row text-gray-800 dark:text-gray-200 border-x border-gray-200 dark:border-neutral-800">
+      <div className="max-w-4xl mx-auto h-full flex flex-col xl:flex-row text-gray-800 dark:text-gray-200 border-x border-gray-200 dark:border-neutral-800">
         <SideNav activeScreen={activeScreen} setActiveScreen={resetToScreen} hasUnreadNotifications={hasUnreadNotifications} isGuest={isGuest} onGuestAction={handleGuestAction} />
         <main ref={mainContentRef} className="flex-1 overflow-y-auto pb-16 xl:pb-0">
             {isGuest && <GuestHeader onLoginClick={handleLogout} />}
