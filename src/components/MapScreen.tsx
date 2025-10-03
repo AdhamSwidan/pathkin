@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { GoogleMap, useJsApiLoader, MarkerF, InfoWindowF } from '@react-google-maps/api';
+import { GoogleMap, MarkerF, InfoWindowF } from '@react-google-maps/api';
 import { Adventure } from '../types';
 import Header from './Header';
 import { useTranslation } from '../contexts/LanguageContext';
 
 interface MapScreenProps {
   adventuresToShow: Adventure[];
+  isLoaded: boolean;
 }
 
 const containerStyle = {
@@ -13,7 +14,7 @@ const containerStyle = {
   height: '100%'
 };
 
-const MapScreen: React.FC<MapScreenProps> = ({ adventuresToShow }) => {
+const MapScreen: React.FC<MapScreenProps> = ({ adventuresToShow, isLoaded }) => {
   const { t } = useTranslation();
   const [selectedAdventure, setSelectedAdventure] = useState<Adventure | null>(null);
 
@@ -22,11 +23,6 @@ const MapScreen: React.FC<MapScreenProps> = ({ adventuresToShow }) => {
     lat: firstAdventureWithCoords?.coordinates?.lat ?? 51.505,
     lng: firstAdventureWithCoords?.coordinates?.lng ?? -0.09,
   };
-
-  const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: process.env.VITE_GOOGLE_MAPS_API_KEY || "",
-  });
 
   const onMarkerClick = (adventure: Adventure) => {
     setSelectedAdventure(adventure);

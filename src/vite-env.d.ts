@@ -15,3 +15,71 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+// Fix: Add minimal type definitions for the Google Maps JavaScript API.
+// This resolves "Cannot find namespace 'google'" and related errors across the components
+// that use the Places API for location autocompletion.
+declare namespace google.maps {
+  namespace places {
+    interface AutocompletePrediction {
+      description: string;
+      place_id: string;
+    }
+
+    class AutocompleteService {
+      getPlacePredictions(
+        request: AutocompletionRequest,
+        callback: (
+          results: AutocompletePrediction[] | null,
+          status: PlacesServiceStatus
+        ) => void
+      ): void;
+    }
+
+    interface AutocompletionRequest {
+      input: string;
+      types?: string[];
+    }
+
+    class PlacesService {
+      constructor(attrContainer: HTMLDivElement);
+      getDetails(
+        request: PlaceDetailsRequest,
+        callback: (
+          result: PlaceResult | null,
+          status: PlacesServiceStatus
+        ) => void
+      ): void;
+    }
+
+    interface PlaceDetailsRequest {
+      placeId: string;
+      fields: string[];
+    }
+    
+    interface PlaceResult {
+        geometry?: {
+            location: {
+                lat: () => number;
+                lng: () => number;
+            };
+        };
+    }
+
+    enum PlacesServiceStatus {
+      OK = 'OK',
+      ZERO_RESULTS = 'ZERO_RESULTS',
+      NOT_FOUND = 'NOT_FOUND',
+      INVALID_REQUEST = 'INVALID_REQUEST',
+      OVER_QUERY_LIMIT = 'OVER_QUERY_LIMIT',
+      REQUEST_DENIED = 'REQUEST_DENIED',
+      UNKNOWN_ERROR = 'UNKNOWN_ERROR',
+    }
+  }
+}
+
+// Fix: Augment the Window interface to include the `google` object.
+// This resolves "Property 'google' does not exist on type 'Window'" errors.
+interface Window {
+  google: typeof google;
+}

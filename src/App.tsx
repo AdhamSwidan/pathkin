@@ -27,6 +27,8 @@ import AddStoryModal from './components/AddStoryModal';
 import EditAdventureModal from './components/EditAdventureModal';
 import SavedAdventuresScreen from './components/settings/SavedAdventuresScreen';
 import { useTranslation } from './contexts/LanguageContext';
+import { useJsApiLoader } from '@react-google-maps/api';
+
 
 import { Screen, Adventure, AdventureType, User, Story, Notification, AdventurePrivacy, HydratedAdventure, HydratedStory, ActivityStatus, NotificationType, HydratedConversation, Conversation, Message, HydratedComment, Comment } from './types';
 import {
@@ -101,6 +103,13 @@ const App: React.FC = () => {
   
   const mainContentRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
+
+  const libraries = useMemo<("places")[]>(() => ['places'], []);
+  const { isLoaded } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: process.env.VITE_GOOGLE_MAPS_API_KEY || "",
+    libraries: libraries,
+  });
 
   // Auth Listener
   useEffect(() => {
@@ -921,16 +930,17 @@ const App: React.FC = () => {
         />;
       case 'map':
         const eventAdventures = hydratedAdventures.filter(p => p.type === AdventureType.Event && p.coordinates && p.privacy === AdventurePrivacy.Public);
-        return <MapScreen adventuresToShow={mapAdventuresToShow ?? eventAdventures} />;
+        return <MapScreen adventuresToShow={mapAdventuresToShow ?? eventAdventures} isLoaded={isLoaded} />;
       case 'create':
         if (isGuest || !currentUser) return null;
-        return <CreateAdventureScreen onCreateAdventure={handleCreateAdventure} currentUser={currentUser} />;
+        return <CreateAdventureScreen onCreateAdventure={handleCreateAdventure} currentUser={currentUser} isLoaded={isLoaded} />;
       case 'search':
         return <SearchScreen 
             adventures={hydratedAdventures} 
             allUsers={users}
             currentUser={userForUI} 
             isGuest={isGuest} 
+            isLoaded={isLoaded}
             onSelectAdventure={handleSelectAdventure}
             onSendMessage={handleSelectConversation} 
             onToggleInterest={handleToggleInterest} 
@@ -1056,7 +1066,7 @@ const App: React.FC = () => {
       )}
       {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage(null)} />}
       {ratingModalAdventure && <RatingModal adventure={ratingModalAdventure} onClose={() => setRatingModalAdventure(null)} onSubmit={handleSubmitRating} />}
-      {editingAdventure && <EditAdventureModal adventure={editingAdventure} onClose={() => setEditingAdventure(null)} onUpdateAdventure={handleUpdateAdventure} />}
+      {editingAdventure && <EditAdventureModal adventure={editingAdventure} onClose={() => setEditingAdventure(null)} onUpdateAdventure={handleUpdateAdventure} isLoaded={isLoaded} />}
       {followListModal.isOpen && followListModal.user && followListModal.listType && (currentUser || isGuest) && (
           <FollowListModal title={t(followListModal.listType)} listOwner={followListModal.user} currentUser={currentUser}
               users={

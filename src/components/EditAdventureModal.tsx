@@ -6,10 +6,11 @@ interface EditAdventureModalProps {
   adventure: HydratedAdventure;
   onClose: () => void;
   onUpdateAdventure: (adventureId: string, updatedData: Partial<Adventure>) => void;
+  isLoaded: boolean;
 }
 
-const EditAdventureModal: React.FC<EditAdventureModalProps> = ({ adventure, onClose, onUpdateAdventure }) => {
-  const { t, language } = useTranslation();
+const EditAdventureModal: React.FC<EditAdventureModalProps> = ({ adventure, onClose, onUpdateAdventure, isLoaded }) => {
+  const { t } = useTranslation();
   
   const [adventureType, setAdventureType] = useState<AdventureType>(adventure.type);
   const [privacy, setPrivacy] = useState<AdventurePrivacy>(adventure.privacy);
@@ -18,7 +19,7 @@ const EditAdventureModal: React.FC<EditAdventureModalProps> = ({ adventure, onCl
   
   const [location, setLocation] = useState(adventure.location);
   const [locationInput, setLocationInput] = useState(adventure.location);
-  const [locationSuggestions, setLocationSuggestions] = useState<any[]>([]);
+  const [locationSuggestions, setLocationSuggestions] = useState<google.maps.places.AutocompletePrediction[]>([]);
   const [selectedCoordinates, setSelectedCoordinates] = useState(adventure.coordinates || null);
   const [isFetchingLocation, setIsFetchingLocation] = useState(false);
   
@@ -28,23 +29,35 @@ const EditAdventureModal: React.FC<EditAdventureModalProps> = ({ adventure, onCl
 
   const locationRef = useRef<HTMLDivElement>(null);
 
-  const fetchLocations = useCallback(async (input: string) => {
-    if (input.trim().length < 3) {
+  const [autocompleteService, setAutocompleteService] = useState<google.maps.places.AutocompleteService | null>(null);
+  const [placesService, setPlacesService] = useState<google.maps.places.PlacesService | null>(null);
+  const placesAttributionRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isLoaded && window.google) {
+        setAutocompleteService(new window.google.maps.places.AutocompleteService());
+        if (placesAttributionRef.current) {
+            setPlacesService(new window.google.maps.places.PlacesService(placesAttributionRef.current));
+        }
+    }
+  }, [isLoaded]);
+
+
+  const fetchLocations = useCallback((input: string) => {
+    if (!autocompleteService || input.trim().length < 3) {
       setLocationSuggestions([]);
       return;
     }
     setIsFetchingLocation(true);
-    try {
-      const response = await fetch(`https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&key=${process.env.VITE_GOOGLE_MAPS_API_KEY}&language=${language}`);
-      const data = await response.json();
-      if (data.predictions) {
-        setLocationSuggestions(data.predictions);
-      }
-    } catch (error) {
-      console.error("Failed to fetch locations:", error);
-    }
-    setIsFetchingLocation(false);
-  }, [language]);
+    autocompleteService.getPlacePredictions({ input, types: ['(cities)'] }, (predictions, status) => {
+        if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
+            setLocationSuggestions(predictions);
+        } else {
+            setLocationSuggestions([]);
+        }
+        setIsFetchingLocation(false);
+    });
+  }, [autocompleteService]);
 
   // Debounce effect for location search
   useEffect(() => {
@@ -69,19 +82,19 @@ const EditAdventureModal: React.FC<EditAdventureModalProps> = ({ adventure, onCl
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSelectLocation = async (suggestion: any) => {
+  const handleSelectLocation = async (suggestion: google.maps.places.AutocompletePrediction) => {
     setLocation(suggestion.description);
     setLocationInput(suggestion.description);
     setLocationSuggestions([]);
-    try {
-        const response = await fetch(`https://maps.googleapis.com/maps/api/place/details/json?place_id=${suggestion.place_id}&fields=geometry&key=${process.env.VITE_GOOGLE_MAPS_API_KEY}`);
-        const data = await response.json();
-        if(data.result.geometry) {
-            setSelectedCoordinates(data.result.geometry.location);
+    if (!placesService) return;
+    placesService.getDetails({ placeId: suggestion.place_id, fields: ['geometry'] }, (place, status) => {
+        if (status === window.google.maps.places.PlacesServiceStatus.OK && place?.geometry?.location) {
+            setSelectedCoordinates({
+                lat: place.geometry.location.lat(),
+                lng: place.geometry.location.lng(),
+            });
         }
-    } catch (error) {
-        console.error("Failed to fetch place details:", error);
-    }
+    });
   };
 
   const handleSubmit = () => {
@@ -197,6 +210,7 @@ const EditAdventureModal: React.FC<EditAdventureModalProps> = ({ adventure, onCl
             {t('saveChanges')}
             </button>
         </div>
+         <div ref={placesAttributionRef} style={{ display: 'none' }}></div>
       </div>
     </div>
   );

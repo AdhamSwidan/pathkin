@@ -13,9 +13,9 @@ interface FilterBarProps {
   onBudgetChange: (value: string) => void;
   onStartDateChange: (date: string) => void;
   onEndDateChange: (date: string) => void;
-  citySuggestions: any[];
+  citySuggestions: google.maps.places.AutocompletePrediction[];
   isFetchingCity: boolean;
-  onSelectCitySuggestion: (suggestion: any) => void;
+  onSelectCitySuggestion: (suggestion: google.maps.places.AutocompletePrediction) => void;
   locationRef: React.RefObject<HTMLDivElement>;
 }
 

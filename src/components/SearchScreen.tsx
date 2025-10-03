@@ -14,6 +14,7 @@ interface SearchScreenProps {
   allUsers: User[];
   currentUser: User;
   isGuest: boolean;
+  isLoaded: boolean;
   onSelectAdventure: (adventure: HydratedAdventure) => void;
   onSendMessage: (user: User) => void;
   onToggleInterest: (adventureId: string) => void;
@@ -44,6 +45,7 @@ const SearchScreen: React.FC<SearchScreenProps> = ({
   allUsers,
   currentUser,
   isGuest,
+  isLoaded,
   onSelectAdventure,
   onSendMessage,
   onToggleInterest,
@@ -67,31 +69,38 @@ const SearchScreen: React.FC<SearchScreenProps> = ({
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   
-  const [locationSuggestions, setLocationSuggestions] = useState<any[]>([]);
+  const [locationSuggestions, setLocationSuggestions] = useState<google.maps.places.AutocompletePrediction[]>([]);
   const [isFetchingLocation, setIsFetchingLocation] = useState(false);
   const [selectedCityName, setSelectedCityName] = useState('');
   const locationRef = useRef<HTMLDivElement>(null);
   
   const [appliedFilters, setAppliedFilters] = useState<AppliedFilters | null>(null);
-  const { t, language } = useTranslation();
+  const { t } = useTranslation();
 
-  const fetchLocations = useCallback(async (input: string) => {
-    if (input.trim().length < 3) {
+  const [autocompleteService, setAutocompleteService] = useState<google.maps.places.AutocompleteService | null>(null);
+
+  useEffect(() => {
+    if (isLoaded && window.google) {
+        setAutocompleteService(new window.google.maps.places.AutocompleteService());
+    }
+  }, [isLoaded]);
+
+
+  const fetchLocations = useCallback((input: string) => {
+    if (!autocompleteService || input.trim().length < 3) {
       setLocationSuggestions([]);
       return;
     }
     setIsFetchingLocation(true);
-    try {
-      const response = await fetch(`https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&types=(cities)&key=${process.env.VITE_GOOGLE_MAPS_API_KEY}&language=${language}`);
-      const data = await response.json();
-      if (data.predictions) {
-        setLocationSuggestions(data.predictions);
+    autocompleteService.getPlacePredictions({ input, types: ['(cities)'] }, (predictions, status) => {
+      if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
+        setLocationSuggestions(predictions);
+      } else {
+        setLocationSuggestions([]);
       }
-    } catch (error) {
-      console.error("Failed to fetch locations:", error);
-    }
-    setIsFetchingLocation(false);
-  }, [language]);
+      setIsFetchingLocation(false);
+    });
+  }, [autocompleteService]);
 
   useEffect(() => {
     const timerId = setTimeout(() => {
@@ -114,7 +123,7 @@ const SearchScreen: React.FC<SearchScreenProps> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSelectLocation = (suggestion: any) => {
+  const handleSelectLocation = (suggestion: google.maps.places.AutocompletePrediction) => {
     setCity(suggestion.description); 
     setSelectedCityName(suggestion.description);
     setLocationSuggestions([]);
