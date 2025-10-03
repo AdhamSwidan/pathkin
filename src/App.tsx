@@ -915,13 +915,25 @@ const App: React.FC = () => {
         if (isGuest || !currentUser) return null;
         return <CreateAdventureScreen onCreateAdventure={handleCreateAdventure} currentUser={currentUser} />;
       case 'search':
-        return <SearchScreen adventures={hydratedAdventures} currentUser={userForUI} isGuest={isGuest} onSelectAdventure={handleSelectAdventure}
-            onSendMessage={handleSelectConversation} onToggleInterest={handleToggleInterest} onNavigateToFindTwins={() => navigateTo('findTwins')}
-            onViewProfile={handleViewProfile} onShowResultsOnMap={handleShowResultsOnMap} onRepostToggle={handleRepostToggle}
-            onSaveToggle={handleSaveToggle} onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted}
+        return <SearchScreen 
+            adventures={hydratedAdventures} 
+            allUsers={users}
+            currentUser={userForUI} 
+            isGuest={isGuest} 
+            onSelectAdventure={handleSelectAdventure}
+            onSendMessage={handleSelectConversation} 
+            onToggleInterest={handleToggleInterest} 
+            onNavigateToFindTwins={() => navigateTo('findTwins')}
+            onViewProfile={handleViewProfile} 
+            onShowResultsOnMap={handleShowResultsOnMap} 
+            onRepostToggle={handleRepostToggle}
+            onSaveToggle={handleSaveToggle} 
+            onShareAdventure={handleShareAdventure} 
+            onToggleCompleted={handleToggleCompleted}
             onViewLocationOnMap={handleViewLocationOnMap}
             onDeleteAdventure={handleDeleteAdventure}
             onEditAdventure={handleEditAdventure}
+            onFollowToggle={handleFollowToggle}
         />;
       case 'chat':
         if (isGuest || !currentUser) return null;

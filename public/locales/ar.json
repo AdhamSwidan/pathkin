@@ -167,5 +167,9 @@
   "selectValidLocation": "الرجاء اختيار موقع صحيح من الاقتراحات.",
   "adventureUpdatedSuccessfully": "تم تحديث المغامرة بنجاح!",
   "adventureDeletedSuccessfully": "تم حذف المغامرة بنجاح",
-  "noCoordinatesOnMap": "هذه المغامرة ليس لديها إحداثيات لعرضها على الخريطة."
+  "noCoordinatesOnMap": "هذه المغامرة ليس لديها إحداثيات لعرضها على الخريطة.",
+  "people": "الأشخاص",
+  "searchPlaceholderPeople": "ابحث عن مستخدمين...",
+  "noUsersFound": "لم يتم العثور على مستخدمين",
+  "tryDifferentSearch": "جرّب مصطلح بحث مختلف."
 }

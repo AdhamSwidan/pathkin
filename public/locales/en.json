@@ -167,5 +167,9 @@
   "selectValidLocation": "Please select a valid location from the suggestions.",
   "adventureUpdatedSuccessfully": "Adventure updated successfully!",
   "adventureDeletedSuccessfully": "Adventure deleted successfully",
-  "noCoordinatesOnMap": "This adventure does not have coordinates to show on the map."
+  "noCoordinatesOnMap": "This adventure does not have coordinates to show on the map.",
+  "people": "People",
+  "searchPlaceholderPeople": "Search for users...",
+  "noUsersFound": "No users found",
+  "tryDifferentSearch": "Try a different search term."
 }
