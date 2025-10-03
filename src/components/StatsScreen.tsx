@@ -30,7 +30,6 @@ const StatsScreen: React.FC<StatsScreenProps> = ({ user, allAdventures }) => {
   const { t } = useTranslation();
   const stats = useMemo(() => {
     // Only count activities that have been confirmed by the host
-    // Fix: Add fallback for user.activityLog to prevent crash.
     const confirmedActivityAdventureIds = new Set(
         (user.activityLog || [])
             .filter(a => a.status === ActivityStatus.Confirmed)
@@ -40,6 +39,10 @@ const StatsScreen: React.FC<StatsScreenProps> = ({ user, allAdventures }) => {
     const completed = allAdventures.filter(adventure => confirmedActivityAdventureIds.has(adventure.id));
     
     const countries = new Set<string>();
+    if (user.country) {
+      countries.add(user.country);
+    }
+    
     completed.forEach(adventure => {
       const country = getCountryFromLocation(adventure.location);
       if (country) {

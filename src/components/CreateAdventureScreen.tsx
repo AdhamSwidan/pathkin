@@ -112,8 +112,7 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ onCreateA
         return;
     }
     
-    // @ts-ignore
-    const newAdventureData = {
+    const newAdventureData: Omit<Adventure, 'id' | 'authorId' | 'interestedUsers' | 'commentCount' | 'createdAt'> = {
       type: adventureType,
       privacy,
       title,

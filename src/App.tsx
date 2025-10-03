@@ -443,22 +443,20 @@ const App: React.FC = () => {
   const handleUpdateProfile = async (updatedData: Partial<User>, avatarFile?: File, coverFile?: File) => {
     if (!currentUser) return;
     try {
-        let avatarUrl = currentUser.avatarUrl;
+        const updatePayload: Partial<User> = { ...updatedData };
+
         if (avatarFile) {
-            avatarUrl = await uploadFile(avatarFile, `avatars/${currentUser.id}/${avatarFile.name}`);
+            const avatarUrl = await uploadFile(avatarFile, `avatars/${currentUser.id}/${avatarFile.name}`);
+            updatePayload.avatarUrl = avatarUrl;
         }
 
-        let coverUrl = currentUser.coverUrl;
         if (coverFile) {
-            coverUrl = await uploadFile(coverFile, `covers/${currentUser.id}/${coverFile.name}`);
+            const coverUrl = await uploadFile(coverFile, `covers/${currentUser.id}/${coverFile.name}`);
+            updatePayload.coverUrl = coverUrl;
         }
         
         const userDocRef = doc(db, 'users', currentUser.id);
-        await updateDoc(userDocRef, {
-            ...updatedData,
-            avatarUrl,
-            coverUrl
-        });
+        await updateDoc(userDocRef, updatePayload);
 
         setToastMessage(t('settingsSaved'));
         goBack();

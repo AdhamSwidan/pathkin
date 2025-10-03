@@ -13,6 +13,7 @@ import StarIcon from './icons/StarIcon';
 import SettingsIcon from './icons/SettingsIcon';
 import { useTranslation } from '../contexts/LanguageContext';
 import UserIcon from './icons/UserIcon';
+import { getFlagUrl } from '../utils/countryUtils';
 
 
 interface ProfileScreenProps {
@@ -133,6 +134,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
     );
   };
 
+  const flagUrl = user.country ? getFlagUrl(user.country) : null;
+
   return (
     <>
       <Header title={user.name} rightAction={headerActions} />
@@ -176,6 +179,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
         <div className="pt-4 px-4">
             <div className="flex items-center space-x-2">
                 <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">{user.name}</h2>
+                {flagUrl && <img src={flagUrl} alt={`${user.country} flag`} className="w-6 h-auto rounded-sm" />}
                 {user.averageRating && (
                     <div className="flex items-center space-x-1 text-amber-500 bg-amber-100 dark:bg-amber-900/50 px-2 py-0.5 rounded-full">
                         <StarIcon className="w-4 h-4 fill-current" />

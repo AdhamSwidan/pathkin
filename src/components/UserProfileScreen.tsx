@@ -12,6 +12,7 @@ import CheckCircleIcon from './icons/CheckCircleIcon';
 import LockIcon from './icons/LockIcon';
 import { useTranslation } from '../contexts/LanguageContext';
 import UserIcon from './icons/UserIcon';
+import { getFlagUrl } from '../utils/countryUtils';
 
 interface UserProfileScreenProps {
   user: User;
@@ -162,6 +163,7 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
   const baseButtonClasses = "px-2 py-1 rounded-md font-semibold text-sm transition-colors";
   const primaryButtonClasses = "bg-orange-500 text-white hover:bg-orange-600";
   const secondaryButtonClasses = "bg-neutral-200 text-neutral-700 hover:bg-neutral-300 dark:bg-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-600";
+  const flagUrl = user.country ? getFlagUrl(user.country) : null;
 
   return (
     <>
@@ -214,6 +216,7 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
             <div className="flex justify-between items-start">
                 <div className="flex items-center space-x-2 mr-2 flex-shrink min-w-0">
                     <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 truncate">{user.name}</h2>
+                    {flagUrl && <img src={flagUrl} alt={`${user.country} flag`} className="w-6 h-auto rounded-sm flex-shrink-0" />}
                      {user.averageRating && (
                         <div className="flex items-center space-x-1 text-amber-500 bg-amber-100 dark:bg-amber-900/50 px-2 py-0.5 rounded-full flex-shrink-0">
                             <StarIcon className="w-4 h-4 fill-current" />
