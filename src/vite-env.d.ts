@@ -32,6 +32,13 @@ declare namespace google.maps {
     setZoom(zoom: number): void;
   }
 
+  // Fix: Add missing 'Size' class definition to resolve error in MapScreen.tsx.
+  class Size {
+    constructor(width: number, height: number, widthUnit?: string, heightUnit?: string);
+    width: number;
+    height: number;
+  }
+
   enum SymbolPath {
     CIRCLE = 0,
     FORWARD_CLOSED_ARROW = 1,

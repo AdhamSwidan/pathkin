@@ -1,9 +1,19 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useMemo } from 'react';
 import { GoogleMap, MarkerF, InfoWindowF } from '@react-google-maps/api';
-import { Adventure } from '../types';
+import { Adventure, AdventureType } from '../types';
 import Header from './Header';
 import { useTranslation } from '../contexts/LanguageContext';
 import MyLocationIcon from './icons/MyLocationIcon';
+import { getAdventureIconDataUrl } from '../utils/mapIconUtils';
+import HikingIcon from './icons/HikingIcon';
+import TentIcon from './icons/TentIcon';
+import BicycleIcon from './icons/BicycleIcon';
+import PlaneIcon from './icons/PlaneIcon';
+import HeartIcon from './icons/HeartIcon';
+import MessageIcon from './icons/MessageIcon';
+import HomeIcon from './icons/HomeIcon';
+import GridIcon from './icons/GridIcon';
+
 
 interface MapScreenProps {
   adventuresToShow: Adventure[];
@@ -16,17 +26,45 @@ const containerStyle = {
   height: '100%'
 };
 
+// Filter button component
+const FilterButton: React.FC<{ icon: React.ReactNode; label: string; isActive: boolean; onClick: () => void; }> = ({ icon, label, isActive, onClick }) => (
+    <button
+        onClick={onClick}
+        className={`flex-shrink-0 flex flex-col items-center justify-center w-20 h-16 rounded-lg transition-colors duration-200 ${
+            isActive 
+            ? 'bg-orange-100 dark:bg-orange-900/40' 
+            : 'bg-gray-50 dark:bg-neutral-800/50 hover:bg-gray-100 dark:hover:bg-neutral-800'
+        }`}
+    >
+        <div className={`w-6 h-6 flex items-center justify-center ${isActive ? 'text-orange-500' : 'text-gray-500 dark:text-gray-400'}`}>
+            {icon}
+        </div>
+        <span className={`text-xs mt-1 text-center ${isActive ? 'font-semibold text-orange-600 dark:text-orange-400' : 'text-gray-600 dark:text-gray-300'}`}>
+            {label}
+        </span>
+    </button>
+);
+
+
 const MapScreen: React.FC<MapScreenProps> = ({ adventuresToShow, isLoaded, onShowToast }) => {
   const { t } = useTranslation();
   const [selectedAdventure, setSelectedAdventure] = useState<Adventure | null>(null);
   const [myPosition, setMyPosition] = useState<google.maps.LatLngLiteral | null>(null);
+  const [filterType, setFilterType] = useState<AdventureType | 'all'>('all');
   const mapRef = useRef<google.maps.Map | null>(null);
 
   const onMapLoad = useCallback((map: google.maps.Map) => {
     mapRef.current = map;
   }, []);
 
-  const firstAdventureWithCoords = adventuresToShow.find(p => p.coordinates);
+  const filteredAdventures = useMemo(() => {
+    if (filterType === 'all') {
+      return adventuresToShow;
+    }
+    return adventuresToShow.filter(adventure => adventure.type === filterType);
+  }, [adventuresToShow, filterType]);
+
+  const firstAdventureWithCoords = filteredAdventures.find(p => p.coordinates);
   const center = {
     lat: firstAdventureWithCoords?.coordinates?.lat ?? 51.505,
     lng: firstAdventureWithCoords?.coordinates?.lng ?? -0.09,
@@ -61,9 +99,33 @@ const MapScreen: React.FC<MapScreenProps> = ({ adventuresToShow, isLoaded, onSho
     }
   };
 
+  const filterOptions = [
+    { type: 'all' as const, icon: <GridIcon />, labelKey: 'allTypes' },
+    { type: AdventureType.Travel, icon: <PlaneIcon />, labelKey: `AdventureType_${AdventureType.Travel}` },
+    { type: AdventureType.Housing, icon: <HomeIcon />, labelKey: `AdventureType_${AdventureType.Housing}` },
+    { type: AdventureType.Event, icon: <MessageIcon />, labelKey: `AdventureType_${AdventureType.Event}` },
+    { type: AdventureType.Hiking, icon: <HikingIcon />, labelKey: `AdventureType_${AdventureType.Hiking}` },
+    { type: AdventureType.Camping, icon: <TentIcon />, labelKey: `AdventureType_${AdventureType.Camping}` },
+    { type: AdventureType.Volunteering, icon: <HeartIcon />, labelKey: `AdventureType_${AdventureType.Volunteering}` },
+    { type: AdventureType.Cycling, icon: <BicycleIcon />, labelKey: `AdventureType_${AdventureType.Cycling}` },
+  ];
+
   return (
     <div className="w-full h-full flex flex-col">
       <Header title={t('mapView')} />
+      <div className="bg-white dark:bg-neutral-900 border-b dark:border-neutral-800 p-2 overflow-x-auto">
+          <div className="flex space-x-2">
+              {filterOptions.map(option => (
+                  <FilterButton
+                      key={option.type}
+                      icon={option.icon}
+                      label={t(option.labelKey)}
+                      isActive={filterType === option.type}
+                      onClick={() => setFilterType(option.type)}
+                  />
+              ))}
+          </div>
+      </div>
       <div className="w-full flex-grow relative">
         {isLoaded ? (
           <>
@@ -77,12 +139,16 @@ const MapScreen: React.FC<MapScreenProps> = ({ adventuresToShow, isLoaded, onSho
                 zoomControl: true,
               }}
             >
-              {adventuresToShow.map(adventure => (
+              {filteredAdventures.map(adventure => (
                 adventure.coordinates && (
                   <MarkerF
                     key={adventure.id}
                     position={adventure.coordinates}
                     onClick={() => onMarkerClick(adventure)}
+                    icon={{
+                      url: getAdventureIconDataUrl(adventure.type),
+                      scaledSize: new window.google.maps.Size(36, 48),
+                    }}
                   />
                 )
               ))}
