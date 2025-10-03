@@ -30,6 +30,9 @@ interface UserProfileScreenProps {
   onToggleCompleted: (postId: string) => void;
   onOpenFollowList: (user: User, listType: 'followers' | 'following') => void;
   isGuest: boolean;
+  onViewLocationOnMap: (post: HydratedPost) => void;
+  onDeletePost: (postId: string) => void;
+  onEditPost: (post: HydratedPost) => void;
 }
 
 type ProfileTab = 'posts' | 'reposts' | 'completed' | 'stats';
@@ -50,7 +53,10 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
   onSharePost,
   onToggleCompleted,
   onOpenFollowList,
-  isGuest
+  isGuest,
+  onViewLocationOnMap,
+  onDeletePost,
+  onEditPost,
 }) => {
   const [activeTab, setActiveTab] = useState<ProfileTab>('posts');
   const { t } = useTranslation();
@@ -139,6 +145,9 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
                 onSaveToggle={onSaveToggle}
                 onSharePost={onSharePost}
                 onToggleCompleted={onToggleCompleted}
+                onViewLocationOnMap={onViewLocationOnMap}
+                onDeletePost={onDeletePost}
+                onEditPost={onEditPost}
               />
             ))}
              {renderedPosts.length === 0 && (

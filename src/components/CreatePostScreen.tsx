@@ -16,6 +16,8 @@ const CreatePostScreen: React.FC<CreatePostScreenProps> = ({ onCreatePost }) => 
   const [keywords, setKeywords] = useState('');
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
+  const [lat, setLat] = useState('');
+  const [lng, setLng] = useState('');
   const [budget, setBudget] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -57,6 +59,8 @@ const CreatePostScreen: React.FC<CreatePostScreenProps> = ({ onCreatePost }) => 
       return;
     }
     
+    const coordinates = (lat && lng) ? { lat: parseFloat(lat), lng: parseFloat(lng) } : undefined;
+
     // @ts-ignore
     const newPostData = {
       type: postType,
@@ -64,6 +68,7 @@ const CreatePostScreen: React.FC<CreatePostScreenProps> = ({ onCreatePost }) => 
       title,
       description,
       location,
+      coordinates,
       startDate,
       endDate: endDate || undefined,
       budget: parseInt(budget, 10),
@@ -145,25 +150,34 @@ const CreatePostScreen: React.FC<CreatePostScreenProps> = ({ onCreatePost }) => 
           )}
         </div>
         
+        <div>
+          <label className={labelBaseClasses}>{t('location')}</label>
+          <input type="text" value={location} onChange={e => setLocation(e.target.value)} className={inputBaseClasses} placeholder="e.g., Cusco, Peru" />
+        </div>
         <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelBaseClasses}>{t('location')}</label>
-              <input type="text" value={location} onChange={e => setLocation(e.target.value)} className={inputBaseClasses} placeholder="e.g., Cusco, Peru" />
+              <label className={labelBaseClasses}>{t('latitude')}</label>
+              <input type="number" value={lat} onChange={e => setLat(e.target.value)} className={inputBaseClasses} placeholder="e.g., -13.531" />
             </div>
+            <div>
+              <label className={labelBaseClasses}>{t('longitude')}</label>
+              <input type="number" value={lng} onChange={e => setLng(e.target.value)} className={inputBaseClasses} placeholder="e.g., -71.967" />
+            </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelBaseClasses}>{t('budget')}</label>
               <input type="number" value={budget} onChange={e => setBudget(e.target.value)} className={inputBaseClasses} placeholder="e.g., 1500" />
             </div>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelBaseClasses}>{t('startDate')}</label>
               <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className={`${inputBaseClasses} text-gray-500 dark:text-gray-400`} />
             </div>
-            <div>
-              <label className={labelBaseClasses}>{t('endDate')}</label>
-              <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className={`${inputBaseClasses} text-gray-500 dark:text-gray-400`} />
-            </div>
+        </div>
+        <div>
+          <label className={labelBaseClasses}>{t('endDate')}</label>
+          <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className={`${inputBaseClasses} text-gray-500 dark:text-gray-400`} />
         </div>
 
         <button onClick={handleSubmit} className="w-full bg-emerald-600 text-white font-bold py-3 rounded-md hover:bg-emerald-700 transition-colors">

@@ -1,16 +1,14 @@
-
-
-
 import React, { useState } from 'react';
 import GoogleIcon from './icons/GoogleIcon';
 import FacebookIcon from './icons/FacebookIcon';
 import { useTranslation } from '../contexts/LanguageContext';
 import EyeIcon from './icons/EyeIcon';
 import EyeOffIcon from './icons/EyeOffIcon';
+import { countries } from '../data/countries';
 
 interface AuthScreenProps {
   onLogin: (email: string, pass: string) => void;
-  onSignUp: (name: string, username: string, email: string, pass: string, birthday: string, gender: string) => void;
+  onSignUp: (name: string, username: string, email: string, pass: string, birthday: string, gender: string, country: string) => void;
   onSocialLogin: (provider: 'google' | 'facebook') => void;
   onGuestLogin: () => void;
   onForgotPassword: () => void;
@@ -25,6 +23,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onSignUp, onSocialLogi
   const [password, setPassword] = useState('');
   const [birthday, setBirthday] = useState('');
   const [gender, setGender] = useState('');
+  const [country, setCountry] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const { t } = useTranslation();
 
@@ -37,11 +36,11 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onSignUp, onSocialLogi
     if (isLogin) {
       onLogin(email, password);
     } else {
-      if (!fullName || !username || !birthday || !gender) {
+      if (!fullName || !username || !birthday || !gender || !country) {
         alert("Please fill in all fields.");
         return;
       }
-      onSignUp(fullName, username, email, password, birthday, gender);
+      onSignUp(fullName, username, email, password, birthday, gender, country);
     }
   };
 
@@ -88,15 +87,24 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onSignUp, onSocialLogi
                 <label htmlFor="birthday" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 ms-1">{t('birthday')}</label>
                 <input id="birthday" type="date" className={`${inputClasses} text-gray-500`} value={birthday} onChange={e => setBirthday(e.target.value)} required />
               </div>
-              <div>
-                 <label htmlFor="gender" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 ms-1">{t('gender')}</label>
-                <select id="gender" className={`${inputClasses} text-gray-500`} value={gender} onChange={e => setGender(e.target.value)} required>
-                  <option value="" disabled>{t('selectOption')}</option>
-                  <option value="male">{t('male')}</option>
-                  <option value="female">{t('female')}</option>
-                  <option value="other">{t('other')}</option>
-                  <option value="prefer_not_to_say">{t('preferNotToSay')}</option>
-                </select>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="gender" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 ms-1">{t('gender')}</label>
+                  <select id="gender" className={`${inputClasses} text-gray-500`} value={gender} onChange={e => setGender(e.target.value)} required>
+                    <option value="" disabled>{t('selectOption')}</option>
+                    <option value="male">{t('male')}</option>
+                    <option value="female">{t('female')}</option>
+                    <option value="other">{t('other')}</option>
+                    <option value="prefer_not_to_say">{t('preferNotToSay')}</option>
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="country" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 ms-1">{t('country')}</label>
+                  <select id="country" className={`${inputClasses} text-gray-500`} value={country} onChange={e => setCountry(e.target.value)} required>
+                    <option value="" disabled>{t('selectOption')}</option>
+                    {countries.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
               </div>
             </>
           )}

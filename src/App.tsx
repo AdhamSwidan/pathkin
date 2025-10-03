@@ -24,6 +24,8 @@ import PrivacySecurityScreen from './components/settings/PrivacySecurityScreen';
 import LanguageScreen from './components/settings/LanguageScreen';
 import ForgotPasswordModal from './components/ForgotPasswordModal';
 import AddStoryModal from './components/AddStoryModal';
+// FIX: Import EditPostModal to handle post editing.
+import EditPostModal from './components/EditPostModal';
 import SavedPostsScreen from './components/settings/SavedPostsScreen';
 import { useTranslation } from './contexts/LanguageContext';
 
@@ -42,6 +44,7 @@ import {
   runTransaction, deleteDoc,
   GoogleAuthProvider, signInWithPopup, increment
 } from './services/firebase';
+
 
 const guestUser: User = {
     id: 'guest',
@@ -95,6 +98,8 @@ const App: React.FC = () => {
   }>({ isOpen: false, user: null, listType: null });
   const [isForgotPasswordModalOpen, setIsForgotPasswordModalOpen] = useState(false);
   const [isAddStoryModalOpen, setIsAddStoryModalOpen] = useState(false);
+  // FIX: Add state to manage the post being edited.
+  const [editingPost, setEditingPost] = useState<HydratedPost | null>(null);
   
   const mainContentRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
@@ -135,7 +140,6 @@ const App: React.FC = () => {
                 ...data,
                 id: doc.id,
                 createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() ?? new Date().toISOString(),
-               interestedUsers: data.interestedUsers || [],
             } as Post
         }));
     });
@@ -461,7 +465,7 @@ const App: React.FC = () => {
   const handleCreatePost = async (newPostData: Omit<Post, 'id' | 'authorId' | 'interestedUsers' | 'commentCount' | 'createdAt'>, mediaFile: File | null) => {
     if (!currentUser) return;
     try {
-        let media: Media[] = [];
+        let media: Media[] | undefined = undefined;
         if (mediaFile) {
             const mediaUrl = await uploadFile(mediaFile, `posts/${currentUser.id}/${Date.now()}_${mediaFile.name}`);
             media = [{ url: mediaUrl, type: mediaFile.type.startsWith('video') ? 'video' : 'image' }];
@@ -559,12 +563,6 @@ const App: React.FC = () => {
         await updateDoc(userRef, {
             reposts: isReposted ? arrayRemove(postId) : arrayUnion(postId)
         });
-      setCurrentUser(prev => prev ? {
-          ...prev,
-          reposts: isReposted 
-              ? prev.reposts.filter(id => id !== postId)
-              : [...prev.reposts, postId]
-      } : null);
     } catch (e) { console.error("Error toggling repost:", e); }
   };
 
@@ -576,12 +574,6 @@ const App: React.FC = () => {
         await updateDoc(userRef, {
             savedPosts: isSaved ? arrayRemove(postId) : arrayUnion(postId)
         });
-       setCurrentUser(prev => prev ? {
-          ...prev,
-          savedPosts: isSaved 
-              ? prev.savedPosts.filter(id => id !== postId)
-              : [...prev.savedPosts, postId]
-      } : null);
     } catch (e) { console.error("Error toggling save:", e); }
   };
   
@@ -816,6 +808,52 @@ const App: React.FC = () => {
     }
   };
   
+  // FIX: Add handlers for viewing location on map, editing, and deleting posts.
+  const handleViewLocationOnMap = (post: HydratedPost) => {
+    if (post.coordinates) {
+      setMapPostsToShow([post]);
+      handleSetActiveScreen('map');
+    } else {
+      setToastMessage(t('noCoordinatesOnMap'));
+    }
+  };
+
+  const handleEditPost = (post: HydratedPost) => {
+    setEditingPost(post);
+  };
+  
+  const handleDeletePost = async (postId: string) => {
+    if (!currentUser) return;
+    const postToDelete = posts.find(p => p.id === postId);
+    if (postToDelete?.authorId !== currentUser.id) {
+        setToastMessage("You can only delete your own posts.");
+        return;
+    }
+
+    try {
+        await deleteDoc(doc(db, 'posts', postId));
+        setToastMessage(t('postDeletedSuccessfully'));
+        if (selectedPost?.id === postId) {
+            setSelectedPost(null);
+        }
+    } catch (e) {
+        console.error("Error deleting post: ", e);
+        setToastMessage("Failed to delete post.");
+    }
+  };
+  
+  const handleUpdatePost = async (postId: string, updatedData: Partial<Post>) => {
+      try {
+          const postRef = doc(db, 'posts', postId);
+          await updateDoc(postRef, updatedData);
+          setToastMessage(t('postUpdatedSuccessfully'));
+          setEditingPost(null);
+      } catch(e) {
+          console.error("Error updating post: ", e);
+          setToastMessage("Failed to update post.");
+      }
+  };
+  
   useEffect(() => { if (!['map', 'search'].includes(activeScreen)) setMapPostsToShow(null); }, [activeScreen]);
   const handleSelectPost = (post: HydratedPost) => setSelectedPost(post);
   const handleCloseModal = () => setSelectedPost(null);
@@ -859,6 +897,10 @@ const App: React.FC = () => {
           hasUnreadNotifications={!isGuest && hasUnreadNotifications} onNavigateToChat={() => navigateTo('chat')}
           onViewProfile={handleViewProfile} onRepostToggle={handleRepostToggle} onSaveToggle={handleSaveToggle}
           onSharePost={handleSharePost} onToggleCompleted={handleToggleCompleted}
+          // FIX: Pass down missing props to FeedScreen.
+          onViewLocationOnMap={handleViewLocationOnMap}
+          onDeletePost={handleDeletePost}
+          onEditPost={handleEditPost}
         />;
       case 'map':
         const eventPosts = hydratedPosts.filter(p => p.type === PostType.Event && p.coordinates && p.privacy === PostPrivacy.Public);
@@ -871,6 +913,10 @@ const App: React.FC = () => {
             onSendMessage={handleSelectConversation} onToggleInterest={handleToggleInterest} onNavigateToFindTwins={() => navigateTo('findTwins')}
             onViewProfile={handleViewProfile} onShowResultsOnMap={handleShowResultsOnMap} onRepostToggle={handleRepostToggle}
             onSaveToggle={handleSaveToggle} onSharePost={handleSharePost} onToggleCompleted={handleToggleCompleted}
+            // FIX: Pass down missing props to SearchScreen.
+            onViewLocationOnMap={handleViewLocationOnMap}
+            onDeletePost={handleDeletePost}
+            onEditPost={handleEditPost}
         />;
       case 'chat':
         if (isGuest || !currentUser) return null;
@@ -881,6 +927,10 @@ const App: React.FC = () => {
           onToggleInterest={handleToggleInterest} onViewProfile={handleViewProfile} onRepostToggle={handleRepostToggle} onSaveToggle={handleSaveToggle}
           onShareProfile={handleShareProfile} onSharePost={handleSharePost} onToggleCompleted={handleToggleCompleted}
           onOpenFollowList={handleOpenFollowList} onNavigateToSettings={() => navigateTo('settings')}
+          // FIX: Pass down missing props to ProfileScreen.
+          onViewLocationOnMap={handleViewLocationOnMap}
+          onDeletePost={handleDeletePost}
+          onEditPost={handleEditPost}
         />;
       case 'chatDetail':
         if (isGuest || !currentUser || !selectedConversationUser) return null;
@@ -895,6 +945,10 @@ const App: React.FC = () => {
             onFollowToggle={handleFollowToggle} onViewProfile={handleViewProfile} onRepostToggle={handleRepostToggle}
             onSaveToggle={handleSaveToggle} onShareProfile={handleShareProfile} onSharePost={handleSharePost}
             onToggleCompleted={handleToggleCompleted} onOpenFollowList={handleOpenFollowList}
+            // FIX: Pass down missing props to UserProfileScreen.
+            onViewLocationOnMap={handleViewLocationOnMap}
+            onDeletePost={handleDeletePost}
+            onEditPost={handleEditPost}
            />;
         }
         return null;
@@ -924,6 +978,10 @@ const App: React.FC = () => {
             onSaveToggle={handleSaveToggle}
             onSharePost={handleSharePost}
             onToggleCompleted={handleToggleCompleted}
+            // FIX: Pass down missing props to SavedPostsScreen.
+            onViewLocationOnMap={handleViewLocationOnMap}
+            onDeletePost={handleDeletePost}
+            onEditPost={handleEditPost}
         />;
       default: return null;
     }
@@ -973,6 +1031,8 @@ const App: React.FC = () => {
       )}
       {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage(null)} />}
       {ratingModalPost && <RatingModal post={ratingModalPost} onClose={() => setRatingModalPost(null)} onSubmit={handleSubmitRating} />}
+      {/* FIX: Render the EditPostModal when a post is being edited. */}
+      {editingPost && <EditPostModal post={editingPost} onClose={() => setEditingPost(null)} onUpdatePost={handleUpdatePost} />}
       {followListModal.isOpen && followListModal.user && followListModal.listType && (currentUser || isGuest) && (
           <FollowListModal title={t(followListModal.listType)} listOwner={followListModal.user} currentUser={currentUser}
               users={

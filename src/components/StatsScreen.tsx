@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { Post, PostType, User, ActivityStatus } from '../types';
 import { getCountryFromLocation, getFlagUrl } from '../utils/countryUtils';
@@ -74,8 +73,21 @@ const StatsScreen: React.FC<StatsScreenProps> = ({ user, allPosts }) => {
     </div>
   );
 
+  const homeCountryFlagUrl = user.country ? getFlagUrl(user.country) : null;
+
   return (
     <div className="p-4 space-y-4">
+      {user.country && (
+        <StatCard title={t('homeCountry')}>
+           <div className="flex items-center space-x-3">
+              {homeCountryFlagUrl && (
+                  <img src={homeCountryFlagUrl} alt={user.country} className="w-10 h-auto rounded-sm shadow-md" />
+              )}
+              <span className="font-semibold text-gray-800 dark:text-gray-200">{user.country}</span>
+           </div>
+        </StatCard>
+      )}
+
       <StatCard title={t('countriesVisited')}>
         {stats.countriesVisited.length > 0 ? (
           <div className="flex flex-wrap gap-3">

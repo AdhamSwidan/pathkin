@@ -1,5 +1,5 @@
-import React from 'react';
-import { PostType, User, HydratedPost, ActivityStatus } from '../types';
+import React, { useState } from 'react';
+import { PostType, User, ActivityStatus, HydratedPost } from '../types';
 import HeartIcon from './icons/HeartIcon';
 import CommentIcon from './icons/CommentIcon';
 import PlayIcon from './icons/PlayIcon';
@@ -10,10 +10,12 @@ import CheckCircleIcon from './icons/CheckCircleIcon';
 import StarIcon from './icons/StarIcon';
 import { useTranslation } from '../contexts/LanguageContext';
 import MessageIcon from './icons/MessageIcon';
+import MoreIcon from './icons/MoreIcon';
+import PostOptionsMenu from './PostOptionsMenu';
 
 interface PostCardProps {
   post: HydratedPost;
-  currentUser: User | null;
+  currentUser: User | null; // Can be null for guests
   isGuest: boolean;
   onCommentClick: (post: HydratedPost) => void;
   onMessageClick: (user: User) => void;
@@ -23,6 +25,9 @@ interface PostCardProps {
   onSaveToggle: (postId: string) => void;
   onSharePost: (post: HydratedPost) => void;
   onToggleCompleted: (postId: string) => void;
+  onViewLocationOnMap: (post: HydratedPost) => void;
+  onDeletePost: (postId: string) => void;
+  onEditPost: (post: HydratedPost) => void;
 }
 
 const PostCard: React.FC<PostCardProps> = ({ 
@@ -37,9 +42,13 @@ const PostCard: React.FC<PostCardProps> = ({
   onSaveToggle,
   onSharePost,
   onToggleCompleted,
+  onViewLocationOnMap,
+  onDeletePost,
+  onEditPost,
 }) => {
   const { t, language } = useTranslation();
-  
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   const isInterested = currentUser ? post.interestedUsers.includes(currentUser.id) : false;
   const isReposted = currentUser ? currentUser.reposts.includes(post.id) : false;
   const isSaved = currentUser ? currentUser.savedPosts.includes(post.id) : false;
@@ -48,37 +57,6 @@ const PostCard: React.FC<PostCardProps> = ({
   const activityLogEntry = currentUser ? currentUser.activityLog.find(a => a.postId === post.id) : undefined;
   const activityStatus = activityLogEntry?.status;
 
-  // التحقق من التاريخ لتحديد إذا ممكن يكبس Done
-  const canMarkAsDone = () => {
-    const now = new Date();
-    const startDate = new Date(post.startDate);
-    const endDate = post.endDate ? new Date(post.endDate) : null;
-    
-    // إذا في تاريخ نهاية، لازم يكون بعد تاريخ النهاية
-    if (endDate) {
-      return now >= endDate;
-    }
-    // إذا ما في تاريخ نهاية، لازم يكون بعد تاريخ البداية
-    else {
-      return now >= startDate;
-    }
-  };
-
-  const getTimeStatus = () => {
-    const now = new Date();
-    const startDate = new Date(post.startDate);
-    const endDate = post.endDate ? new Date(post.endDate) : null;
-    
-    if (endDate && now < endDate) {
-      return 'event_not_ended';
-    } else if (!endDate && now < startDate) {
-      return 'event_not_started';
-    } else {
-      return 'can_mark_done';
-    }
-  };
-
-  const timeStatus = getTimeStatus();
 
   const getTagStyle = (type: PostType) => {
     switch (type) {
@@ -107,32 +85,12 @@ const PostCard: React.FC<PostCardProps> = ({
 
   const checkmarkColor = () => {
     if (activityStatus === ActivityStatus.Confirmed) return 'text-green-500';
-    if (activityStatus === ActivityStatus.Pending) return 'text-yellow-500';
+    if (activityStatus === ActivityStatus.Pending) return 'text-amber-500';
     return '';
   };
-
-  const getDoneButtonText = () => {
-    if (activityStatus === ActivityStatus.Confirmed) return '✓ Done';
-    if (activityStatus === ActivityStatus.Pending) return '⏳ Pending';
-    
-    if (timeStatus === 'event_not_ended') return 'Event not ended';
-    if (timeStatus === 'event_not_started') return 'Event not started';
-    
-    return 'Mark Done';
-  };
-
-  const isDoneButtonDisabled = isGuest || !currentUser || !canMarkAsDone();
   
   const actionButtonClasses = "flex items-center space-x-1 transition-colors";
   const disabledClasses = "cursor-not-allowed text-gray-400 dark:text-gray-600";
-
-  const handleDoneClick = () => {
-    if (!canMarkAsDone()) {
-      alert(t(timeStatus === 'event_not_ended' ? 'eventNotEnded' : 'eventNotStarted'));
-      return;
-    }
-    onToggleCompleted(post.id);
-  };
 
   return (
     <div className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-lg shadow-sm mb-4">
@@ -154,18 +112,27 @@ const PostCard: React.FC<PostCardProps> = ({
                 <p className="text-xs text-gray-500 dark:text-gray-400">{new Date(post.createdAt).toLocaleString(language)}</p>
                 </div>
             </button>
-            {!isGuest && !isAuthor && (
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onMessageClick(post.author);
-                    }}
-                    className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-neutral-800 flex-shrink-0 ms-2"
-                    aria-label={`Message ${post.author.name}`}
-                >
-                    <MessageIcon />
-                </button>
-            )}
+            <div className="relative flex-shrink-0 ms-2">
+                {isAuthor && (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setIsMenuOpen(prev => !prev);
+                        }}
+                        className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-neutral-800"
+                    >
+                        <MoreIcon />
+                    </button>
+                )}
+                {isMenuOpen && (
+                    <PostOptionsMenu 
+                        post={post}
+                        onClose={() => setIsMenuOpen(false)}
+                        onDelete={() => { onDeletePost(post.id); setIsMenuOpen(false); }}
+                        onEdit={() => { onEditPost(post); setIsMenuOpen(false); }}
+                    />
+                )}
+            </div>
         </div>
 
         {/* Post Content */}
@@ -195,7 +162,13 @@ const PostCard: React.FC<PostCardProps> = ({
         {/* Post Details */}
         <div className="flex flex-wrap gap-2 text-xs text-gray-600 dark:text-gray-300">
           <span className={`px-2 py-1 rounded-full font-medium ${getTagStyle(post.type)}`}>{t(`PostType_${post.type}`)}</span>
-          <span className="px-2 py-1 rounded-full bg-gray-100 dark:bg-neutral-800">📍 {post.location}</span>
+          <button 
+             onClick={() => onViewLocationOnMap(post)}
+             disabled={!post.coordinates}
+             className="px-2 py-1 rounded-full bg-gray-100 dark:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-200 dark:hover:bg-neutral-700"
+          >
+            📍 {post.location}
+          </button>
           <span className="px-2 py-1 rounded-full bg-gray-100 dark:bg-neutral-800">
             🗓️ {formatDate(post.startDate)} {post.endDate && `- ${formatDate(post.endDate)}`}
           </span>
@@ -222,15 +195,12 @@ const PostCard: React.FC<PostCardProps> = ({
           <span>{post.commentCount || 0}</span>
         </button>
         <button
-          onClick={handleDoneClick}
-          disabled={isDoneButtonDisabled}
-          className={`${actionButtonClasses} ${isDoneButtonDisabled ? disabledClasses : `hover:text-green-500 ${checkmarkColor()}`}`}
+          onClick={() => onToggleCompleted(post.id)}
+          disabled={isGuest || isAuthor}
+          className={`${actionButtonClasses} ${isGuest || isAuthor ? disabledClasses : `hover:text-green-500 ${checkmarkColor()}`}`}
           aria-label="Mark as done"
         >
           <CheckCircleIcon className={activityStatus ? 'fill-current' : ''} />
-          <span className="text-xs whitespace-nowrap">
-            {getDoneButtonText()}
-          </span>
         </button>
         <button 
           onClick={() => onSharePost(post)}

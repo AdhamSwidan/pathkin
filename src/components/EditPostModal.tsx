@@ -1,0 +1,130 @@
+import React, { useState } from 'react';
+import { Post, PostPrivacy, PostType, HydratedPost } from '../types';
+import { useTranslation } from '../contexts/LanguageContext';
+
+interface EditPostModalProps {
+  post: HydratedPost;
+  onClose: () => void;
+  onUpdatePost: (postId: string, updatedData: Partial<Post>) => void;
+}
+
+const EditPostModal: React.FC<EditPostModalProps> = ({ post, onClose, onUpdatePost }) => {
+  const { t } = useTranslation();
+  
+  const [postType, setPostType] = useState<PostType>(post.type);
+  const [privacy, setPrivacy] = useState<PostPrivacy>(post.privacy);
+  const [title, setTitle] = useState(post.title);
+  const [description, setDescription] = useState(post.description);
+  const [location, setLocation] = useState(post.location);
+  const [lat, setLat] = useState(post.coordinates?.lat.toString() || '');
+  const [lng, setLng] = useState(post.coordinates?.lng.toString() || '');
+  const [budget, setBudget] = useState(post.budget.toString());
+  const [startDate, setStartDate] = useState(post.startDate);
+  const [endDate, setEndDate] = useState(post.endDate || '');
+
+  const handleSubmit = () => {
+    const coordinates = (lat && lng) ? { lat: parseFloat(lat), lng: parseFloat(lng) } : undefined;
+
+    const updatedData: Partial<Post> = {
+      type: postType,
+      privacy,
+      title,
+      description,
+      location,
+      coordinates,
+      startDate,
+      endDate: endDate || undefined,
+      budget: parseInt(budget, 10),
+    };
+    
+    onUpdatePost(post.id, updatedData);
+    onClose();
+  };
+  
+  const inputBaseClasses = "w-full p-2 border border-gray-300 rounded-md dark:bg-neutral-800 dark:border-neutral-700 dark:text-gray-200 dark:placeholder-gray-400";
+  const labelBaseClasses = "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1";
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-70 z-[101] flex justify-center items-center p-4 animate-fade-in">
+      <div className="bg-white dark:bg-neutral-900 rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col">
+        <div className="p-4 border-b dark:border-neutral-800 flex justify-between items-center">
+          <h2 className="text-xl font-bold dark:text-white">{t('editPost')}</h2>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white text-2xl font-bold">&times;</button>
+        </div>
+        
+        <div className="p-4 overflow-y-auto flex-grow space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+                <div>
+                    <label className={labelBaseClasses}>{t('postType')}</label>
+                    <select value={postType} onChange={e => setPostType(e.target.value as PostType)} className={inputBaseClasses}>
+                        <option value={PostType.Travel}>{t('PostType_Travel')}</option>
+                        <option value={PostType.Housing}>{t('PostType_Housing')}</option>
+                        <option value={PostType.Event}>{t('PostType_Event')}</option>
+                        <option value={PostType.Hiking}>{t('PostType_Hiking')}</option>
+                        <option value={PostType.Camping}>{t('PostType_Camping')}</option>
+                        <option value={PostType.Volunteering}>{t('PostType_Volunteering')}</option>
+                        <option value={PostType.Cycling}>{t('PostType_Cycling')}</option>
+                    </select>
+                </div>
+                <div>
+                    <label className={labelBaseClasses}>{t('privacy')}</label>
+                    <select value={privacy} onChange={e => setPrivacy(e.target.value as PostPrivacy)} className={inputBaseClasses}>
+                        <option value={PostPrivacy.Public}>{t('PostPrivacy_Public')}</option>
+                        <option value={PostPrivacy.Followers}>{t('PostPrivacy_Followers')}</option>
+                        <option value={PostPrivacy.Twins}>{t('PostPrivacy_Twins')}</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label htmlFor="title" className={labelBaseClasses}>{t('title')}</label>
+                <input type="text" id="title" value={title} onChange={e => setTitle(e.target.value)} className={inputBaseClasses} />
+            </div>
+
+            <div>
+                <label htmlFor="description" className={labelBaseClasses}>{t('description')}</label>
+                <textarea id="description" value={description} onChange={e => setDescription(e.target.value)} rows={4} className={inputBaseClasses}></textarea>
+            </div>
+            
+             <div>
+                <label className={labelBaseClasses}>{t('location')}</label>
+                <input type="text" value={location} onChange={e => setLocation(e.target.value)} className={inputBaseClasses} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+                <div>
+                    <label className={labelBaseClasses}>{t('latitude')}</label>
+                    <input type="number" value={lat} onChange={e => setLat(e.target.value)} className={inputBaseClasses} />
+                </div>
+                <div>
+                    <label className={labelBaseClasses}>{t('longitude')}</label>
+                    <input type="number" value={lng} onChange={e => setLng(e.target.value)} className={inputBaseClasses} />
+                </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+                <div>
+                    <label className={labelBaseClasses}>{t('budget')}</label>
+                    <input type="number" value={budget} onChange={e => setBudget(e.target.value)} className={inputBaseClasses} />
+                </div>
+                <div>
+                    <label className={labelBaseClasses}>{t('startDate')}</label>
+                    <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className={`${inputBaseClasses} text-gray-500 dark:text-gray-400`} />
+                </div>
+            </div>
+            <div>
+                <label className={labelBaseClasses}>{t('endDate')}</label>
+                <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className={`${inputBaseClasses} text-gray-500 dark:text-gray-400`} />
+            </div>
+        </div>
+        
+        <div className="p-4 border-t dark:border-neutral-800 bg-slate-50/80 dark:bg-neutral-950/80 backdrop-blur-sm">
+            <button onClick={handleSubmit} className="w-full bg-orange-600 text-white font-bold py-3 rounded-md hover:bg-orange-700 transition-colors">
+            {t('saveChanges')}
+            </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default EditPostModal;

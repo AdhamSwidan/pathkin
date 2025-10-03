@@ -25,6 +25,9 @@ interface FeedScreenProps {
   onSharePost: (post: HydratedPost) => void;
   onToggleCompleted: (postId: string) => void;
   isGuest: boolean;
+  onViewLocationOnMap: (post: HydratedPost) => void;
+  onDeletePost: (postId: string) => void;
+  onEditPost: (post: HydratedPost) => void;
 }
 
 const FeedScreen: React.FC<FeedScreenProps> = ({ 
@@ -44,7 +47,10 @@ const FeedScreen: React.FC<FeedScreenProps> = ({
   onSaveToggle,
   onSharePost,
   onToggleCompleted,
-  isGuest
+  isGuest,
+  onViewLocationOnMap,
+  onDeletePost,
+  onEditPost,
 }) => {
   const { t } = useTranslation();
   const headerActions = (
@@ -83,6 +89,9 @@ const FeedScreen: React.FC<FeedScreenProps> = ({
             onSaveToggle={onSaveToggle}
             onSharePost={onSharePost}
             onToggleCompleted={onToggleCompleted}
+            onViewLocationOnMap={onViewLocationOnMap}
+            onDeletePost={onDeletePost}
+            onEditPost={onEditPost}
           />
         ))}
         {posts.length === 0 && (

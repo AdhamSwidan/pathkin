@@ -25,11 +25,13 @@ interface ProfileScreenProps {
   onRepostToggle: (postId: string) => void;
   onSaveToggle: (postId: string) => void;
   onShareProfile: (user: User) => void;
-  // Fix: Changed `postId: string` to `post: HydratedPost` to match the expected type from PostCard.
   onSharePost: (post: HydratedPost) => void;
   onToggleCompleted: (postId: string) => void;
   onOpenFollowList: (user: User, listType: 'followers' | 'following') => void;
   onNavigateToSettings: () => void;
+  onViewLocationOnMap: (post: HydratedPost) => void;
+  onDeletePost: (postId: string) => void;
+  onEditPost: (post: HydratedPost) => void;
 }
 
 type ProfileTab = 'posts' | 'saved' | 'reposts' | 'completed' | 'stats';
@@ -48,6 +50,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   onToggleCompleted,
   onOpenFollowList,
   onNavigateToSettings,
+  onViewLocationOnMap,
+  onDeletePost,
+  onEditPost,
 }) => {
   const [activeTab, setActiveTab] = useState<ProfileTab>('posts');
   const { t } = useTranslation();
@@ -114,6 +119,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                 onSaveToggle={onSaveToggle}
                 onSharePost={onSharePost}
                 onToggleCompleted={onToggleCompleted}
+                onViewLocationOnMap={onViewLocationOnMap}
+                onDeletePost={onDeletePost}
+                onEditPost={onEditPost}
               />
             ))}
              {renderedPosts.length === 0 && (

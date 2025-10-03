@@ -22,6 +22,9 @@ interface SearchScreenProps {
   onSharePost: (post: HydratedPost) => void;
   onToggleCompleted: (postId: string) => void;
   isGuest: boolean;
+  onViewLocationOnMap: (post: HydratedPost) => void;
+  onDeletePost: (postId: string) => void;
+  onEditPost: (post: HydratedPost) => void;
 }
 
 interface AppliedFilters {
@@ -46,7 +49,10 @@ const SearchScreen: React.FC<SearchScreenProps> = ({
   onSaveToggle,
   onSharePost,
   onToggleCompleted,
-  isGuest
+  isGuest,
+  onViewLocationOnMap,
+  onDeletePost,
+  onEditPost,
 }) => {
   // Input states
   const [searchQuery, setSearchQuery] = useState('');
@@ -219,6 +225,9 @@ const SearchScreen: React.FC<SearchScreenProps> = ({
             onSaveToggle={onSaveToggle}
             onSharePost={onSharePost}
             onToggleCompleted={onToggleCompleted}
+            onViewLocationOnMap={onViewLocationOnMap}
+            onDeletePost={onDeletePost}
+            onEditPost={onEditPost}
           />
         ))}
         {appliedFilters !== null && filteredPosts.length === 0 && (

@@ -153,5 +153,15 @@
   "preferNotToSay": "Prefer not to say",
   "emailConfirmationSent": "Account created! A confirmation link has been sent to your email.",
   "savedPosts": "Saved Posts",
-  "noSavedPosts": "You have no saved posts."
+  "noSavedPosts": "You have no saved posts.",
+  "country": "Country",
+  "latitude": "Latitude (Optional)",
+  "longitude": "Longitude (Optional)",
+  "editPost": "Edit Post",
+  "deletePost": "Delete Post",
+  "confirmDelete": "Are you sure you want to delete this post? This action cannot be undone.",
+  "postUpdated": "Post updated successfully!",
+  "postDeleted": "Post deleted successfully.",
+  "homeCountry": "Home Country",
+  "followsYou": "Follows you"
 }

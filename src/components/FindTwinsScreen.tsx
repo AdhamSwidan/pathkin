@@ -1,5 +1,3 @@
-
-
 import React, { useState } from 'react';
 import { User } from '../types';
 import Header from './Header';
@@ -99,12 +97,18 @@ const FindTwinsScreen: React.FC<FindTwinsScreenProps> = ({
               <h3 className="font-bold text-lg dark:text-white">{t('foundTwins', { count: results.length })}</h3>
               {results.map(user => {
                 const isFollowing = currentUser.following.includes(user.id);
+                const followsYou = user.following.includes(currentUser.id);
                 return (
                   <div key={user.id} className="bg-white dark:bg-neutral-900 p-3 rounded-lg border dark:border-neutral-800 flex flex-col sm:flex-row sm:items-center sm:justify-between">
                     <button onClick={() => onViewProfile(user)} className="flex items-center mb-2 sm:mb-0 text-left">
                       <img src={user.avatarUrl} alt={user.name} className="w-12 h-12 rounded-full me-4" />
                       <div>
-                        <p className="font-semibold text-gray-800 dark:text-gray-100">{user.name}</p>
+                        <div className="flex items-center space-x-2">
+                            <p className="font-semibold text-gray-800 dark:text-gray-100">{user.name}</p>
+                            {followsYou && (
+                                <span className="text-xs bg-gray-200 dark:bg-neutral-700 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded-md">{t('followsYou')}</span>
+                            )}
+                        </div>
                         <p className="text-xs text-gray-500 dark:text-gray-400">{user.bio}</p>
                       </div>
                     </button>
