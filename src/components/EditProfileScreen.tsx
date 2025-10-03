@@ -18,7 +18,8 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ onBack, currentUs
   const [username, setUsername] = useState(currentUser.username);
   const [bio, setBio] = useState(currentUser.bio);
   const [birthday, setBirthday] = useState(currentUser.birthday || '');
-  const [password, setPassword] = useState('');
+  // Fix: Removed password state and functionality. The `User` object does not have a `password` property,
+  // and updating passwords should be handled securely via Firebase Auth, not by saving to a user document.
   
   const [avatarPreview, setAvatarPreview] = useState(currentUser.avatarUrl);
   const [coverPreview, setCoverPreview] = useState(currentUser.coverUrl || '');
@@ -69,9 +70,6 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ onBack, currentUs
       birthday,
       interests: Array.from(selectedInterests),
     };
-    if (password) {
-      updatedData.password = password;
-    }
     onUpdateProfile(updatedData, avatarFile, coverFile);
   };
 
@@ -120,10 +118,6 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ onBack, currentUs
           <div>
             <label htmlFor="birthday" className={labelClasses}>Birthday</label>
             <input id="birthday" type="date" value={birthday} onChange={e => setBirthday(e.target.value)} className={`${inputClasses} text-gray-500 dark:text-gray-400`} />
-          </div>
-          <div>
-            <label htmlFor="password" className={labelClasses}>New Password</label>
-            <input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} className={inputClasses} placeholder="Leave blank to keep current" />
           </div>
         </div>
 
