@@ -9,7 +9,6 @@ import ShareIcon from './icons/ShareIcon';
 import CheckCircleIcon from './icons/CheckCircleIcon';
 import StarIcon from './icons/StarIcon';
 import { useTranslation } from '../contexts/LanguageContext';
-import MessageIcon from './icons/MessageIcon';
 import MoreIcon from './icons/MoreIcon';
 import PostOptionsMenu from './PostOptionsMenu';
 

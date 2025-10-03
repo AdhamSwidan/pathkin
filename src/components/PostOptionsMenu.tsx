@@ -1,8 +1,7 @@
 import React, { useEffect, useRef } from 'react';
-import { HydratedPost, PostPrivacy } from '../types';
+import { HydratedPost } from '../types';
 import { useTranslation } from '../contexts/LanguageContext';
 import EditIcon from './icons/EditIcon';
-import TrashIcon from './icons/TrashIcon';
 
 interface PostOptionsMenuProps {
   post: HydratedPost;
