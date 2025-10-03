@@ -40,7 +40,8 @@ const FollowButton: React.FC<FollowButtonProps> = ({
         return null;
     }
 
-    const isFollowingThisUser = currentUser.following.includes(userInList.id);
+    // Fix: Add fallback for currentUser.following to prevent crash.
+    const isFollowingThisUser = (currentUser.following || []).includes(userInList.id);
 
     // If I am viewing my own followers list, I can remove them.
     if (listOwner.id === currentUser.id && listType === 'followers') {

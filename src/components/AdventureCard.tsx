@@ -48,6 +48,7 @@ const AdventureCard: React.FC<AdventureCardProps> = ({
   const { t, language } = useTranslation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  // Fix: Added fallbacks for potentially undefined array properties to prevent crashes.
   const isInterested = currentUser ? (adventure.interestedUsers || []).includes(currentUser.id) : false;
   const isReposted = currentUser ? (currentUser.repostedAdventures || []).includes(adventure.id) : false;
   const isSaved = currentUser ? (currentUser.savedAdventures || []).includes(adventure.id) : false;
@@ -183,7 +184,7 @@ const AdventureCard: React.FC<AdventureCardProps> = ({
           className={`${actionButtonClasses} ${isGuest ? disabledClasses : `hover:text-rose-500 ${isInterested ? 'text-rose-500' : ''}`}`}
         >
           <HeartIcon className={isInterested ? 'fill-current' : ''} />
-          <span>{adventure.interestedUsers.length}</span>
+          <span>{(adventure.interestedUsers || []).length}</span>
         </button>
         <button 
           onClick={() => onCommentClick(adventure)} 

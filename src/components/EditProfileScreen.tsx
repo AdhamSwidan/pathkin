@@ -26,6 +26,7 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ onBack, currentUs
   const [avatarFile, setAvatarFile] = useState<File | undefined>();
   const [coverFile, setCoverFile] = useState<File | undefined>();
 
+  // Fix: Add fallback for currentUser.interests to prevent crash if undefined.
   const [selectedInterests, setSelectedInterests] = useState(new Set(currentUser.interests || []));
   
   const avatarFileRef = useRef<HTMLInputElement>(null);

@@ -271,6 +271,7 @@ const App: React.FC = () => {
   
   const savedAdventures = useMemo(() => {
     if (!currentUser) return [];
+    // Fix: Add fallback for currentUser.savedAdventures to prevent crash on older user data.
     return hydratedAdventures.filter(p => (currentUser.savedAdventures || []).includes(p.id));
   }, [hydratedAdventures, currentUser]);
 
@@ -870,6 +871,7 @@ const App: React.FC = () => {
     if (isGuest) return hydratedAdventures.filter(adventure => adventure.privacy === AdventurePrivacy.Public);
     if (!currentUser) return [];
     
+    // Fix: Add defensive fallback for currentUser.following
     const userFollowing = currentUser.following || [];
     
     return hydratedAdventures.filter(adventure => {

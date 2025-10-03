@@ -70,6 +70,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   
   const { userAdventures, savedAdventures, repostedAdventures, completedAdventures } = useMemo(() => {
     const userAdventures = allAdventures.filter(p => p.author.id === user.id);
+    // Fix: Add fallbacks for user array properties to prevent crashes.
     const savedAdventures = allAdventures.filter(p => (user.savedAdventures || []).includes(p.id));
     const repostedAdventures = allAdventures.filter(p => (user.repostedAdventures || []).includes(p.id));
     const completedAdventures = allAdventures.filter(p => (user.activityLog || []).some(a => a.adventureId === p.id && a.status === ActivityStatus.Confirmed));

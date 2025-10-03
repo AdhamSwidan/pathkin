@@ -1,7 +1,5 @@
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
-// Fix: Import 'process' to provide type definitions for `process.cwd()` which were missing.
-import { process } from 'process';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {

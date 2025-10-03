@@ -33,7 +33,8 @@ const FindTwinsScreen: React.FC<FindTwinsScreenProps> = ({
     }
 
     const matchingUsers = allUsers.filter(user => {
-      if (user.id === currentUser.id || !user.birthday || !user.privacySettings.allowTwinSearch) {
+      // Fix: Add optional chaining to user.privacySettings to prevent crash on older user data.
+      if (user.id === currentUser.id || !user.birthday || !user.privacySettings?.allowTwinSearch) {
         return false;
       }
       if (searchType === 'exact') {
@@ -97,6 +98,7 @@ const FindTwinsScreen: React.FC<FindTwinsScreenProps> = ({
               <h3 className="font-bold text-lg dark:text-white">{t('foundTwins', { count: results.length })}</h3>
               {results.map(user => {
                 const isFollowing = (currentUser.following || []).includes(user.id);
+                // Fix: Add fallback for user.following to prevent crash on older user data.
                 const followsYou = (user.following || []).includes(currentUser.id);
                 return (
                   <div key={user.id} className="bg-white dark:bg-neutral-900 p-3 rounded-lg border dark:border-neutral-800 flex flex-col sm:flex-row sm:items-center sm:justify-between">

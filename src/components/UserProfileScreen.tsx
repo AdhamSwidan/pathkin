@@ -87,6 +87,7 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
         return false;
     });
 
+    // Fix: Add fallbacks for user array properties to prevent crashes.
     const repostedAdventures = allAdventures.filter(p => (user.repostedAdventures || []).includes(p.id));
     const completedAdventures = allAdventures.filter(p => 
         (user.activityLog || []).some(a => a.adventureId === p.id && a.status === ActivityStatus.Confirmed)
@@ -194,12 +195,13 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
                       <p className="font-bold text-lg text-gray-800 dark:text-gray-100">{userAdventures.length}</p>
                       <p className="text-xs font-semibold text-gray-600 dark:text-gray-500">{t('adventures')}</p>
                   </div>
-                  <button className="text-center disabled:cursor-default" onClick={() => onOpenFollowList(user, 'followers')} disabled={!canViewProfile || !user.privacySettings.showFollowLists}>
-                      <p className="font-bold text-lg text-gray-800 dark:text-gray-100">{canViewProfile && user.privacySettings.showFollowLists ? (user.followers || []).length : '-'}</p>
+                   {/* Fix: Add optional chaining and fallback for privacy settings and user arrays */}
+                  <button className="text-center disabled:cursor-default" onClick={() => onOpenFollowList(user, 'followers')} disabled={!canViewProfile || !user.privacySettings?.showFollowLists}>
+                      <p className="font-bold text-lg text-gray-800 dark:text-gray-100">{canViewProfile && user.privacySettings?.showFollowLists ? (user.followers || []).length : '-'}</p>
                       <p className="text-xs font-semibold text-gray-600 dark:text-gray-500">{t('followers')}</p>
                   </button>
-                  <button className="text-center disabled:cursor-default" onClick={() => onOpenFollowList(user, 'following')} disabled={!canViewProfile || !user.privacySettings.showFollowLists}>
-                      <p className="font-bold text-lg text-gray-800 dark:text-gray-100">{canViewProfile && user.privacySettings.showFollowLists ? (user.following || []).length : '-'}</p>
+                  <button className="text-center disabled:cursor-default" onClick={() => onOpenFollowList(user, 'following')} disabled={!canViewProfile || !user.privacySettings?.showFollowLists}>
+                      <p className="font-bold text-lg text-gray-800 dark:text-gray-100">{canViewProfile && user.privacySettings?.showFollowLists ? (user.following || []).length : '-'}</p>
                       <p className="text-xs font-semibold text-gray-600 dark:text-gray-500">{t('following')}</p>
                   </button>
               </div>
@@ -244,8 +246,8 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
             <div className="mt-4 border-t border-b border-gray-200 dark:border-neutral-800 flex">
                 <TabButton tab="adventures" icon={<GridIcon />} />
                 <TabButton tab="reposts" icon={<RepostIcon />} />
-                {user.privacySettings.showCompletedActivities && <TabButton tab="completed" icon={<CheckCircleIcon />} />}
-                {user.privacySettings.showStats && <TabButton tab="stats" icon={<BarChartIcon />} />}
+                {user.privacySettings?.showCompletedActivities && <TabButton tab="completed" icon={<CheckCircleIcon />} />}
+                {user.privacySettings?.showStats && <TabButton tab="stats" icon={<BarChartIcon />} />}
             </div>
         }
 
