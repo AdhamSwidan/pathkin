@@ -22,7 +22,7 @@ const ChatDetailScreen: React.FC<ChatDetailScreenProps> = ({ participant, curren
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { language } = useTranslation();
+  const { t, language } = useTranslation();
   
   const convoId = [currentUser.id, participant.id].sort().join('_');
 
@@ -52,12 +52,26 @@ const ChatDetailScreen: React.FC<ChatDetailScreenProps> = ({ participant, curren
     }
   };
 
+  const formatDateSeparator = (date: Date) => {
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (isSameDay(date, today)) {
+      return t('notifications.today');
+    }
+    if (isSameDay(date, yesterday)) {
+      return t('notifications.yesterday');
+    }
+    return date.toLocaleDateString(language, { year: 'numeric', month: 'long', day: 'numeric' });
+  };
+
   let lastMessageDate: Date | null = null;
 
   return (
     <div className="h-full flex flex-col">
       <Header title={participant.name} onBack={onBack} />
-      <div className="flex-1 overflow-y-auto p-4 space-y-2">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map(message => {
           const messageDate = new Date(message.createdAt);
           const showDateSeparator = lastMessageDate === null || !isSameDay(lastMessageDate, messageDate);
@@ -67,14 +81,14 @@ const ChatDetailScreen: React.FC<ChatDetailScreenProps> = ({ participant, curren
             <React.Fragment key={message.id}>
               {showDateSeparator && (
                   <div className="text-center text-xs text-gray-500 dark:text-gray-400 my-4">
-                      {messageDate.toLocaleDateString(language, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                      {formatDateSeparator(messageDate)}
                   </div>
               )}
               <div className={`flex items-end gap-2 ${message.senderId === currentUser.id ? 'justify-end' : 'justify-start'}`}>
                 {message.senderId !== currentUser.id && (
                   <img src={participant.avatarUrl} className="w-6 h-6 rounded-full self-end" alt="avatar" />
                 )}
-                <div className={`max-w-[75%] sm:max-w-[60%] p-2 px-3 rounded-lg ${message.senderId === currentUser.id ? 'bg-orange-600 text-white rounded-br-none' : 'bg-gray-200 dark:bg-neutral-700 text-gray-800 dark:text-gray-200 rounded-bl-none'}`}>
+                <div className={`max-w-[75%] sm:max-w-[60%] p-2 px-3 rounded-2xl ${message.senderId === currentUser.id ? 'bg-orange-600 text-white' : 'bg-gray-200 dark:bg-neutral-700 text-gray-800 dark:text-gray-200'}`}>
                   <p className="text-sm" style={{wordBreak: 'break-word'}}>{message.text}</p>
                    <p className={`text-xs mt-1 text-right ${message.senderId === currentUser.id ? 'text-orange-200' : 'text-gray-500 dark:text-gray-400'}`}>
                     {messageDate.toLocaleTimeString(language, { hour: '2-digit', minute: '2-digit' })}
