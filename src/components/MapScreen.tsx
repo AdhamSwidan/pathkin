@@ -6,9 +6,10 @@ import { useTranslation } from '../contexts/LanguageContext';
 
 interface MapScreenProps {
   adventuresToShow: Adventure[];
+  language: string;
 }
 
-const MapScreen: React.FC<MapScreenProps> = ({ adventuresToShow }) => {
+const MapScreen: React.FC<MapScreenProps> = ({ adventuresToShow, language }) => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<L.Map | null>(null); // To store the map instance
   const { t } = useTranslation();
@@ -25,6 +26,16 @@ const MapScreen: React.FC<MapScreenProps> = ({ adventuresToShow }) => {
       shadowUrl: 'https://aistudiocdn.com/leaflet@1.9.4/dist/images/marker-shadow.png',
     });
   }, []);
+
+  const formatLocation = (address: any) => {
+    if (!address) return '';
+    const parts = [
+      address.city || address.town || address.village || address.suburb || address.county,
+      address.state,
+      address.country
+    ];
+    return parts.filter(Boolean).join(', ');
+  }
 
 
   useEffect(() => {
@@ -53,29 +64,43 @@ const MapScreen: React.FC<MapScreenProps> = ({ adventuresToShow }) => {
     // Layer to hold markers, so we can clear it easily
     const markerLayer = L.layerGroup().addTo(map);
 
-    // Add markers for each adventure
-    const markers: L.Marker[] = [];
-    adventuresToShow.forEach(adventure => {
-      if (adventure.coordinates) {
-        const marker = L.marker([adventure.coordinates.lat, adventure.coordinates.lng])
-          .bindPopup(`<b>${adventure.title}</b><br>${adventure.location}`);
-        markerLayer.addLayer(marker);
-        markers.push(marker);
-      }
-    });
+    const addMarkers = async () => {
+        const markers: L.Marker[] = [];
+        for (const adventure of adventuresToShow) {
+            if (adventure.coordinates) {
+                let locationName = adventure.location; // Fallback to the stored name
+                try {
+                    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${adventure.coordinates.lat}&lon=${adventure.coordinates.lng}&accept-language=${language}&zoom=10`);
+                    const data = await response.json();
+                    if (data && data.address) {
+                        locationName = formatLocation(data.address);
+                    } else if (data && data.display_name) {
+                        locationName = data.display_name.split(',').slice(0, 3).join(','); // Simpler fallback if no address object
+                    }
+                } catch (error) {
+                    console.error("Reverse geocoding failed:", error);
+                }
 
-    // Fit map to markers if there are any
-    if (markers.length > 0) {
-      const group = L.featureGroup(markers);
-      map.fitBounds(group.getBounds().pad(0.1));
-    }
+                const marker = L.marker([adventure.coordinates.lat, adventure.coordinates.lng])
+                .bindPopup(`<b>${adventure.title}</b><br>${locationName}`);
+                markerLayer.addLayer(marker);
+                markers.push(marker);
+            }
+        }
 
+        if (markers.length > 0) {
+            const group = L.featureGroup(markers);
+            map.fitBounds(group.getBounds().pad(0.1));
+        }
+    };
+
+    addMarkers();
 
     // Cleanup function: remove the markers layer when the component unmounts or adventuresToShow change.
     return () => {
       markerLayer.clearLayers();
     };
-  }, [adventuresToShow]); // Re-run effect when adventuresToShow change
+  }, [adventuresToShow, language]); // Re-run effect when adventures or language change
 
   // Separate effect for map removal on unmount
   useEffect(() => {

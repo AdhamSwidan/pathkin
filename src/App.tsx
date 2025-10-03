@@ -100,7 +100,7 @@ const App: React.FC = () => {
   const [editingAdventure, setEditingAdventure] = useState<HydratedAdventure | null>(null);
   
   const mainContentRef = useRef<HTMLDivElement>(null);
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
 
   // Auth Listener
   useEffect(() => {
@@ -908,7 +908,7 @@ const App: React.FC = () => {
         />;
       case 'map':
         const eventAdventures = hydratedAdventures.filter(p => p.type === AdventureType.Event && p.coordinates && p.privacy === AdventurePrivacy.Public);
-        return <MapScreen adventuresToShow={mapAdventuresToShow ?? eventAdventures} />;
+        return <MapScreen adventuresToShow={mapAdventuresToShow ?? eventAdventures} language={language} />;
       case 'create':
         if (isGuest || !currentUser) return null;
         return <CreateAdventureScreen onCreateAdventure={handleCreateAdventure} currentUser={currentUser} />;

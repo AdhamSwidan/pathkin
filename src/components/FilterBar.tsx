@@ -38,6 +38,17 @@ const FilterBar: React.FC<FilterBarProps> = ({
   const { t } = useTranslation();
   const inputBaseClasses = "w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500 dark:bg-neutral-800 dark:border-neutral-700 dark:text-gray-200 dark:placeholder-gray-400";
   const labelBaseClasses = "block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1";
+
+  const formatLocation = (suggestion: any) => {
+    const { address } = suggestion;
+    if (!address) return suggestion.display_name;
+    const parts = [
+      address.city || address.town || address.village || address.suburb || address.county,
+      address.state,
+      address.country
+    ];
+    return parts.filter(Boolean).join(', ');
+  }
   
   return (
     <div className="bg-slate-50 dark:bg-neutral-900 p-2 space-y-3 border-b dark:border-neutral-800">
@@ -81,7 +92,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
                   <ul className="absolute z-10 w-full mt-1 bg-white dark:bg-neutral-800 border dark:border-neutral-700 rounded-md shadow-lg max-h-60 overflow-y-auto">
                       {citySuggestions.map(s => (
                           <li key={s.place_id} onClick={() => onSelectCitySuggestion(s)} className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-700 cursor-pointer">
-                              {s.display_name}
+                              {formatLocation(s)}
                           </li>
                       ))}
                   </ul>

@@ -73,7 +73,18 @@ const SearchScreen: React.FC<SearchScreenProps> = ({
   const locationRef = useRef<HTMLDivElement>(null);
   
   const [appliedFilters, setAppliedFilters] = useState<AppliedFilters | null>(null);
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
+
+  const formatLocation = (suggestion: any) => {
+    const { address } = suggestion;
+    if (!address) return suggestion.display_name;
+    const parts = [
+      address.city || address.town || address.village || address.suburb || address.county,
+      address.state,
+      address.country
+    ];
+    return parts.filter(Boolean).join(', ');
+  }
 
   // Debounce effect for location search
   useEffect(() => {
@@ -90,7 +101,7 @@ const SearchScreen: React.FC<SearchScreenProps> = ({
         }
         setIsFetchingLocation(true);
         try {
-            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}&limit=5`);
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}&limit=5&accept-language=${language}`);
             const data = await response.json();
             setLocationSuggestions(data);
         } catch (error) { console.error("Failed to fetch locations:", error); }
@@ -98,7 +109,7 @@ const SearchScreen: React.FC<SearchScreenProps> = ({
     };
     const timerId = setTimeout(fetchLocations, 500);
     return () => clearTimeout(timerId);
-  }, [city, selectedCityName]);
+  }, [city, selectedCityName, language]);
 
   // Click outside effect to close suggestions
   useEffect(() => {
@@ -112,8 +123,9 @@ const SearchScreen: React.FC<SearchScreenProps> = ({
   }, []);
 
   const handleSelectLocation = (suggestion: any) => {
-    setCity(suggestion.display_name);
-    setSelectedCityName(suggestion.display_name); // Store the full name to prevent re-fetch
+    const formattedName = formatLocation(suggestion);
+    setCity(formattedName);
+    setSelectedCityName(formattedName); // Store the full name to prevent re-fetch
     setLocationSuggestions([]);
   };
 
