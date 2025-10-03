@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { HydratedPost, HydratedComment, User } from '../types';
 import SendIcon from './icons/SendIcon';
-import { useTranslation } from '../contexts/LanguageContext';
 
 interface PostDetailModalProps {
   post: HydratedPost;
@@ -13,7 +12,6 @@ interface PostDetailModalProps {
 
 const PostDetailModal: React.FC<PostDetailModalProps> = ({ post, comments, currentUser, onClose, onAddComment }) => {
   const [newComment, setNewComment] = useState('');
-  const { t } = useTranslation();
 
   const handleCommentSubmit = () => {
     if (newComment.trim()) {

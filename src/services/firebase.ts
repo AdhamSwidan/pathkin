@@ -1,5 +1,9 @@
-// Fix: Use modular import for `initializeApp` from Firebase v9 SDK.
-import { initializeApp } from "firebase/app";
+// Fix: The original import `from 'firebase/app'` fails, suggesting an SDK version mismatch or configuration issue.
+// Using the v9 compat library for initialization is a robust workaround that allows the rest of the app to use modular functions.
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/auth';
+import 'firebase/compat/firestore';
+import 'firebase/compat/storage';
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
@@ -52,8 +56,8 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-// Fix: Call `initializeApp` directly as imported from `firebase/app` in v9.
-const app = initializeApp(firebaseConfig);
+// Fix: Call `initializeApp` using the compat library.
+const app = firebase.initializeApp(firebaseConfig);
 
 // Initialize and export Firebase services
 export const auth = getAuth(app);

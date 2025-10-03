@@ -143,6 +143,7 @@ export interface Notification {
   recipientId: string; // The user who should receive this notification
   user: User; // The user who triggered the notification
   post?: Post;
+  postId?: string;
   text: string;
   createdAt: string;
   read: boolean;
