@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 import { Screen } from '../types';
 import HomeIcon from './icons/HomeIcon';
@@ -14,13 +12,12 @@ import { useTranslation } from '../contexts/LanguageContext';
 interface SideNavProps {
   activeScreen: Screen;
   setActiveScreen: (screen: Screen) => void;
-  onNotificationClick: () => void;
   hasUnreadNotifications: boolean;
   isGuest: boolean;
   onGuestAction: () => void;
 }
 
-const NavItem: React.FC<{ icon: React.ReactNode; label: string; isActive: boolean; onClick: () => void; disabled?: boolean; }> = ({ icon, label, isActive, onClick, disabled = false }) => {
+const NavItem: React.FC<{ icon: React.ReactNode; label: string; isActive: boolean; onClick: () => void; disabled?: boolean; hasBadge?: boolean; }> = ({ icon, label, isActive, onClick, disabled = false, hasBadge = false }) => {
   const activeClasses = 'bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400';
   const inactiveClasses = 'hover:bg-gray-100 dark:hover:bg-neutral-800 text-gray-600 dark:text-gray-300';
   const disabledClasses = 'text-gray-400 dark:text-gray-600 cursor-not-allowed';
@@ -29,15 +26,18 @@ const NavItem: React.FC<{ icon: React.ReactNode; label: string; isActive: boolea
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`flex items-center w-full p-3 my-1 rounded-lg transition-colors duration-200 ${disabled ? disabledClasses : (isActive ? activeClasses : inactiveClasses)}`}
+      className={`relative flex items-center w-full p-3 my-1 rounded-lg transition-colors duration-200 ${disabled ? disabledClasses : (isActive ? activeClasses : inactiveClasses)}`}
     >
       <div className="w-6 h-6 me-4">{icon}</div>
       <span className="font-semibold">{label}</span>
+      {hasBadge && (
+        <span className="absolute top-3 end-3 block h-2 w-2 rounded-full bg-rose-500" />
+      )}
     </button>
   );
 };
 
-const SideNav: React.FC<SideNavProps> = ({ activeScreen, setActiveScreen, onNotificationClick, hasUnreadNotifications, isGuest, onGuestAction }) => {
+const SideNav: React.FC<SideNavProps> = ({ activeScreen, setActiveScreen, hasUnreadNotifications, isGuest, onGuestAction }) => {
   const { t } = useTranslation();
   
   const handleNavItemClick = (screen: Screen, requiresAuth: boolean = false) => {
@@ -77,25 +77,21 @@ const SideNav: React.FC<SideNavProps> = ({ activeScreen, setActiveScreen, onNoti
                 disabled={isGuest && item.requiresAuth}
                 />
             ))}
-             <button
+            <NavItem
+                label={t('messages')}
+                icon={<MessageIcon />}
+                isActive={activeScreen === 'chat'}
                 onClick={() => handleNavItemClick('chat', true)}
                 disabled={isGuest}
-                className={`relative flex items-center w-full p-3 my-1 rounded-lg transition-colors duration-200 ${isGuest ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed' : (activeScreen === 'chat' ? 'bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400' : 'hover:bg-gray-100 dark:hover:bg-neutral-800 text-gray-600 dark:text-gray-300')}`}
-            >
-                <div className="w-6 h-6 me-4"><MessageIcon /></div>
-                <span className="font-semibold">{t('messages')}</span>
-            </button>
-             <button
-                onClick={isGuest ? onGuestAction : onNotificationClick}
+            />
+            <NavItem
+                label={t('notifications')}
+                icon={<BellIcon />}
+                isActive={activeScreen === 'notifications'}
+                onClick={() => handleNavItemClick('notifications', true)}
                 disabled={isGuest}
-                className={`relative flex items-center w-full p-3 my-1 rounded-lg ${isGuest ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed' : 'hover:bg-gray-100 dark:hover:bg-neutral-800 text-gray-600 dark:text-gray-300'}`}
-            >
-                <div className="w-6 h-6 me-4"><BellIcon /></div>
-                <span className="font-semibold">{t('notifications')}</span>
-                 {hasUnreadNotifications && !isGuest && (
-                    <span className="absolute top-3 end-3 block h-2 w-2 rounded-full bg-rose-500" />
-                )}
-            </button>
+                hasBadge={hasUnreadNotifications && !isGuest}
+            />
             <div className="my-4 border-t border-gray-200 dark:border-neutral-800"></div>
             {secondaryNavItems.map((item) => (
                 <NavItem

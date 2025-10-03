@@ -171,5 +171,10 @@
   "people": "الأشخاص",
   "searchPlaceholderPeople": "ابحث عن مستخدمين...",
   "noUsersFound": "لم يتم العثور على مستخدمين",
-  "tryDifferentSearch": "جرّب مصطلح بحث مختلف."
+  "tryDifferentSearch": "جرّب مصطلح بحث مختلف.",
+  "notifications.today": "اليوم",
+  "notifications.yesterday": "الأمس",
+  "notifications.thisWeek": "هذا الأسبوع",
+  "notifications.older": "أقدم",
+  "notifications.markAllAsRead": "تحديد الكل كمقروء"
 }

@@ -142,8 +142,7 @@ export interface Notification {
   id: string;
   type: NotificationType;
   recipientId: string; // The user who should receive this notification
-  user: User; // The user who triggered the notification
-  adventure?: Adventure;
+  userId: string; // The user who triggered the notification
   adventureId?: string;
   text: string;
   createdAt: string;
@@ -151,6 +150,12 @@ export interface Notification {
   // For attendance requests
   attendeeId?: string; 
   attendeeName?: string;
+}
+
+// Fix: Corrected HydratedNotification by removing spurious Omit. 'Notification' has no 'adventure' property to omit.
+export type HydratedNotification = Notification & {
+    user: User;
+    adventure?: HydratedAdventure;
 }
 
 export type Screen = 
@@ -167,4 +172,5 @@ export type Screen =
   | 'editProfile'
   | 'privacySecurity'
   | 'language'
-  | 'savedAdventures';
+  | 'savedAdventures'
+  | 'notifications';

@@ -9,7 +9,6 @@ import AdventureDetailModal from './components/AdventureDetailModal';
 import ChatDetailScreen from './components/ChatDetailScreen';
 import FindTwinsScreen from './components/FindTwinsScreen';
 import StoryViewer from './components/StoryViewer';
-import NotificationPanel from './components/NotificationPanel';
 import SearchScreen from './components/SearchScreen';
 import UserProfileScreen from './components/UserProfileScreen';
 import Toast from './components/Toast';
@@ -26,11 +25,12 @@ import ForgotPasswordModal from './components/ForgotPasswordModal';
 import AddStoryModal from './components/AddStoryModal';
 import EditAdventureModal from './components/EditAdventureModal';
 import SavedAdventuresScreen from './components/settings/SavedAdventuresScreen';
+import NotificationsScreen from './components/NotificationsScreen'; // Import the new screen
 import { useTranslation } from './contexts/LanguageContext';
 import { useJsApiLoader } from '@react-google-maps/api';
 
 
-import { Screen, Adventure, AdventureType, User, Story, Notification, AdventurePrivacy, HydratedAdventure, HydratedStory, ActivityStatus, NotificationType, HydratedConversation, Conversation, Message, HydratedComment, Comment } from './types';
+import { Screen, Adventure, AdventureType, User, Story, Notification, AdventurePrivacy, HydratedAdventure, HydratedStory, ActivityStatus, NotificationType, HydratedConversation, Conversation, Message, HydratedComment, Comment, HydratedNotification } from './types';
 import {
   auth, db, storage,
   onAuthStateChanged,
@@ -43,7 +43,8 @@ import {
   updateDoc,
   addDoc, serverTimestamp, arrayUnion, arrayRemove, Timestamp,
   runTransaction, deleteDoc,
-  GoogleAuthProvider, signInWithPopup, increment
+  GoogleAuthProvider, signInWithPopup, increment,
+  writeBatch
 } from './services/firebase';
 
 
@@ -87,7 +88,6 @@ const App: React.FC = () => {
   const [selectedAdventure, setSelectedAdventure] = useState<HydratedAdventure | null>(null);
   const [selectedConversationUser, setSelectedConversationUser] = useState<User | null>(null);
   const [viewingStories, setViewingStories] = useState<HydratedStory[] | null>(null);
-  const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
   const [viewingUser, setViewingUser] = useState<User | null>(null);
   const [mapAdventuresToShow, setMapAdventuresToShow] = useState<Adventure[] | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -190,15 +190,13 @@ const App: React.FC = () => {
     const unsubNotifications = onSnapshot(notificationsQuery, (snapshot) => {
         const fetchedNotifications = snapshot.docs.map(doc => {
             const data = doc.data();
-            const user = users.find(u => u.id === data.userId) || data.user;
             return {
                 ...data,
                 id: doc.id,
                 createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() ?? new Date().toISOString(),
-                user,
             } as Notification;
         });
-        setNotifications(fetchedNotifications.filter(n => n.user));
+        setNotifications(fetchedNotifications);
     });
 
     const conversationsQuery = query(collection(db, "conversations"), where("participants", "array-contains", currentUser.id), orderBy("updatedAt", "desc"));
@@ -222,7 +220,7 @@ const App: React.FC = () => {
         unsubNotifications();
         unsubConversations();
     };
-  }, [currentUser, users, adventures]);
+  }, [currentUser]);
 
   // Listener for comments when an adventure detail modal is opened
   useEffect(() => {
@@ -276,6 +274,15 @@ const App: React.FC = () => {
       return { ...convo, participant };
     }).filter((c): c is HydratedConversation => c !== null);
   }, [conversations, users, currentUser]);
+  
+  const hydratedNotifications = useMemo((): HydratedNotification[] => {
+    return notifications.map(notif => {
+        const user = users.find(u => u.id === notif.userId);
+        const adventure = hydratedAdventures.find(p => p.id === notif.adventureId);
+        if (!user) return null;
+        return { ...notif, user, adventure };
+    }).filter((n): n is HydratedNotification => n !== null);
+  }, [notifications, users, hydratedAdventures]);
 
   
   const savedAdventures = useMemo(() => {
@@ -285,8 +292,8 @@ const App: React.FC = () => {
 
   const userNotifications = useMemo(() => {
     if (!currentUser) return [];
-    return notifications.filter(n => n.recipientId === currentUser.id);
-  }, [notifications, currentUser]);
+    return hydratedNotifications.filter(n => n.recipientId === currentUser.id);
+  }, [hydratedNotifications, currentUser]);
 
   const hasUnreadNotifications = userNotifications.some(n => !n.read);
 
@@ -310,7 +317,7 @@ const App: React.FC = () => {
   };
 
   const handleSetActiveScreen = (screen: Screen) => {
-    if (isGuest && (screen === 'create' || screen === 'profile' || screen === 'chat')) {
+    if (isGuest && (screen === 'create' || screen === 'profile' || screen === 'chat' || screen === 'notifications')) {
       showGuestToast(); return;
     }
     if (mainContentRef.current) mainContentRef.current.scrollTop = 0;
@@ -721,9 +728,6 @@ const App: React.FC = () => {
     }
   };
 
-
-  const handleToggleNotifications = () => setIsNotificationPanelOpen(p => !p);
-
   const handleViewProfile = (userToView: User) => {
     if (isGuest) {
         setViewingUser(userToView);
@@ -872,6 +876,36 @@ const App: React.FC = () => {
     }
   };
   
+  const handleMarkNotificationsAsRead = async () => {
+    const unreadIds = userNotifications.filter(n => !n.read).map(n => n.id);
+    if (unreadIds.length === 0) return;
+    
+    const batch = writeBatch(db);
+    unreadIds.forEach(id => {
+        const notifRef = doc(db, "notifications", id);
+        batch.update(notifRef, { read: true });
+    });
+    
+    try {
+        await batch.commit();
+    } catch(e) {
+        console.error("Error marking notifications as read:", e);
+    }
+  };
+
+  const handleNotificationClick = (notification: HydratedNotification) => {
+    if (notification.type === NotificationType.RateExperience && notification.adventure) {
+      setRatingModalAdventure(notification.adventure);
+    } else if (notification.adventureId) {
+      const adventureToShow = hydratedAdventures.find(p => p.id === notification.adventureId);
+      if (adventureToShow) {
+        handleSelectAdventure(adventureToShow);
+      }
+    } else if (notification.type === NotificationType.Message) {
+        handleSelectConversation(notification.user);
+    }
+  };
+
   const handleViewLocationOnMap = (adventure: HydratedAdventure) => {
     if (adventure.coordinates) {
       setMapAdventuresToShow([adventure]);
@@ -958,7 +992,7 @@ const App: React.FC = () => {
           currentUser={userForUI}
           isGuest={isGuest}
           onSelectAdventure={handleSelectAdventure} onSendMessage={handleSelectConversation} onToggleInterest={handleToggleInterest}
-          onSelectStories={handleSelectStories} onAddStory={handleAddStory} onNotificationClick={handleToggleNotifications}
+          onSelectStories={handleSelectStories} onAddStory={handleAddStory} onNavigateToNotifications={() => navigateTo('notifications')}
           hasUnreadNotifications={!isGuest && hasUnreadNotifications} onNavigateToChat={() => navigateTo('chat')}
           onViewProfile={handleViewProfile} onRepostToggle={handleRepostToggle} onSaveToggle={handleSaveToggle}
           onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted}
@@ -997,6 +1031,15 @@ const App: React.FC = () => {
       case 'chat':
         if (isGuest || !currentUser) return null;
         return <ChatScreen conversations={hydratedConversations} onSelectConversation={handleSelectConversation} onBack={goBack} />;
+      case 'notifications':
+        if (isGuest || !currentUser) return null;
+        return <NotificationsScreen 
+            notifications={userNotifications} 
+            onBack={goBack}
+            onConfirmAttendance={handleConfirmAttendance}
+            onNotificationClick={handleNotificationClick}
+            onMarkAllAsRead={handleMarkNotificationsAsRead}
+        />;
       case 'profile':
         if (isGuest || !currentUser) return null;
         return <ProfileScreen user={currentUser} allAdventures={hydratedAdventures} onSelectAdventure={handleSelectAdventure} onSendMessage={handleSelectConversation}
@@ -1081,7 +1124,7 @@ const App: React.FC = () => {
 
   return (
     <div className="h-screen w-screen bg-slate-50 dark:bg-neutral-950 flex font-sans text-gray-900 dark:text-gray-100">
-      <SideNav activeScreen={activeScreen} setActiveScreen={handleSetActiveScreen} onNotificationClick={handleToggleNotifications}
+      <SideNav activeScreen={activeScreen} setActiveScreen={handleSetActiveScreen}
           hasUnreadNotifications={!isGuest && hasUnreadNotifications} isGuest={isGuest} onGuestAction={showGuestToast} />
 
       <main className="flex-1 flex flex-col relative overflow-hidden">
@@ -1095,13 +1138,6 @@ const App: React.FC = () => {
       <AddStoryModal isOpen={isAddStoryModalOpen} onClose={() => setIsAddStoryModalOpen(false)} onStoryCreate={handleCreateStory} />
       {selectedAdventure && <AdventureDetailModal adventure={selectedAdventure} comments={hydratedComments} onAddComment={handleAddComment} currentUser={currentUser} onClose={handleCloseModal} />}
       {viewingStories && <StoryViewer stories={viewingStories} onClose={() => setViewingStories(null)} />}
-      {isNotificationPanelOpen && (
-          <div className="absolute top-0 right-0 z-50 w-full max-w-sm mt-2 mr-2">
-              <NotificationPanel notifications={userNotifications} onClose={handleToggleNotifications} onConfirmAttendance={handleConfirmAttendance} 
-                  onRateExperience={(adventureId) => setRatingModalAdventure(hydratedAdventures.find(p => p.id === adventureId) || null)} 
-              />
-          </div>
-      )}
       {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage(null)} />}
       {ratingModalAdventure && <RatingModal adventure={ratingModalAdventure} onClose={() => setRatingModalAdventure(null)} onSubmit={handleSubmitRating} />}
       {editingAdventure && <EditAdventureModal adventure={editingAdventure} onClose={() => setEditingAdventure(null)} onUpdateAdventure={handleUpdateAdventure} isLoaded={isLoaded} />}

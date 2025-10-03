@@ -171,5 +171,10 @@
   "people": "People",
   "searchPlaceholderPeople": "Search for users...",
   "noUsersFound": "No users found",
-  "tryDifferentSearch": "Try a different search term."
+  "tryDifferentSearch": "Try a different search term.",
+  "notifications.today": "Today",
+  "notifications.yesterday": "Yesterday",
+  "notifications.thisWeek": "This Week",
+  "notifications.older": "Older",
+  "notifications.markAllAsRead": "Mark all as read"
 }

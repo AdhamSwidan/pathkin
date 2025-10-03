@@ -36,7 +36,8 @@ export {
   Timestamp,
   deleteDoc,
   runTransaction,
-  increment
+  increment,
+  writeBatch
 } from "firebase/firestore";
 export { 
   ref, 

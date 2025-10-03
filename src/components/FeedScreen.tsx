@@ -17,7 +17,7 @@ interface FeedScreenProps {
   onToggleInterest: (adventureId: string) => void;
   onSelectStories: (stories: HydratedStory[]) => void;
   onAddStory: () => void;
-  onNotificationClick: () => void;
+  onNavigateToNotifications: () => void;
   hasUnreadNotifications: boolean;
   onNavigateToChat: () => void;
   onViewProfile: (user: User) => void;
@@ -40,7 +40,7 @@ const FeedScreen: React.FC<FeedScreenProps> = ({
   onToggleInterest, 
   onSelectStories,
   onAddStory,
-  onNotificationClick,
+  onNavigateToNotifications,
   hasUnreadNotifications,
   onNavigateToChat,
   onViewProfile,
@@ -68,7 +68,7 @@ const FeedScreen: React.FC<FeedScreenProps> = ({
       <button onClick={onNavigateToChat} className="p-2 text-gray-600 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 relative">
         <MessageIcon />
       </button>
-      <button onClick={onNotificationClick} className="p-2 text-gray-600 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 relative">
+      <button onClick={onNavigateToNotifications} className="p-2 text-gray-600 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 relative">
         <BellIcon />
         {hasUnreadNotifications && (
           <span className="absolute top-1 end-1 block h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white dark:ring-neutral-950" />
