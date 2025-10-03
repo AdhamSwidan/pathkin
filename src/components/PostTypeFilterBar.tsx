@@ -4,7 +4,7 @@ import { useTranslation } from '../contexts/LanguageContext';
 import GridIcon from './icons/GridIcon';
 import PlaneIcon from './icons/PlaneIcon';
 import HomeIcon from './icons/HomeIcon';
-import UsersIcon from './icons/UsersIcon';
+import GroupIcon from './icons/GroupIcon';
 import HikingIcon from './icons/HikingIcon';
 import TentIcon from './icons/TentIcon';
 import HeartIcon from './icons/HeartIcon';
@@ -19,7 +19,7 @@ const filterOptions: { type: PostType | 'all', icon: React.ReactNode, labelKey: 
     { type: 'all', icon: <GridIcon />, labelKey: 'allTypes' },
     { type: PostType.Travel, icon: <PlaneIcon />, labelKey: `PostType_${PostType.Travel}` },
     { type: PostType.Housing, icon: <HomeIcon />, labelKey: `PostType_${PostType.Housing}` },
-    { type: PostType.Event, icon: <UsersIcon />, labelKey: `PostType_${PostType.Event}` },
+    { type: PostType.Event, icon: <GroupIcon />, labelKey: `PostType_${PostType.Event}` },
     { type: PostType.Hiking, icon: <HikingIcon />, labelKey: `PostType_${PostType.Hiking}` },
     { type: PostType.Camping, icon: <TentIcon />, labelKey: `PostType_${PostType.Camping}` },
     { type: PostType.Volunteering, icon: <HeartIcon />, labelKey: `PostType_${PostType.Volunteering}` },
