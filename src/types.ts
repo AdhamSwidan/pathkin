@@ -130,6 +130,7 @@ export interface Conversation {
   participants: string[]; // Array of two user IDs
   lastMessage?: Message;
   updatedAt: string;
+  unreadCount?: { [key: string]: number; };
 }
 
 // Fix: Changed from Omit<Conversation, 'participants'> to Conversation to resolve a type predicate error in App.tsx.
@@ -152,7 +153,7 @@ export interface Notification {
   attendeeName?: string;
 }
 
-// Fix: Corrected HydratedNotification by removing spurious Omit. 'Notification' has no 'adventure' property to omit.
+// Fix: Corrected HydratedNotification to ensure type compatibility for the type predicate in App.tsx.
 export type HydratedNotification = Notification & {
     user: User;
     adventure?: HydratedAdventure;

@@ -18,6 +18,8 @@
   "attendanceRequestNotification": "wants to confirm their attendance at \"{{title}}\".",
   "attendanceConfirmedNotification": "has confirmed your attendance at \"{{title}}\".",
   "rateExperienceNotification": "How was your experience at \"{{title}}\"? Tap to rate.",
+  "interestNotificationText": "showed interest in your adventure \"{{title}}\".",
+  "commentNotificationText": "commented on your adventure \"{{title}}\".",
   "feedbackThanks": "Thanks for your feedback!",
   "nowConnected": "You are now connected!",
   "followerRemoved": "Follower removed.",

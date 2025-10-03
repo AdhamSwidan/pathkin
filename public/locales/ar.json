@@ -18,6 +18,8 @@
   "attendanceRequestNotification": "يريد تأكيد حضوره في \"{{title}}\".",
   "attendanceConfirmedNotification": "قام بتأكيد حضورك في \"{{title}}\".",
   "rateExperienceNotification": "كيف كانت تجربتك في \"{{title}}\"؟ انقر للتقييم.",
+  "interestNotificationText": "أبدى اهتمامه بمغامرتك \"{{title}}\".",
+  "commentNotificationText": "علّق على مغامرتك \"{{title}}\".",
   "feedbackThanks": "شكرا لك على ملاحظاتك!",
   "nowConnected": "أنتم الآن متصلون!",
   "followerRemoved": "تمت إزالة المتابع.",
