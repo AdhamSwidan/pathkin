@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import App from './src/App';
 import { LanguageProvider } from './src/contexts/LanguageContext';
 import './src/index.css';
+import 'leaflet/dist/leaflet.css';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
