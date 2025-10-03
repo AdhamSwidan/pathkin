@@ -38,13 +38,13 @@ const AdventureTypeFilterBar: React.FC<AdventureTypeFilterBarProps> = ({ selecte
                         <button
                             key={option.type}
                             onClick={() => onSelectType(option.type)}
-                            className={`flex-shrink-0 flex flex-col items-center justify-center w-20 h-20 rounded-lg transition-colors duration-200 ${
+                            className={`flex-shrink-0 flex flex-col items-center justify-center w-16 h-16 rounded-lg transition-colors duration-200 ${
                                 isActive 
                                 ? 'bg-orange-100 dark:bg-orange-900/40' 
                                 : 'bg-gray-50 dark:bg-neutral-800/50 hover:bg-gray-100 dark:hover:bg-neutral-800'
                             }`}
                         >
-                            <div className={`w-8 h-8 flex items-center justify-center ${isActive ? 'text-orange-500' : 'text-gray-500 dark:text-gray-400'}`}>
+                            <div className={`w-7 h-7 flex items-center justify-center ${isActive ? 'text-orange-500' : 'text-gray-500 dark:text-gray-400'}`}>
                                 {option.icon}
                             </div>
                             <span className={`text-xs mt-1 text-center ${isActive ? 'font-semibold text-orange-600 dark:text-orange-400' : 'text-gray-600 dark:text-gray-300'}`}>

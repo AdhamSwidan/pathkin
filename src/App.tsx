@@ -1032,57 +1032,63 @@ const App: React.FC = () => {
 
   return (
     <div className="h-screen w-full bg-slate-50 dark:bg-neutral-950">
-      <div className="max-w-4xl mx-auto h-full flex flex-col xl:flex-row text-gray-800 dark:text-gray-200 border-x border-gray-200 dark:border-neutral-800">
+      <div className="h-full flex justify-center">
+        {/* SideNav is positioned by the flex container on desktop */}
         <SideNav activeScreen={activeScreen} setActiveScreen={resetToScreen} hasUnreadNotifications={hasUnreadNotifications} isGuest={isGuest} onGuestAction={handleGuestAction} />
-        <main ref={mainContentRef} className="flex-1 overflow-y-auto pb-16 xl:pb-0">
-            {isGuest && <GuestHeader onLoginClick={handleLogout} />}
-            {renderScreen()}
-        </main>
-        <BottomNav activeScreen={activeScreen} setActiveScreen={resetToScreen} isGuest={isGuest} onGuestAction={handleGuestAction} />
         
-        {/* Modals and Overlays */}
-        {selectedAdventure && <AdventureDetailModal adventure={selectedAdventure} comments={hydratedComments} currentUser={currentUser} onClose={handleCloseAdventureDetail} onAddComment={handleAddComment} />}
-        {viewingStories && <StoryViewer stories={viewingStories} onClose={() => setViewingStories(null)} />}
-        {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage(null)} />}
-        {ratingModalAdventure && <RatingModal adventure={ratingModalAdventure} onClose={() => setRatingModalAdventure(null)} onSubmit={() => {}} />}
-        {followListModal.isOpen && followListModal.user && (
-          <FollowListModal 
-              title={t(followListModal.listType!)}
-              listOwner={followListModal.user}
-              currentUser={currentUser}
-              // Fix: Add fallback for user arrays to prevent crash.
-              users={users.filter(u => (followListModal.listType === 'followers' ? (followListModal.user?.followers || []) : (followListModal.user?.following || [])).includes(u.id))}
-              listType={followListModal.listType!}
-              onClose={() => setFollowListModal({isOpen: false, user: null, listType: null})}
-              onViewProfile={(user) => {
-                  setFollowListModal({isOpen: false, user: null, listType: null});
-                  handleViewProfile(user);
-              }}
-              onFollowToggle={handleFollowToggle}
-              onRemoveFollower={handleRemoveFollower}
-          />
-        )}
-        <ForgotPasswordModal 
-          isOpen={isForgotPasswordModalOpen}
-          onClose={() => setIsForgotPasswordModalOpen(false)}
-          onSubmit={(email) => {
-              handleForgotPassword(email);
-          }}
-        />
-        <AddStoryModal 
-          isOpen={isAddStoryModalOpen}
-          onClose={() => setIsAddStoryModalOpen(false)}
-          onStoryCreate={handleCreateStory}
-        />
-        {editingAdventure && (
-            <EditAdventureModal 
-              adventure={editingAdventure}
-              onClose={() => setEditingAdventure(null)}
-              onUpdateAdventure={handleUpdateAdventure}
-              isLoaded={isLoaded}
-            />
-        )}
+        {/* Main content area */}
+        <div className="w-full max-w-4xl h-full flex flex-col text-gray-800 dark:text-gray-200 border-x border-gray-200 dark:border-neutral-800">
+          <main ref={mainContentRef} className="flex-1 overflow-y-auto pb-16 xl:pb-0">
+              {isGuest && <GuestHeader onLoginClick={handleLogout} />}
+              {renderScreen()}
+          </main>
+          {/* BottomNav is for mobile/tablet, it's part of this column flow but hidden on desktop */}
+          <BottomNav activeScreen={activeScreen} setActiveScreen={resetToScreen} isGuest={isGuest} onGuestAction={handleGuestAction} />
+        </div>
       </div>
+      
+      {/* Modals and Overlays are moved here to be at the root, which is better for fixed positioning and z-index */}
+      {selectedAdventure && <AdventureDetailModal adventure={selectedAdventure} comments={hydratedComments} currentUser={currentUser} onClose={handleCloseAdventureDetail} onAddComment={handleAddComment} />}
+      {viewingStories && <StoryViewer stories={viewingStories} onClose={() => setViewingStories(null)} />}
+      {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage(null)} />}
+      {ratingModalAdventure && <RatingModal adventure={ratingModalAdventure} onClose={() => setRatingModalAdventure(null)} onSubmit={() => {}} />}
+      {followListModal.isOpen && followListModal.user && (
+        <FollowListModal 
+            title={t(followListModal.listType!)}
+            listOwner={followListModal.user}
+            currentUser={currentUser}
+            // Fix: Add fallback for user arrays to prevent crash.
+            users={users.filter(u => (followListModal.listType === 'followers' ? (followListModal.user?.followers || []) : (followListModal.user?.following || [])).includes(u.id))}
+            listType={followListModal.listType!}
+            onClose={() => setFollowListModal({isOpen: false, user: null, listType: null})}
+            onViewProfile={(user) => {
+                setFollowListModal({isOpen: false, user: null, listType: null});
+                handleViewProfile(user);
+            }}
+            onFollowToggle={handleFollowToggle}
+            onRemoveFollower={handleRemoveFollower}
+        />
+      )}
+      <ForgotPasswordModal 
+        isOpen={isForgotPasswordModalOpen}
+        onClose={() => setIsForgotPasswordModalOpen(false)}
+        onSubmit={(email) => {
+            handleForgotPassword(email);
+        }}
+      />
+      <AddStoryModal 
+        isOpen={isAddStoryModalOpen}
+        onClose={() => setIsAddStoryModalOpen(false)}
+        onStoryCreate={handleCreateStory}
+      />
+      {editingAdventure && (
+          <EditAdventureModal 
+            adventure={editingAdventure}
+            onClose={() => setEditingAdventure(null)}
+            onUpdateAdventure={handleUpdateAdventure}
+            isLoaded={isLoaded}
+          />
+      )}
     </div>
   );
 };
