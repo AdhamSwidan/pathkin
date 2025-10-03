@@ -127,19 +127,27 @@ const App: React.FC = () => {
   useEffect(() => {
     const usersQuery = query(collection(db, "users"));
     const unsubUsers = onSnapshot(usersQuery, (snapshot) => {
-        setUsers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User)));
+        const fetchedUsers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
+        console.log(`[DIAGNOSTIC] Fetched ${fetchedUsers.length} users.`);
+        setUsers(fetchedUsers);
+    }, (error) => {
+        console.error("[DIAGNOSTIC] Error fetching users:", error);
     });
 
     const adventuresQuery = query(collection(db, "posts"), orderBy("createdAt", "desc"));
     const unsubAdventures = onSnapshot(adventuresQuery, (snapshot) => {
-        setAdventures(snapshot.docs.map(doc => {
+        const fetchedAdventures = snapshot.docs.map(doc => {
             const data = doc.data();
             return {
                 ...data,
                 id: doc.id,
                 createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() ?? new Date().toISOString(),
             } as Adventure
-        }));
+        });
+        console.log(`[DIAGNOSTIC] Fetched ${fetchedAdventures.length} adventures from 'posts' collection.`);
+        setAdventures(fetchedAdventures);
+    }, (error) => {
+        console.error("[DIAGNOSTIC] Error fetching adventures:", error);
     });
 
     const storiesQuery = query(collection(db, "stories"), orderBy("createdAt", "desc"));

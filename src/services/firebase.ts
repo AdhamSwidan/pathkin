@@ -55,6 +55,13 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
+// Diagnostic log to check if environment variables are loaded
+console.log('[DIAGNOSTIC] Firebase Service: Initializing...');
+console.log('[DIAGNOSTIC] Firebase Project ID Loaded:', !!import.meta.env.VITE_FIREBASE_PROJECT_ID);
+// Avoid logging sensitive keys directly
+console.log('[DIAGNOSTIC] Firebase API Key Loaded:', import.meta.env.VITE_FIREBASE_API_KEY ? 'Yes' : 'No');
+
+
 // Initialize Firebase
 // Fix: Call `initializeApp` using the compat library.
 const app = firebase.initializeApp(firebaseConfig);
