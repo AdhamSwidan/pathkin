@@ -31,7 +31,8 @@ import { useJsApiLoader } from '@react-google-maps/api';
 
 
 // Fix: Imported the 'Media' type to resolve 'Cannot find name 'Media'' errors.
-import { Screen, Adventure, AdventureType, User, Story, Notification, AdventurePrivacy, HydratedAdventure, HydratedStory, ActivityStatus, NotificationType, HydratedConversation, Conversation, Message, HydratedComment, Comment, HydratedNotification, Media } from './types';
+// Fix: Removed unused enums 'AdventureType', 'AdventurePrivacy', and 'ActivityStatus' to resolve TS6133 errors.
+import { Screen, Adventure, User, Story, Notification, HydratedAdventure, HydratedStory, NotificationType, HydratedConversation, Conversation, Message, HydratedComment, Comment, HydratedNotification, Media } from './types';
 import {
   auth, db, storage,
   onAuthStateChanged,
@@ -103,6 +104,8 @@ const App: React.FC = () => {
   const [editingAdventure, setEditingAdventure] = useState<HydratedAdventure | null>(null);
   
   const mainContentRef = useRef<HTMLDivElement>(null);
+  // Fix: Add a ref to hold the comment listener unsubscribe function.
+  const commentListenerUnsub = useRef<(() => void) | null>(null);
   const { t } = useTranslation();
 
   const libraries = useMemo<("places")[]>(() => ['places'], []);
@@ -254,15 +257,17 @@ const App: React.FC = () => {
         .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
   }, [conversations, users, currentUser]);
   
+  // Fix: Rewrote hydration logic to avoid complex type predicate errors (TS2322, TS2677).
   const hydratedNotifications: HydratedNotification[] = useMemo(() => {
-    return notifications
-        .map(notif => {
-            const user = users.find(u => u.id === notif.userId);
+    const result: HydratedNotification[] = [];
+    for (const notif of notifications) {
+        const user = users.find(u => u.id === notif.userId);
+        if (user) {
             const adventure = hydratedAdventures.find(p => p.id === notif.adventureId);
-            if (!user) return null;
-            return { ...notif, user, adventure };
-        })
-        .filter((n): n is HydratedNotification => n !== null);
+            result.push({ ...notif, user, adventure });
+        }
+    }
+    return result;
   }, [notifications, users, hydratedAdventures]);
 
   const hydratedComments: HydratedComment[] = useMemo(() => {
@@ -285,13 +290,12 @@ const App: React.FC = () => {
     mainContentRef.current?.scrollTo(0, 0);
   };
 
+  // Fix: Modified popScreen to read from 'screenStack', resolving the "never read" error.
   const popScreen = () => {
-    setScreenStack(prev => {
-      const newStack = [...prev];
-      newStack.pop();
-      setActiveScreen(newStack[newStack.length - 1]);
-      return newStack;
-    });
+    if (screenStack.length <= 1) return; // Prevent popping the last screen.
+    const newStack = screenStack.slice(0, -1);
+    setActiveScreen(newStack[newStack.length - 1]);
+    setScreenStack(newStack);
     mainContentRef.current?.scrollTo(0, 0);
   };
   
@@ -731,9 +735,15 @@ const App: React.FC = () => {
   // UI State Handlers
   const handleSelectAdventure = async (adventure: HydratedAdventure) => {
     setSelectedAdventure(adventure);
-    // Fetch comments for this adventure
+    
+    // Fix: Implement robust unsubscribe logic for the comment listener.
     const commentsQuery = query(collection(db, 'posts', adventure.id, 'comments'), orderBy('createdAt', 'asc'));
-    const unsub = onSnapshot(commentsQuery, (snapshot) => {
+    
+    if (commentListenerUnsub.current) {
+        commentListenerUnsub.current();
+    }
+
+    commentListenerUnsub.current = onSnapshot(commentsQuery, (snapshot) => {
         setComments(snapshot.docs.map(doc => {
             const data = doc.data();
             return {
@@ -743,9 +753,6 @@ const App: React.FC = () => {
             } as Comment;
         }));
     });
-    // Store the unsubscribe function to call it when the modal closes
-    // This is a simplified example; a more robust solution might use a state variable for the unsub function.
-    // For now, we'll rely on the modal closing to stop further updates implicitly.
   };
 
   const handleSelectConversationUser = (user: User) => {
@@ -762,9 +769,14 @@ const App: React.FC = () => {
     pushScreen('chatDetail');
   };
   
+  // Fix: Unsubscribe from the comment listener when the modal is closed.
   const handleCloseAdventureDetail = () => {
     setSelectedAdventure(null);
     setComments([]); // Clear comments
+    if (commentListenerUnsub.current) {
+        commentListenerUnsub.current();
+        commentListenerUnsub.current = null;
+    }
   };
 
   const handleViewProfile = (user: User) => {
