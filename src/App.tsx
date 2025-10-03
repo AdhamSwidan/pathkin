@@ -32,7 +32,7 @@ import { useJsApiLoader } from '@react-google-maps/api';
 
 // Fix: Imported the 'Media' type to resolve 'Cannot find name 'Media'' errors.
 // Fix: Removed unused enums 'AdventureType', 'AdventurePrivacy', and 'ActivityStatus' to resolve TS6133 errors.
-import { Screen, Adventure, User, Story, Notification, HydratedAdventure, HydratedStory, NotificationType, HydratedConversation, Conversation, Message, HydratedComment, Comment, HydratedNotification, Media } from './types';
+import { Screen, Adventure, User, Story, Notification, HydratedAdventure, HydratedStory, NotificationType, HydratedConversation, Conversation, Message, HydratedComment, Comment, HydratedNotification, Media, ActivityStatus } from './types';
 import {
   auth, db, storage,
   onAuthStateChanged,
@@ -561,22 +561,78 @@ const App: React.FC = () => {
   const handleToggleRepost = async (adventureId: string) => {
     if (!currentUser || isGuest) { handleGuestAction(); return; }
     const userRef = doc(db, 'users', currentUser.id);
-    const isReposted = (currentUser.repostedAdventures || []).includes(adventureId);
-    if (isReposted) {
-      await updateDoc(userRef, { repostedAdventures: arrayRemove(adventureId) });
-    } else {
-      await updateDoc(userRef, { repostedAdventures: arrayUnion(adventureId) });
+    const currentReposts = currentUser.repostedAdventures || [];
+    const isReposted = currentReposts.includes(adventureId);
+    const updatedReposts = isReposted
+        ? currentReposts.filter(id => id !== adventureId)
+        : [...currentReposts, adventureId];
+
+    // Optimistic UI update for instant feedback
+    setCurrentUser(prev => prev ? { ...prev, repostedAdventures: updatedReposts } : null);
+
+    try {
+        await updateDoc(userRef, { 
+            repostedAdventures: isReposted ? arrayRemove(adventureId) : arrayUnion(adventureId) 
+        });
+    } catch (error) {
+        console.error("Error toggling repost:", error);
+        // Revert UI on error
+        setCurrentUser(prev => prev ? { ...prev, repostedAdventures: currentReposts } : null);
     }
   };
 
   const handleToggleSave = async (adventureId: string) => {
     if (!currentUser || isGuest) { handleGuestAction(); return; }
     const userRef = doc(db, 'users', currentUser.id);
-    const isSaved = (currentUser.savedAdventures || []).includes(adventureId);
-    if (isSaved) {
-      await updateDoc(userRef, { savedAdventures: arrayRemove(adventureId) });
+    const currentSaves = currentUser.savedAdventures || [];
+    const isSaved = currentSaves.includes(adventureId);
+    const updatedSaves = isSaved
+        ? currentSaves.filter(id => id !== adventureId)
+        : [...currentSaves, adventureId];
+    
+    // Optimistic UI update for instant feedback
+    setCurrentUser(prev => prev ? { ...prev, savedAdventures: updatedSaves } : null);
+    
+    try {
+        await updateDoc(userRef, { 
+            savedAdventures: isSaved ? arrayRemove(adventureId) : arrayUnion(adventureId)
+        });
+    } catch (error) {
+        console.error("Error toggling save:", error);
+        // Revert UI on error
+        setCurrentUser(prev => prev ? { ...prev, savedAdventures: currentSaves } : null);
+    }
+  };
+
+  const handleToggleCompleted = async (adventureId: string) => {
+    if (!currentUser || isGuest) { handleGuestAction(); return; }
+    
+    const currentLog = currentUser.activityLog || [];
+    const existingEntryIndex = currentLog.findIndex(a => a.adventureId === adventureId);
+    let newLog;
+    
+    if (existingEntryIndex > -1) {
+      // Entry exists, remove it (toggle off)
+      newLog = currentLog.filter((_, index) => index !== existingEntryIndex);
     } else {
-      await updateDoc(userRef, { savedAdventures: arrayUnion(adventureId) });
+      // Entry doesn't exist, add it as pending (toggle on)
+      newLog = [...currentLog, { adventureId, status: ActivityStatus.Pending }];
+    }
+
+    // Optimistic UI update
+    setCurrentUser(prev => prev ? { ...prev, activityLog: newLog } : null);
+
+    // Update Firestore
+    const userRef = doc(db, 'users', currentUser.id);
+    try {
+      await updateDoc(userRef, { activityLog: newLog });
+      if (existingEntryIndex === -1) {
+          setToastMessage(t('confirmationRequested'));
+      }
+    } catch (error) {
+      console.error("Error toggling completed status:", error);
+      // Revert UI on error
+      setCurrentUser(prev => prev ? { ...prev, activityLog: currentLog } : null);
     }
   };
   
@@ -839,7 +895,7 @@ const App: React.FC = () => {
                     onRepostToggle={handleToggleRepost}
                     onSaveToggle={handleToggleSave}
                     onShareAdventure={handleShareAdventure}
-                    onToggleCompleted={() => {}} // Placeholder
+                    onToggleCompleted={handleToggleCompleted}
                     onViewLocationOnMap={handleViewLocationOnMap}
                     onDeleteAdventure={handleDeleteAdventure}
                     onEditAdventure={setEditingAdventure}
@@ -864,7 +920,7 @@ const App: React.FC = () => {
                     onRepostToggle={handleToggleRepost}
                     onSaveToggle={handleToggleSave}
                     onShareAdventure={handleShareAdventure}
-                    onToggleCompleted={() => {}} // Placeholder
+                    onToggleCompleted={handleToggleCompleted}
                     onViewLocationOnMap={handleViewLocationOnMap}
                     onDeleteAdventure={handleDeleteAdventure}
                     onEditAdventure={setEditingAdventure}
@@ -897,7 +953,7 @@ const App: React.FC = () => {
                     onSaveToggle={handleToggleSave}
                     onShareProfile={handleShareProfile}
                     onShareAdventure={handleShareAdventure}
-                    onToggleCompleted={() => {}} // Placeholder
+                    onToggleCompleted={handleToggleCompleted}
                     onOpenFollowList={(user, listType) => setFollowListModal({isOpen: true, user, listType})}
                     onNavigateToSettings={() => pushScreen('settings')}
                     onViewLocationOnMap={handleViewLocationOnMap}
@@ -920,7 +976,7 @@ const App: React.FC = () => {
                   onSaveToggle={handleToggleSave}
                   onShareProfile={handleShareProfile}
                   onShareAdventure={handleShareAdventure}
-                  onToggleCompleted={() => {}}
+                  onToggleCompleted={handleToggleCompleted}
                   onOpenFollowList={(user, listType) => setFollowListModal({isOpen: true, user, listType})}
                   isGuest={isGuest}
                   onViewLocationOnMap={handleViewLocationOnMap}
@@ -953,7 +1009,7 @@ const App: React.FC = () => {
                     onRepostToggle={handleToggleRepost}
                     onSaveToggle={handleToggleSave}
                     onShareAdventure={handleShareAdventure}
-                    onToggleCompleted={() => {}}
+                    onToggleCompleted={handleToggleCompleted}
                     onViewLocationOnMap={handleViewLocationOnMap}
                     onDeleteAdventure={handleDeleteAdventure}
                     onEditAdventure={setEditingAdventure}
@@ -975,7 +1031,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="h-screen w-screen flex flex-col md:flex-row bg-slate-50 dark:bg-neutral-950 text-gray-800 dark:text-gray-200">
+    <div className="h-screen w-full max-w-7xl mx-auto flex flex-col md:flex-row bg-slate-50 dark:bg-neutral-950 text-gray-800 dark:text-gray-200 border-x border-gray-200 dark:border-neutral-800">
       <SideNav activeScreen={activeScreen} setActiveScreen={resetToScreen} hasUnreadNotifications={hasUnreadNotifications} isGuest={isGuest} onGuestAction={handleGuestAction} />
       <main ref={mainContentRef} className="flex-1 overflow-y-auto pb-16 xl:pb-0">
           {isGuest && <GuestHeader onLoginClick={handleLogout} />}
