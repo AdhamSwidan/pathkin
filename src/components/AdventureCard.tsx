@@ -183,7 +183,7 @@ const AdventureCard: React.FC<AdventureCardProps> = ({
           className={`${actionButtonClasses} ${isGuest ? disabledClasses : `hover:text-rose-500 ${isInterested ? 'text-rose-500' : ''}`}`}
         >
           <HeartIcon className={isInterested ? 'fill-current' : ''} />
-          <span>{adventure.interestedUsers.length}</span>
+          <span>{(adventure.interestedUsers || []).length}</span>
         </button>
         <button 
           onClick={() => onCommentClick(adventure)} 

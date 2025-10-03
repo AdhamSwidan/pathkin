@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 import { AdventureType } from '../types';
 import { useTranslation } from '../contexts/LanguageContext';
@@ -15,6 +13,10 @@ interface FilterBarProps {
   onBudgetChange: (value: string) => void;
   onStartDateChange: (date: string) => void;
   onEndDateChange: (date: string) => void;
+  citySuggestions: any[];
+  isFetchingCity: boolean;
+  onSelectCitySuggestion: (suggestion: any) => void;
+  locationRef: React.RefObject<HTMLDivElement>;
 }
 
 const FilterBar: React.FC<FilterBarProps> = ({ 
@@ -27,7 +29,11 @@ const FilterBar: React.FC<FilterBarProps> = ({
   onCityChange,
   onBudgetChange,
   onStartDateChange,
-  onEndDateChange
+  onEndDateChange,
+  citySuggestions,
+  isFetchingCity,
+  onSelectCitySuggestion,
+  locationRef
 }) => {
   const { t } = useTranslation();
   const inputBaseClasses = "w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500 dark:bg-neutral-800 dark:border-neutral-700 dark:text-gray-200 dark:placeholder-gray-400";
@@ -58,7 +64,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
         </div>
         
         <div className="grid grid-cols-2 gap-2">
-          <div>
+          <div ref={locationRef} className="relative">
             <label htmlFor="city-filter" className={labelBaseClasses}>{t('city')}</label>
             <input
               id="city-filter"
@@ -68,7 +74,18 @@ const FilterBar: React.FC<FilterBarProps> = ({
               aria-label="Filter by city"
               value={city}
               onChange={(e) => onCityChange(e.target.value)}
+              autoComplete="off"
             />
+             {isFetchingCity && <div className="p-2 text-xs text-gray-500">{t('searching')}</div>}
+              {citySuggestions.length > 0 && (
+                  <ul className="absolute z-10 w-full mt-1 bg-white dark:bg-neutral-800 border dark:border-neutral-700 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                      {citySuggestions.map(s => (
+                          <li key={s.place_id} onClick={() => onSelectCitySuggestion(s)} className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-700 cursor-pointer">
+                              {s.display_name}
+                          </li>
+                      ))}
+                  </ul>
+              )}
           </div>
           <div>
             <label htmlFor="budget-filter" className={labelBaseClasses}>{t('maxBudget')}</label>

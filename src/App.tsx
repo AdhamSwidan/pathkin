@@ -443,7 +443,7 @@ const App: React.FC = () => {
   const handleUpdateProfile = async (updatedData: Partial<User>, avatarFile?: File, coverFile?: File) => {
     if (!currentUser) return;
     try {
-        const updatePayload: Partial<User> = { ...updatedData };
+        const updatePayload: any = { ...updatedData };
 
         if (avatarFile) {
             const avatarUrl = await uploadFile(avatarFile, `avatars/${currentUser.id}/${avatarFile.name}`);
@@ -1025,7 +1025,7 @@ const App: React.FC = () => {
 
       <main className="flex-1 flex flex-col relative overflow-hidden">
           {isGuest && <GuestHeader onLoginClick={handleReturnToAuth} />}
-          <div ref={mainContentRef} className={`flex-grow overflow-y-auto w-full max-w-2xl mx-auto xl:border-l xl:border-r xl:border-gray-200 xl:dark:border-neutral-800 ${showBottomNav ? 'pb-16' : ''} xl:pb-0`}>
+          <div ref={mainContentRef} className={`flex-grow overflow-y-auto w-full max-w-3xl mx-auto xl:border-l xl:border-r xl:border-gray-200 xl:dark:border-neutral-800 ${showBottomNav ? 'pb-16' : ''} xl:pb-0`}>
               {renderScreen()}
           </div>
           {showBottomNav && <BottomNav activeScreen={activeScreen} setActiveScreen={handleSetActiveScreen} isGuest={isGuest} onGuestAction={showGuestToast} />}

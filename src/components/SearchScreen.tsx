@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { User, AdventureType, HydratedAdventure } from '../types';
 import Header from './Header';
 import AdventureCard from './AdventureCard';
@@ -67,8 +67,55 @@ const SearchScreen: React.FC<SearchScreenProps> = ({
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   
+  const [locationSuggestions, setLocationSuggestions] = useState<any[]>([]);
+  const [isFetchingLocation, setIsFetchingLocation] = useState(false);
+  const [selectedCityName, setSelectedCityName] = useState(''); // To check against input
+  const locationRef = useRef<HTMLDivElement>(null);
+  
   const [appliedFilters, setAppliedFilters] = useState<AppliedFilters | null>(null);
   const { t } = useTranslation();
+
+  // Debounce effect for location search
+  useEffect(() => {
+    // If the input text is the same as the full name we selected, do nothing.
+    if (city.trim() === selectedCityName) {
+        setLocationSuggestions([]);
+        return;
+    }
+
+    const fetchLocations = async () => {
+        if (city.trim().length < 3) {
+            setLocationSuggestions([]);
+            return;
+        }
+        setIsFetchingLocation(true);
+        try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}&limit=5`);
+            const data = await response.json();
+            setLocationSuggestions(data);
+        } catch (error) { console.error("Failed to fetch locations:", error); }
+        setIsFetchingLocation(false);
+    };
+    const timerId = setTimeout(fetchLocations, 500);
+    return () => clearTimeout(timerId);
+  }, [city, selectedCityName]);
+
+  // Click outside effect to close suggestions
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+        if (locationRef.current && !locationRef.current.contains(event.target as Node)) {
+            setLocationSuggestions([]);
+        }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleSelectLocation = (suggestion: any) => {
+    setCity(suggestion.display_name);
+    setSelectedCityName(suggestion.display_name); // Store the full name to prevent re-fetch
+    setLocationSuggestions([]);
+  };
 
   const handleSearch = () => {
     setAppliedFilters({ query: searchQuery, type, city, budget, startDate, endDate });
@@ -155,6 +202,10 @@ const SearchScreen: React.FC<SearchScreenProps> = ({
                 type={type} city={city} budget={budget} startDate={startDate} endDate={endDate}
                 onTypeChange={setType} onCityChange={setCity} onBudgetChange={setBudget}
                 onStartDateChange={setStartDate} onEndDateChange={setEndDate}
+                locationRef={locationRef}
+                citySuggestions={locationSuggestions}
+                isFetchingCity={isFetchingLocation}
+                onSelectCitySuggestion={handleSelectLocation}
             />
             <div className="p-2 border-b dark:border-neutral-800 bg-slate-50 dark:bg-neutral-900">
                 <button

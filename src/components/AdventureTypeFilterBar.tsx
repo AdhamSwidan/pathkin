@@ -30,8 +30,8 @@ const AdventureTypeFilterBar: React.FC<AdventureTypeFilterBarProps> = ({ selecte
     const { t } = useTranslation();
 
     return (
-        <div className="border-b border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 sticky top-14 z-30">
-            <div className="flex space-x-2 overflow-x-auto p-2">
+        <div className="border-b border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
+            <div className="flex flex-wrap justify-center gap-2 p-2">
                 {filterOptions.map(option => {
                     const isActive = selectedType === option.type;
                     return (
