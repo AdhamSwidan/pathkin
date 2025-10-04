@@ -1,12 +1,10 @@
 // Fix: Replaced mixed compat/modular Firebase setup with a fully modular (v9+) approach.
 // This resolves errors where functions like `getFirestore` and `collection` were not found.
 import { initializeApp } from 'firebase/app';
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
-
-// Re-export v9 modular functions for convenience throughout the app
-export { 
+// Fix: Refactored Firebase imports to be explicit, resolving module resolution errors.
+// This changes from re-exporting directly to importing and then exporting.
+import { 
+  getAuth,
   onAuthStateChanged, 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
@@ -15,7 +13,8 @@ export {
   GoogleAuthProvider,
   signInWithPopup
 } from "firebase/auth";
-export { 
+import { 
+  getFirestore,
   collection, 
   doc, 
   getDoc,
@@ -36,11 +35,46 @@ export {
   increment,
   writeBatch
 } from "firebase/firestore";
-export { 
+import { 
+  getStorage,
   ref, 
   uploadBytes, 
   getDownloadURL 
 } from "firebase/storage";
+
+
+// Re-export v9 modular functions for convenience throughout the app
+export { 
+  onAuthStateChanged, 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  signOut, 
+  sendPasswordResetEmail,
+  GoogleAuthProvider,
+  signInWithPopup,
+  collection, 
+  doc, 
+  getDoc,
+  getDocs,
+  setDoc, 
+  updateDoc, 
+  onSnapshot, 
+  query, 
+  orderBy, 
+  where,
+  addDoc, 
+  serverTimestamp, 
+  arrayUnion, 
+  arrayRemove, 
+  Timestamp,
+  deleteDoc,
+  runTransaction,
+  increment,
+  writeBatch,
+  ref, 
+  uploadBytes, 
+  getDownloadURL 
+};
 
 
 // Fix: Standardized on Vite's native `import.meta.env` for all environment variables.
