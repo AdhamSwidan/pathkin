@@ -13,8 +13,6 @@ export default defineConfig(({ mode }) => {
       // This makes the Vercel environment variable available as process.env.API_KEY
       // to satisfy the strict coding guideline for the Gemini SDK.
       'process.env.API_KEY': JSON.stringify(env.VITE_GEMINI_API_KEY),
-      // Add the Google Maps API key here as well
-      'process.env.VITE_GOOGLE_MAPS_API_KEY': JSON.stringify(env.VITE_GOOGLE_MAPS_API_KEY),
     }
   }
 })

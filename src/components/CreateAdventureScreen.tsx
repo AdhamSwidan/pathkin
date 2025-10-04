@@ -180,41 +180,47 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ onCreateA
   };
   
   const handleSubmit = () => {
-    // Basic validation
-    if (!title || !description) {
-        alert("Please add a title and description.");
+    if (!title || !description || !location || !startDate) {
+        alert("Please fill in all required fields: title, description, location, and start date.");
         return;
     }
     
-    let adventureData: Omit<Adventure, 'id' | 'authorId' | 'interestedUsers' | 'commentCount' | 'createdAt'> = {
+    // Create a mutable copy of the adventure data
+    const adventureData: any = {
       type: adventureType,
       privacy,
-      ...(privacy === AdventurePrivacy.Twins && { subPrivacy }),
       title,
       description,
       location,
-      coordinates: coordinates ?? undefined,
       startDate,
-      endDate: endDate || undefined,
       budget: parseInt(budget, 10) || 0,
     };
     
-    // Add type-specific data
+    // Conditionally add optional fields ONLY if they have a value
+    if (privacy === AdventurePrivacy.Twins) adventureData.subPrivacy = subPrivacy;
+    if (coordinates) adventureData.coordinates = coordinates;
+    if (endDate) adventureData.endDate = endDate;
+    
+    // Add type-specific data, again, only if valid
     switch (adventureType) {
         case AdventureType.Travel:
-            adventureData.destinations = destinations.filter(d => d.location && d.coordinates) as { location: string; coordinates: { lat: number; lng: number; }}[];
+            const validDestinations = destinations.filter(d => d.location && d.coordinates);
+            if (validDestinations.length > 0) {
+              adventureData.destinations = validDestinations;
+            }
             break;
         case AdventureType.Housing:
             adventureData.budget = parseInt(budget, 10) || 0; // Price
-            adventureData.roomCount = parseInt(roomCount, 10) || undefined;
+            if (roomCount) adventureData.roomCount = parseInt(roomCount, 10);
             break;
         case AdventureType.Event:
-            adventureData.eventCategory = eventCategory === 'Other' ? otherEventCategory : eventCategory;
+            const finalCategory = eventCategory === 'Other' ? otherEventCategory : eventCategory;
+            if (finalCategory) adventureData.eventCategory = finalCategory;
             break;
         case AdventureType.Hiking:
         case AdventureType.Cycling:
-            adventureData.endLocation = endLocation;
-            adventureData.endCoordinates = endCoordinates ?? undefined;
+            if (endLocation) adventureData.endLocation = endLocation;
+            if (endCoordinates) adventureData.endCoordinates = endCoordinates;
             break;
     }
     

@@ -147,24 +147,50 @@ const EditAdventureModal: React.FC<EditAdventureModalProps> = ({ adventure, onCl
   const [endCoordinates, setEndCoordinates] = useState(adventure.endCoordinates || null);
 
   const handleSubmit = () => {
-    const updatedData: Partial<Adventure> = {
+    // Create a mutable copy of the adventure data
+    const updatedData: any = {
       type: adventureType,
       privacy,
-      ...(privacy === AdventurePrivacy.Twins && { subPrivacy }),
       title,
       description,
       location,
-      coordinates: coordinates ?? undefined,
       startDate,
-      endDate: endDate || undefined,
       budget: parseInt(budget, 10) || 0,
-      destinations: destinations.filter(d => d.location && d.coordinates) as { location: string; coordinates: { lat: number; lng: number; }}[],
-      roomCount: parseInt(roomCount, 10) || undefined,
-      eventCategory: eventCategory === 'Other' ? otherEventCategory : eventCategory,
-      endLocation: endLocation,
-      endCoordinates: endCoordinates ?? undefined,
     };
     
+    // Conditionally add optional fields ONLY if they have a value
+    if (privacy === AdventurePrivacy.Twins) updatedData.subPrivacy = subPrivacy;
+    if (coordinates) updatedData.coordinates = coordinates;
+    if (endDate) updatedData.endDate = endDate; else updatedData.endDate = null;
+    
+    // Add type-specific data, again, only if valid
+    switch (adventureType) {
+        case AdventureType.Travel:
+            const validDestinations = destinations.filter(d => d.location && d.coordinates);
+            updatedData.destinations = validDestinations.length > 0 ? validDestinations : null;
+            break;
+        case AdventureType.Housing:
+            updatedData.budget = parseInt(budget, 10) || 0; // Price
+            updatedData.roomCount = roomCount ? parseInt(roomCount, 10) : null;
+            break;
+        case AdventureType.Event:
+            const finalCategory = eventCategory === 'Other' ? otherEventCategory : eventCategory;
+            updatedData.eventCategory = finalCategory || null;
+            break;
+        case AdventureType.Hiking:
+        case AdventureType.Cycling:
+            updatedData.endLocation = endLocation || null;
+            updatedData.endCoordinates = endCoordinates || null;
+            break;
+    }
+    
+    // Clean up null fields from other types
+    Object.keys(updatedData).forEach(key => {
+      if (updatedData[key] === undefined) {
+        delete updatedData[key];
+      }
+    });
+
     onUpdateAdventure(adventure.id, updatedData);
     onClose();
   };
