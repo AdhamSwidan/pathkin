@@ -88,8 +88,6 @@ const AdventureCard: React.FC<AdventureCardProps> = ({
   };
   
   const formatDates = () => {
-    const fromLabel = adventure.type === AdventureType.Housing ? t('availableFrom') : t('startDate');
-    const toLabel = adventure.type === AdventureType.Housing ? t('availableTo') : t('endDate');
     let dateText = `${formatDate(adventure.startDate)}`;
     if (adventure.endDate) {
         dateText += ` - ${formatDate(adventure.endDate)}`;
