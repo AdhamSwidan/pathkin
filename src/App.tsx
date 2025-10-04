@@ -108,7 +108,7 @@ const App: React.FC = () => {
   const commentListenerUnsub = useRef<(() => void) | null>(null);
   const { t } = useTranslation();
 
-  const libraries = useMemo<("places")[]>(() => ['places'], []);
+  const libraries = useMemo<("places" | "directions")[]>(() => ['places', 'directions'], []);
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: process.env.VITE_GOOGLE_MAPS_API_KEY || "",

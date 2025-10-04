@@ -79,6 +79,35 @@ declare namespace google.maps {
     UNKNOWN_ERROR = 'UNKNOWN_ERROR',
   }
 
+  // Fix: Add types for the Directions API to resolve errors in MapScreen.tsx.
+  // This includes DirectionsResult, DirectionsService, TravelMode, and DirectionsStatus.
+  interface DirectionsResult {}
+
+  interface DirectionsRequest {
+    origin: LatLngLiteral | string;
+    destination: LatLngLiteral | string;
+    travelMode: TravelMode;
+  }
+
+  class DirectionsService {
+    route(
+      request: DirectionsRequest,
+      callback: (result: DirectionsResult | null, status: DirectionsStatus) => void
+    ): void;
+  }
+
+  enum TravelMode {
+    WALKING = 'WALKING',
+    BICYCLING = 'BICYCLING',
+    DRIVING = 'DRIVING',
+    TRANSIT = 'TRANSIT',
+  }
+  
+  enum DirectionsStatus {
+    OK = 'OK',
+    ZERO_RESULTS = 'ZERO_RESULTS',
+  }
+
   namespace places {
     interface AutocompletePrediction {
       description: string;

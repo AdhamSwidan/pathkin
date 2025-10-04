@@ -81,6 +81,34 @@ const AdventureCard: React.FC<AdventureCardProps> = ({
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString(language, { month: 'short', day: 'numeric', year: 'numeric' });
   };
+  
+  const formatBudget = () => {
+    const label = adventure.type === AdventureType.Housing ? t('price') : t('budget');
+    return `${label.replace(' ($)','')} ~$${adventure.budget}`;
+  };
+  
+  const formatDates = () => {
+    const fromLabel = adventure.type === AdventureType.Housing ? t('availableFrom') : t('startDate');
+    const toLabel = adventure.type === AdventureType.Housing ? t('availableTo') : t('endDate');
+    let dateText = `${formatDate(adventure.startDate)}`;
+    if (adventure.endDate) {
+        dateText += ` - ${formatDate(adventure.endDate)}`;
+    }
+    return dateText;
+  };
+  
+  const getLocationText = () => {
+    switch (adventure.type) {
+        case AdventureType.Travel:
+            return `${t('from')}: ${adventure.location}`;
+        case AdventureType.Hiking:
+        case AdventureType.Cycling:
+            return `${t('startPoint')}: ${adventure.location}`;
+        default:
+            return adventure.location;
+    }
+  };
+
 
   const checkmarkColor = () => {
     if (activityStatus === ActivityStatus.Confirmed) return 'text-green-500';
@@ -166,12 +194,12 @@ const AdventureCard: React.FC<AdventureCardProps> = ({
              disabled={!adventure.coordinates}
              className="px-2 py-1 rounded-full bg-gray-100 dark:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-200 dark:hover:bg-neutral-700"
           >
-            📍 {adventure.location}
+            📍 {getLocationText()}
           </button>
           <span className="px-2 py-1 rounded-full bg-gray-100 dark:bg-neutral-800">
-            🗓️ {formatDate(adventure.startDate)} {adventure.endDate && `- ${formatDate(adventure.endDate)}`}
+            🗓️ {formatDates()}
           </span>
-          <span className="px-2 py-1 rounded-full bg-gray-100 dark:bg-neutral-800">💰 ~${adventure.budget}</span>
+          <span className="px-2 py-1 rounded-full bg-gray-100 dark:bg-neutral-800">💰 {formatBudget()}</span>
         </div>
       </div>
       

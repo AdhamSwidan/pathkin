@@ -85,6 +85,20 @@ export interface Adventure {
   createdAt: string;
   media?: Media[];
   privacy: AdventurePrivacy;
+  subPrivacy?: AdventurePrivacy.Public | AdventurePrivacy.Followers;
+
+  // For Travel
+  destinations?: { location: string; coordinates: { lat: number; lng: number } }[];
+
+  // For Housing
+  roomCount?: number;
+
+  // For Event
+  eventCategory?: string;
+
+  // For Hiking & Cycling
+  endLocation?: string;
+  endCoordinates?: { lat: number; lng: number };
 }
 
 // An Adventure that has been "hydrated" with its author's data

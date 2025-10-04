@@ -1,5 +1,5 @@
-import React, { useState, useRef, useCallback, useMemo } from 'react';
-import { GoogleMap, MarkerF, InfoWindowF } from '@react-google-maps/api';
+import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
+import { GoogleMap, MarkerF, InfoWindowF, DirectionsRenderer } from '@react-google-maps/api';
 import { Adventure, AdventureType } from '../types';
 import Header from './Header';
 import { useTranslation } from '../contexts/LanguageContext';
@@ -51,6 +51,7 @@ const MapScreen: React.FC<MapScreenProps> = ({ adventuresToShow, isLoaded, onSho
   const [selectedAdventure, setSelectedAdventure] = useState<Adventure | null>(null);
   const [myPosition, setMyPosition] = useState<google.maps.LatLngLiteral | null>(null);
   const [filterType, setFilterType] = useState<AdventureType | 'all'>('all');
+  const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
 
   const onMapLoad = useCallback((map: google.maps.Map) => {
@@ -72,10 +73,29 @@ const MapScreen: React.FC<MapScreenProps> = ({ adventuresToShow, isLoaded, onSho
 
   const onMarkerClick = (adventure: Adventure) => {
     setSelectedAdventure(adventure);
+    setDirections(null); // Clear previous directions
+    if ( (adventure.type === AdventureType.Hiking || adventure.type === AdventureType.Cycling) && adventure.coordinates && adventure.endCoordinates) {
+        const directionsService = new window.google.maps.DirectionsService();
+        directionsService.route(
+            {
+                origin: adventure.coordinates,
+                destination: adventure.endCoordinates,
+                travelMode: window.google.maps.TravelMode.WALKING, // or BICYCLING
+            },
+            (result, status) => {
+                if (status === window.google.maps.DirectionsStatus.OK && result) {
+                    setDirections(result);
+                } else {
+                    console.error(`error fetching directions ${result}`);
+                }
+            }
+        );
+    }
   };
   
   const onInfoWindowClose = () => {
     setSelectedAdventure(null);
+    setDirections(null);
   }
 
   const handleShowMyLocation = () => {
@@ -98,6 +118,12 @@ const MapScreen: React.FC<MapScreenProps> = ({ adventuresToShow, isLoaded, onSho
       onShowToast(t('locationUnavailable'));
     }
   };
+
+  // Clear selections when filter changes
+  useEffect(() => {
+    setSelectedAdventure(null);
+    setDirections(null);
+  }, [filterType]);
 
   const filterOptions = [
     { type: 'all' as const, icon: <GridIcon />, labelKey: 'allTypes' },
@@ -167,7 +193,7 @@ const MapScreen: React.FC<MapScreenProps> = ({ adventuresToShow, isLoaded, onSho
                 />
               )}
 
-              {selectedAdventure && selectedAdventure.coordinates && (
+              {selectedAdventure && selectedAdventure.coordinates && !directions && (
                 <InfoWindowF
                   position={selectedAdventure.coordinates}
                   onCloseClick={onInfoWindowClose}
@@ -177,6 +203,13 @@ const MapScreen: React.FC<MapScreenProps> = ({ adventuresToShow, isLoaded, onSho
                     <p className="text-sm text-gray-600">{selectedAdventure.location}</p>
                   </div>
                 </InfoWindowF>
+              )}
+
+              {directions && (
+                <DirectionsRenderer 
+                    directions={directions} 
+                    options={{ suppressMarkers: true, polylineOptions: { strokeColor: '#F97316', strokeWeight: 5 } }} 
+                />
               )}
             </GoogleMap>
             <button
