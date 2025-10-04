@@ -3,7 +3,7 @@ import { GoogleGenAI } from "@google/genai";
 import { AdventureType } from "../types";
 
 // Fix: Initialize the GoogleGenAI client with the API key from environment variables as per the coding guidelines.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
 
 export const generateDescription = async (title: string, keywords: string, adventureType: AdventureType): Promise<string> => {
   const prompt = `
