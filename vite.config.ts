@@ -10,9 +10,9 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     define: {
-      // This makes the Vercel environment variable available as process.env.API_KEY
-      // to satisfy the strict coding guideline for the Gemini SDK.
+      // This makes environment variables available on the client-side `process.env` object.
       'process.env.API_KEY': JSON.stringify(env.VITE_GEMINI_API_KEY),
+      'process.env.GOOGLE_MAPS_API_KEY': JSON.stringify(env.VITE_GOOGLE_MAPS_API_KEY),
     }
   }
 })

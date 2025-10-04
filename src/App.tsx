@@ -108,10 +108,13 @@ const App: React.FC = () => {
   const commentListenerUnsub = useRef<(() => void) | null>(null);
   const { t } = useTranslation();
 
+  // Diagnostic log to check if the Maps API key is available
+  console.log('[DIAGNOSTIC] App.tsx: Google Maps API Key Loaded:', process.env.GOOGLE_MAPS_API_KEY ? 'Yes' : 'No');
+
   const libraries = useMemo<any>(() => ['places', 'directions'], []);
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "",
+    googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY || "",
     libraries: libraries,
   });
 
