@@ -203,5 +203,6 @@
   "categoryOther": "أخرى",
   "otherCategory": "فئة أخرى",
   "startPoint": "نقطة البداية",
-  "endPoint": "نقطة النهاية"
+  "endPoint": "نقطة النهاية",
+  "mapLoadError": "فشل تحميل الخريطة. يرجى التحقق من مفتاح API وإعدادات Google Cloud."
 }

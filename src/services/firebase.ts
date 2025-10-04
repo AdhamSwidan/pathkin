@@ -1,9 +1,6 @@
-// Fix: The original import `from 'firebase/app'` fails, suggesting an SDK version mismatch or configuration issue.
-// Using the v9 compat library for initialization is a robust workaround that allows the rest of the app to use modular functions.
-import firebase from 'firebase/compat/app';
-import 'firebase/compat/auth';
-import 'firebase/compat/firestore';
-import 'firebase/compat/storage';
+// Fix: Replaced mixed compat/modular Firebase setup with a fully modular (v9+) approach.
+// This resolves errors where functions like `getFirestore` and `collection` were not found.
+import { initializeApp } from 'firebase/app';
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
@@ -46,26 +43,19 @@ export {
 } from "firebase/storage";
 
 
-// Fix: Use process.env for Vite environment variables on the client-side, populated by vite.config.ts.
+// Fix: Standardized on Vite's native `import.meta.env` for all environment variables.
 const firebaseConfig = {
-  apiKey: process.env.VITE_FIREBASE_API_KEY,
-  authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.VITE_FIREBASE_APP_ID,
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-// Diagnostic log to check if environment variables are loaded
-console.log('[DIAGNOSTIC] Firebase Service: Initializing...');
-console.log('[DIAGNOSTIC] Firebase Project ID Loaded:', !!process.env.VITE_FIREBASE_PROJECT_ID);
-// Avoid logging sensitive keys directly
-console.log('[DIAGNOSTIC] Firebase API Key Loaded:', process.env.VITE_FIREBASE_API_KEY ? 'Yes' : 'No');
-
-
 // Initialize Firebase
-// Fix: Call `initializeApp` using the compat library.
-const app = firebase.initializeApp(firebaseConfig);
+// Fix: Call `initializeApp` from the modular SDK.
+const app = initializeApp(firebaseConfig);
 
 // Initialize and export Firebase services
 export const auth = getAuth(app);
