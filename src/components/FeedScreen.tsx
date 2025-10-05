@@ -5,7 +5,7 @@ import AdventureCard from './AdventureCard';
 import StoryReel from './StoryReel';
 import BellIcon from './icons/BellIcon';
 import MessageIcon from './icons/MessageIcon';
-import { useTranslation } from './contexts/LanguageContext';
+import { useTranslation } from '../contexts/LanguageContext';
 import AdventureTypeFilterBar from './AdventureTypeFilterBar';
 
 interface FeedScreenProps {
