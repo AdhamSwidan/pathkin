@@ -1,10 +1,4 @@
-// Fix: Replaced mixed compat/modular Firebase setup with a fully modular (v9+) approach.
-// This resolves errors where functions like `getFirestore` and `collection` were not found.
-// Fix: Changed import path to use scoped package to resolve module export error.
-import { initializeApp } from '@firebase/app';
-// Fix: Refactored Firebase imports to be explicit, resolving module resolution errors.
-// This changes from re-exporting directly to importing and then exporting.
-// Fix: Changed import path to use scoped package to resolve module export errors.
+import { initializeApp } from 'firebase/app';
 import { 
   getAuth,
   onAuthStateChanged, 
@@ -13,9 +7,9 @@ import {
   signOut, 
   sendPasswordResetEmail,
   GoogleAuthProvider,
-  signInWithPopup
-} from "@firebase/auth";
-// Fix: Changed import path to the scoped package '@firebase/firestore' to resolve module export errors.
+  signInWithPopup,
+  User as FirebaseUser
+} from "firebase/auth";
 import { 
   getFirestore,
   collection, 
@@ -37,15 +31,14 @@ import {
   runTransaction,
   increment,
   writeBatch
-} from "@firebase/firestore";
-// Fix: Changed import path to the scoped package '@firebase/storage' to resolve module export errors.
+} from "firebase/firestore";
 import { 
   getStorage,
   ref, 
   uploadBytes, 
   getDownloadURL,
   deleteObject
-} from "@firebase/storage";
+} from "firebase/storage";
 
 
 // Re-export v9 modular functions for convenience throughout the app
@@ -79,7 +72,8 @@ export {
   ref, 
   uploadBytes, 
   getDownloadURL,
-  deleteObject
+  deleteObject,
+  FirebaseUser
 };
 
 
@@ -94,7 +88,6 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-// Fix: Call `initializeApp` from the modular SDK.
 const app = initializeApp(firebaseConfig);
 
 // Initialize and export Firebase services

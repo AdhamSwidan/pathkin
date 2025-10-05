@@ -28,12 +28,12 @@ import SavedAdventuresScreen from './components/settings/SavedAdventuresScreen';
 import NotificationsScreen from './components/NotificationsScreen';
 import { useTranslation } from './contexts/LanguageContext';
 import { useJsApiLoader } from '@react-google-maps/api';
-import Header from './components/Header';
 // Fix: Import `ActivityLogEntry` to resolve type error in `handleConfirmAttendance`.
-import { Screen, Adventure, User, Story, Notification, HydratedAdventure, HydratedStory, NotificationType, HydratedConversation, Conversation, Message, HydratedComment, Comment, HydratedNotification, Media, ActivityStatus, ActivityLogEntry } from './types';
+import { Screen, Adventure, User, Story, Notification, HydratedAdventure, HydratedStory, HydratedConversation, Conversation, HydratedComment, Comment, HydratedNotification, Media, ActivityStatus, ActivityLogEntry } from './types';
 import {
   auth, db, storage,
-  onAuthStateChanged,
+  // Fix: Corrected import to use `FirebaseUser` directly, as exported from the firebase service.
+  onAuthStateChanged, FirebaseUser,
   doc, getDoc, getDocs, signOut,
   collection, onSnapshot, query, orderBy, where,
   signInWithEmailAndPassword,
@@ -124,7 +124,7 @@ const App: React.FC = () => {
 
   // Auth Listener
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user: FirebaseUser | null) => {
         if (user) {
             const userDocRef = doc(db, 'users', user.uid);
             const docSnap = await getDoc(userDocRef);
@@ -258,19 +258,21 @@ const App: React.FC = () => {
         resetToScreen('feed');
     } catch (error: any) { console.error(error); if (error.code === 'auth/email-already-in-use') { handleShowToast(t('emailExistsError')); } }
   };
-  const handleSocialLogin = async (providerName: 'google') => {
-    const provider = new GoogleAuthProvider();
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      const userDocRef = doc(db, 'users', user.uid);
-      const docSnap = await getDoc(userDocRef);
-      if (!docSnap.exists()) {
-        const newUser: User = { id: user.uid, name: user.displayName || 'New User', username: user.email?.split('@')[0] || `user${Date.now()}`, email: user.email || '', followers: [], following: [], repostedAdventures: [], savedAdventures: [], activityLog: [], bio: '', interests: [], avatarUrl: user.photoURL || `https://picsum.photos/seed/${user.uid}/200`, isPrivate: false, privacySettings: { showFollowLists: true, showStats: true, showCompletedActivities: true, allowTwinSearch: true } };
-        await setDoc(userDocRef, newUser);
-      }
-      resetToScreen('feed');
-    } catch (error) { console.error("Social login error:", error); }
+  const handleSocialLogin = async (providerName: 'google' | 'facebook') => {
+    if (providerName === 'google') {
+        const provider = new GoogleAuthProvider();
+        try {
+          const result = await signInWithPopup(auth, provider);
+          const user = result.user;
+          const userDocRef = doc(db, 'users', user.uid);
+          const docSnap = await getDoc(userDocRef);
+          if (!docSnap.exists()) {
+            const newUser: User = { id: user.uid, name: user.displayName || 'New User', username: user.email?.split('@')[0] || `user${Date.now()}`, email: user.email || '', followers: [], following: [], repostedAdventures: [], savedAdventures: [], activityLog: [], bio: '', interests: [], avatarUrl: user.photoURL || `https://picsum.photos/seed/${user.uid}/200`, isPrivate: false, privacySettings: { showFollowLists: true, showStats: true, showCompletedActivities: true, allowTwinSearch: true } };
+            await setDoc(userDocRef, newUser);
+          }
+          resetToScreen('feed');
+        } catch (error) { console.error("Social login error:", error); }
+    }
   };
   const handleGuestLogin = () => { setIsGuest(true); resetToScreen('feed'); };
   const handleLogout = async () => { await signOut(auth); resetToScreen('feed'); };
@@ -316,9 +318,10 @@ const App: React.FC = () => {
     if (!currentUser) return;
     const adventureRef = doc(db, 'posts', adventureId);
     const adventure = adventures.find(p => p.id === adventureId);
-    const isInterested = (adventure?.interestedUsers || []).includes(currentUser.id);
+    if (!adventure) return;
+    const isInterested = (adventure.interestedUsers || []).includes(currentUser.id);
     await updateDoc(adventureRef, { interestedUsers: isInterested ? arrayRemove(currentUser.id) : arrayUnion(currentUser.id) });
-    if (!isInterested && adventure?.authorId !== currentUser.id) {
+    if (!isInterested && adventure.authorId !== currentUser.id) {
         await addDoc(collection(db, 'notifications'), { recipientId: adventure.authorId, userId: currentUser.id, adventureId, text: t('interestNotificationText', { title: adventure.title }), type: 'interest', read: false, createdAt: serverTimestamp() });
     }
   };
@@ -510,7 +513,6 @@ const App: React.FC = () => {
   
   // Render Logic
   const renderScreen = () => {
-    const userForProfile = (activeScreen === 'userProfile' && viewingUser) ? viewingUser : (currentUser || guestUser);
     
     switch (activeScreen) {
       // Fix: Removed the `onGuestAction` prop from FeedScreen as it's not defined in its props.
