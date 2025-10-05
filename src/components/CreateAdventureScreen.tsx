@@ -124,7 +124,7 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ onCreateA
       <Header title={t('createANewAdventure')} />
       <div className="p-2 sm:p-4 space-y-3 overflow-y-auto">
         
-        <FormCard icon={<CategoryIcon />} title="Category*">
+        <FormCard icon={<CategoryIcon />} title={`${t('adventure')}*`}>
           <div className="flex flex-wrap gap-2">
             {adventureTypes.map(type => (
               <Chip key={type} isSelected={adventureType === type} onClick={() => setAdventureType(type)}>

@@ -327,15 +327,52 @@ const App: React.FC = () => {
   };
   const handleToggleRepost = async (adventureId: string) => {
     if (!currentUser) return;
+
+    const originalReposts = currentUser.repostedAdventures || [];
+    const isReposted = originalReposts.includes(adventureId);
+
+    // Optimistic UI update
+    const newReposts = isReposted
+      ? originalReposts.filter(id => id !== adventureId)
+      : [...originalReposts, adventureId];
+    
+    setCurrentUser(prevUser => prevUser ? { ...prevUser, repostedAdventures: newReposts } : null);
+
+    // Firebase update
     const userRef = doc(db, 'users', currentUser.id);
-    const isReposted = (currentUser.repostedAdventures || []).includes(adventureId);
-    await updateDoc(userRef, { repostedAdventures: isReposted ? arrayRemove(adventureId) : arrayUnion(adventureId) });
+    try {
+      await updateDoc(userRef, { repostedAdventures: isReposted ? arrayRemove(adventureId) : arrayUnion(adventureId) });
+    } catch (error) {
+      console.error("Failed to update reposts, reverting UI", error);
+      // Revert on error
+      setCurrentUser(prevUser => prevUser ? { ...prevUser, repostedAdventures: originalReposts } : null);
+      handleShowToast("Could not update repost. Please try again.");
+    }
   };
+
   const handleToggleSave = async (adventureId: string) => {
     if (!currentUser) return;
+    
+    const originalSaves = currentUser.savedAdventures || [];
+    const isSaved = originalSaves.includes(adventureId);
+
+    // Optimistic UI update
+    const newSaves = isSaved
+      ? originalSaves.filter(id => id !== adventureId)
+      : [...originalSaves, adventureId];
+      
+    setCurrentUser(prevUser => prevUser ? { ...prevUser, savedAdventures: newSaves } : null);
+
+    // Firebase update
     const userRef = doc(db, 'users', currentUser.id);
-    const isSaved = (currentUser.savedAdventures || []).includes(adventureId);
-    await updateDoc(userRef, { savedAdventures: isSaved ? arrayRemove(adventureId) : arrayUnion(adventureId) });
+    try {
+      await updateDoc(userRef, { savedAdventures: isSaved ? arrayRemove(adventureId) : arrayUnion(adventureId) });
+    } catch (error) {
+      console.error("Failed to update saved adventures, reverting UI", error);
+      // Revert on error
+      setCurrentUser(prevUser => prevUser ? { ...prevUser, savedAdventures: originalSaves } : null);
+      handleShowToast("Could not save adventure. Please try again.");
+    }
   };
   const handleShareAdventure = async (adventure: HydratedAdventure) => {
     if (navigator.share) {

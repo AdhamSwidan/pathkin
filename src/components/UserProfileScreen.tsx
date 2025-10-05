@@ -167,7 +167,7 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
   return (
     <>
       <Header title={user.name} onBack={onBack} rightAction={headerActions} />
-      <div className="bg-white dark:bg-neutral-950 flex-grow">
+      <div className="flex-grow">
         {/* Cover Photo */}
         <div className="w-full h-32 bg-gray-200 dark:bg-neutral-800">
           {user.coverUrl ? (
@@ -181,7 +181,7 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
         <div className="px-4 relative">
           <div className="flex items-end">
             {/* Avatar */}
-            <div className="w-24 h-24 rounded-full border-4 border-white dark:border-neutral-950 shadow-lg flex-shrink-0 -mt-12 bg-gray-300 dark:bg-neutral-700 flex items-center justify-center">
+            <div className="w-24 h-24 rounded-full border-4 border-light-bg dark:border-dark-bg shadow-lg flex-shrink-0 -mt-12 bg-gray-300 dark:bg-neutral-700 flex items-center justify-center">
               {user.avatarUrl ? (
                 <img src={user.avatarUrl} alt={user.name} className="w-full h-full rounded-full object-cover" />
               ) : (
