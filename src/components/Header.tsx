@@ -18,7 +18,7 @@ const Header: React.FC<HeaderProps> = ({ title, onBack, rightAction }) => {
       )}
       <h1 className="text-lg font-bold text-gray-800 dark:text-gray-100">{title}</h1>
       {rightAction && (
-        <div className="absolute right-2">
+        <div className="absolute right-2 top-0 h-full flex items-center">
           {rightAction}
         </div>
       )}

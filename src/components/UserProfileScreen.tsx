@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { User, ActivityStatus, HydratedAdventure } from '../types';
 import Header from './Header';
@@ -131,8 +132,7 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
     }
 
     return (
-      <div className="mt-4 px-2">
-        <div className="space-y-4">
+      <div className="pt-2 px-2">
            {renderedAdventures.map(adventure => (
               <AdventureCard 
                 key={adventure.id} 
@@ -155,7 +155,6 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
              {renderedAdventures.length === 0 && (
                 <p className="text-center text-gray-500 dark:text-gray-400 py-8">{t('noAdventuresInSection')}</p>
              )}
-        </div>
       </div>
     );
   };

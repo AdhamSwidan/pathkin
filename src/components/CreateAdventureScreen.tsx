@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import Header from './Header';
 import { AdventureType, Media, AdventurePrivacy, Adventure, User } from '../types';
@@ -123,6 +124,16 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ onCreateA
       <Header title={t('createANewAdventure')} />
       <div className="p-2 sm:p-4 space-y-3 overflow-y-auto">
         
+        <FormCard icon={<CategoryIcon />} title="Category*">
+          <div className="flex flex-wrap gap-2">
+            {adventureTypes.map(type => (
+              <Chip key={type} isSelected={adventureType === type} onClick={() => setAdventureType(type)}>
+                {t(`AdventureType_${type}`)}
+              </Chip>
+            ))}
+          </div>
+        </FormCard>
+
         <FormCard icon={<TitleIcon />} title={t('title')}>
           <input type="text" id="title" placeholder="Adventure on the mountain" value={title} onChange={e => setTitle(e.target.value)} className={inputClasses}/>
         </FormCard>
@@ -145,16 +156,6 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ onCreateA
           </button>
         </FormCard>
         
-        <FormCard icon={<CategoryIcon />} title="Category*">
-          <div className="flex flex-wrap gap-2">
-            {adventureTypes.map(type => (
-              <Chip key={type} isSelected={adventureType === type} onClick={() => setAdventureType(type)}>
-                {t(`AdventureType_${type}`)}
-              </Chip>
-            ))}
-          </div>
-        </FormCard>
-
         {adventureType === AdventureType.Event && (
             <FormCard icon={<ListIcon />} title={t('eventCategory')}>
                 <select value={eventCategory} onChange={e => setEventCategory(e.target.value)} className={inputClasses}>
@@ -172,9 +173,8 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ onCreateA
           <textarea id="description" value={description} onChange={e => setDescription(e.target.value)} rows={5} className={inputClasses} placeholder="We are going on a full day excursion..."></textarea>
         </FormCard>
         
-        <FormCard icon={<ImageIcon />} title="Image*" subtitle="Select your image. More quality, more visibility!">
+        <FormCard icon={<ImageIcon />} title="Media*" subtitle="Select an image or video. More quality, more visibility!">
           <div className="flex flex-wrap gap-2">
-            <Chip onClick={() => {}}>Unsplash</Chip>
             <Chip onClick={() => fileInputRef.current?.click()} isSelected={!!mediaFile}>Gallery</Chip>
           </div>
           <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*,video/*" className="hidden"/>

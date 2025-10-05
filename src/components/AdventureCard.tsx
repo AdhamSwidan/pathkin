@@ -1,10 +1,11 @@
+
 import React, { useState } from 'react';
 import { AdventureType, User, ActivityStatus, HydratedAdventure } from '../types';
-import HeartIcon from './icons/HeartIcon';
+import InterestIcon from './icons/InterestIcon';
 import CommentIcon from './icons/CommentIcon';
 import PlayIcon from './icons/PlayIcon';
 import RepostIcon from './icons/RepostIcon';
-import BookmarkIcon from './icons/BookmarkIcon';
+import SaveIcon from './icons/SaveIcon';
 import ShareIcon from './icons/ShareIcon';
 import CheckCircleIcon from './icons/CheckCircleIcon';
 import StarIcon from './icons/StarIcon';
@@ -208,7 +209,7 @@ const AdventureCard: React.FC<AdventureCardProps> = ({
           disabled={isGuest}
           className={`${actionButtonClasses} ${isGuest ? disabledClasses : `hover:text-rose-500 ${isInterested ? 'text-rose-500' : ''}`}`}
         >
-          <HeartIcon className={isInterested ? 'fill-current' : ''} />
+          <InterestIcon className={isInterested ? 'fill-current' : ''} />
           <span>{(adventure.interestedUsers || []).length}</span>
         </button>
         <button 
@@ -245,7 +246,7 @@ const AdventureCard: React.FC<AdventureCardProps> = ({
           disabled={isGuest}
           className={`${actionButtonClasses} ${isGuest ? disabledClasses : `hover:text-amber-500 ${isSaved ? 'text-amber-500' : ''}`}`}
         >
-          <BookmarkIcon className={isSaved ? 'fill-current' : ''} />
+          <SaveIcon className={isSaved ? 'fill-current' : ''} />
         </button>
       </div>
     </div>
