@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef } from 'react';
 import Header from './Header';
 import { AdventureType, Media, AdventurePrivacy, Adventure, User } from '../types';
 import { generateDescription } from '../services/geminiService';
@@ -11,6 +11,8 @@ import ImageIcon from './icons/ImageIcon';
 import CategoryIcon from './icons/CategoryIcon';
 import PrivacyIcon from './icons/PrivacyIcon';
 import MapPinIcon from './icons/MapPinIcon';
+import DollarSignIcon from './icons/DollarSignIcon';
+import ListIcon from './icons/ListIcon';
 
 interface CreateAdventureScreenProps {
   currentUser: User;
@@ -59,6 +61,7 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ onCreateA
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [mediaPreview, setMediaPreview] = useState<Media | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
 
   // Dynamic State
   const [location, setLocation] = useState('');
@@ -89,6 +92,12 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ onCreateA
       const type = file.type.startsWith('video') ? 'video' : 'image';
       setMediaPreview({ url, type });
     }
+  };
+
+  const handleLocationSelect = (address: string, coords: { lat: number; lng: number; }) => {
+    setLocation(address);
+    setCoordinates(coords);
+    setIsPickerOpen(false);
   };
   
   const handleSubmit = () => {
@@ -128,8 +137,12 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ onCreateA
         </div>
 
         <FormCard icon={<MapPinIcon />} title="Meeting Point*">
-            {/* Location logic would go here */}
-            <button className={`${inputClasses} text-left text-gray-500 dark:text-gray-400`}>+ Select meeting point</button>
+          <button 
+            onClick={() => setIsPickerOpen(true)} 
+            className={`${inputClasses} text-left ${location ? 'text-gray-800 dark:text-gray-200' : 'text-gray-500 dark:text-gray-400'}`}
+          >
+            {location || '+ Select meeting point'}
+          </button>
         </FormCard>
         
         <FormCard icon={<CategoryIcon />} title="Category*">
@@ -140,6 +153,19 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ onCreateA
               </Chip>
             ))}
           </div>
+           {adventureType === AdventureType.Event && (
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-2 ms-1">{t('eventCategory')}</label>
+              <select value={eventCategory} onChange={e => setEventCategory(e.target.value)} className={inputClasses}>
+                  <option value="">{t('selectCategory')}</option>
+                  <option value="Music">{t('categoryMusic')}</option>
+                  <option value="Art">{t('categoryArt')}</option>
+                  <option value="Food">{t('categoryFood')}</option>
+                  <option value="Sports">{t('categorySports')}</option>
+                  <option value="Other">{t('categoryOther')}</option>
+              </select>
+            </div>
+          )}
         </FormCard>
 
         <FormCard icon={<PencilIcon />} title="Description*">
@@ -153,15 +179,15 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ onCreateA
           </div>
           <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*,video/*" className="hidden"/>
           {mediaPreview && (
-            <div className="mt-2 p-2 border dark:border-neutral-700 rounded-md relative">
-              <img src={mediaPreview.url} className="rounded w-full" />
+            <div className="mt-4 p-2 border-2 border-dashed dark:border-zinc-700 rounded-2xl relative">
+              <img src={mediaPreview.url} className="rounded-xl w-full" alt="Preview"/>
             </div>
           )}
-          <div className="relative my-2">
+          <div className="relative my-4">
               <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-300/50 dark:border-zinc-700/50" /></div>
               <div className="relative flex justify-center text-sm"><span className="px-2 bg-light-bg-secondary dark:bg-dark-bg-secondary text-gray-500 dark:text-gray-400">Soon</span></div>
           </div>
-          <button onClick={handleGenerateDescription} disabled={isGenerating} className="w-full text-center py-3 rounded-2xl font-semibold bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-lg animate-glow">
+          <button onClick={handleGenerateDescription} disabled={isGenerating || !title} className="w-full text-center py-3 rounded-2xl font-semibold bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-lg animate-glow disabled:opacity-50 disabled:animate-none">
             ✨ {isGenerating ? t('generating') : t('generateWithAI')}
           </button>
         </FormCard>
@@ -172,12 +198,27 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ onCreateA
               <option value={AdventurePrivacy.Followers}>{t('AdventurePrivacy_Followers')}</option>
               <option value={AdventurePrivacy.Twins}>{t('AdventurePrivacy_Twins')}</option>
             </select>
+             {privacy === AdventurePrivacy.Twins && (
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-2 ms-1">{t('subPrivacyLabel')}</label>
+                <select value={subPrivacy} onChange={e => setSubPrivacy(e.target.value as AdventurePrivacy.Public | AdventurePrivacy.Followers)} className={inputClasses}>
+                  <option value={AdventurePrivacy.Public}>{t('AdventurePrivacy_Public')}</option>
+                  <option value={AdventurePrivacy.Followers}>{t('AdventurePrivacy_Followers')}</option>
+                </select>
+              </div>
+            )}
+        </FormCard>
+
+        <FormCard icon={<DollarSignIcon />} title={t('budget')}>
+            <input type="number" value={budget} onChange={e => setBudget(e.target.value)} className={inputClasses} placeholder="0"/>
         </FormCard>
 
         <button onClick={handleSubmit} className="w-full bg-brand-orange text-white font-bold py-4 rounded-2xl hover:bg-brand-orange-light transition-colors text-lg">
           {t('publishAdventure')}
         </button>
       </div>
+
+      {isLoaded && <LocationPickerModal isOpen={isPickerOpen} onClose={() => setIsPickerOpen(false)} onLocationSelect={handleLocationSelect} />}
     </>
   );
 };
