@@ -14,27 +14,13 @@ import PrivacyIcon from './icons/PrivacyIcon';
 import MapPinIcon from './icons/MapPinIcon';
 import DollarSignIcon from './icons/DollarSignIcon';
 import ListIcon from './icons/ListIcon';
+import FormCard from './FormCard';
 
 interface CreateAdventureScreenProps {
   currentUser: User;
   onCreateAdventure: (adventure: Omit<Adventure, 'id' | 'authorId' | 'interestedUsers' | 'commentCount' | 'createdAt'>, mediaFile: File | null) => void;
   isLoaded: boolean;
 }
-
-
-// A self-contained card for grouping form sections
-const FormCard: React.FC<{ children: React.ReactNode; icon: React.ReactNode; title: string; subtitle?: string; }> = ({ children, icon, title, subtitle }) => (
-  <div className="bg-light-bg-secondary/70 dark:bg-dark-bg-secondary/70 backdrop-blur-sm rounded-3xl p-4 sm:p-6 space-y-4">
-    <div className="flex items-start space-x-4 text-gray-800 dark:text-gray-200">
-      <div className="flex-shrink-0 w-6 h-6 opacity-80">{icon}</div>
-      <div>
-        <h3 className="font-bold text-lg">{title}</h3>
-        {subtitle && <p className="text-sm text-gray-500 dark:text-gray-400 -mt-1">{subtitle}</p>}
-      </div>
-    </div>
-    <div>{children}</div>
-  </div>
-);
 
 // Chip component for categories and image options
 const Chip: React.FC<{ children: React.ReactNode; isSelected?: boolean; onClick: () => void; className?: string; }> = ({ children, isSelected = false, onClick, className = '' }) => (
@@ -134,6 +120,23 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ onCreateA
           </div>
         </FormCard>
 
+        <FormCard icon={<PrivacyIcon />} title={t('privacy')}>
+            <select value={privacy} onChange={e => setPrivacy(e.target.value as AdventurePrivacy)} className={inputClasses}>
+              <option value={AdventurePrivacy.Public}>{t('AdventurePrivacy_Public')}</option>
+              <option value={AdventurePrivacy.Followers}>{t('AdventurePrivacy_Followers')}</option>
+              <option value={AdventurePrivacy.Twins}>{t('AdventurePrivacy_Twins')}</option>
+            </select>
+             {privacy === AdventurePrivacy.Twins && (
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-2 ms-1">{t('subPrivacyLabel')}</label>
+                <select value={subPrivacy} onChange={e => setSubPrivacy(e.target.value as AdventurePrivacy.Public | AdventurePrivacy.Followers)} className={inputClasses}>
+                  <option value={AdventurePrivacy.Public}>{t('AdventurePrivacy_Public')}</option>
+                  <option value={AdventurePrivacy.Followers}>{t('AdventurePrivacy_Followers')}</option>
+                </select>
+              </div>
+            )}
+        </FormCard>
+
         <FormCard icon={<TitleIcon />} title={t('title')}>
           <input type="text" id="title" placeholder="Adventure on the mountain" value={title} onChange={e => setTitle(e.target.value)} className={inputClasses}/>
         </FormCard>
@@ -190,23 +193,6 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ onCreateA
           <button onClick={handleGenerateDescription} disabled={isGenerating || !title} className="w-full text-center py-3 rounded-2xl font-semibold bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-lg animate-glow disabled:opacity-50 disabled:animate-none">
             ✨ {isGenerating ? t('generating') : t('generateWithAI')}
           </button>
-        </FormCard>
-
-         <FormCard icon={<PrivacyIcon />} title={t('privacy')}>
-            <select value={privacy} onChange={e => setPrivacy(e.target.value as AdventurePrivacy)} className={inputClasses}>
-              <option value={AdventurePrivacy.Public}>{t('AdventurePrivacy_Public')}</option>
-              <option value={AdventurePrivacy.Followers}>{t('AdventurePrivacy_Followers')}</option>
-              <option value={AdventurePrivacy.Twins}>{t('AdventurePrivacy_Twins')}</option>
-            </select>
-             {privacy === AdventurePrivacy.Twins && (
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-2 ms-1">{t('subPrivacyLabel')}</label>
-                <select value={subPrivacy} onChange={e => setSubPrivacy(e.target.value as AdventurePrivacy.Public | AdventurePrivacy.Followers)} className={inputClasses}>
-                  <option value={AdventurePrivacy.Public}>{t('AdventurePrivacy_Public')}</option>
-                  <option value={AdventurePrivacy.Followers}>{t('AdventurePrivacy_Followers')}</option>
-                </select>
-              </div>
-            )}
         </FormCard>
 
         <FormCard icon={<DollarSignIcon />} title={t('budget')}>
