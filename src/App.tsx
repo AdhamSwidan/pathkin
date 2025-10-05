@@ -25,15 +25,12 @@ import ForgotPasswordModal from './components/ForgotPasswordModal';
 import AddStoryModal from './components/AddStoryModal';
 import EditAdventureModal from './components/EditAdventureModal';
 import SavedAdventuresScreen from './components/settings/SavedAdventuresScreen';
-import NotificationsScreen from './components/NotificationsScreen'; // Import the new screen
+import NotificationsScreen from './components/NotificationsScreen';
 import { useTranslation } from './contexts/LanguageContext';
 import { useJsApiLoader } from '@react-google-maps/api';
 import Header from './components/Header';
-
-
-// Fix: Imported the 'Media' type to resolve 'Cannot find name 'Media'' errors.
-// Fix: Removed unused enums 'AdventureType', 'AdventurePrivacy', and 'ActivityStatus' to resolve TS6133 errors.
-import { Screen, Adventure, User, Story, Notification, HydratedAdventure, HydratedStory, NotificationType, HydratedConversation, Conversation, Message, HydratedComment, Comment, HydratedNotification, Media, ActivityStatus } from './types';
+// Fix: Import `ActivityLogEntry` to resolve type error in `handleConfirmAttendance`.
+import { Screen, Adventure, User, Story, Notification, HydratedAdventure, HydratedStory, NotificationType, HydratedConversation, Conversation, Message, HydratedComment, Comment, HydratedNotification, Media, ActivityStatus, ActivityLogEntry } from './types';
 import {
   auth, db, storage,
   onAuthStateChanged,
@@ -50,7 +47,6 @@ import {
   writeBatch,
   deleteObject
 } from './services/firebase';
-
 
 const guestUser: User = {
     id: 'guest',
@@ -75,7 +71,6 @@ const guestUser: User = {
     },
 };
 
-// Fix: Corrected the component definition. The original file was truncated, missing the return statement and export.
 const App: React.FC = () => {
   const [authChecked, setAuthChecked] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -110,7 +105,6 @@ const App: React.FC = () => {
   );
   
   const mainContentRef = useRef<HTMLDivElement>(null);
-  // Fix: Add a ref to hold the comment listener unsubscribe function.
   const commentListenerUnsub = useRef<(() => void) | null>(null);
   const { t } = useTranslation();
 
@@ -143,8 +137,9 @@ const App: React.FC = () => {
             }
         } else {
             setCurrentUser(null);
+            setIsGuest(false);
         }
-        setAuthChecked(true); // Mark auth check as complete
+        setAuthChecked(true);
     });
     return () => unsubscribe();
   }, []);
@@ -155,65 +150,39 @@ const App: React.FC = () => {
     const unsubUsers = onSnapshot(usersQuery, (snapshot) => {
         const fetchedUsers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
         setUsers(fetchedUsers);
-    }, (error: any) => {
-        console.error("Error fetching users:", error);
-    });
+    }, (error) => console.error("Error fetching users:", error));
 
     const adventuresQuery = query(collection(db, "posts"), orderBy("createdAt", "desc"));
     const unsubAdventures = onSnapshot(adventuresQuery, (snapshot) => {
         const fetchedAdventures = snapshot.docs.map(doc => {
             const data = doc.data();
-            return {
-                ...data,
-                id: doc.id,
-                createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() ?? new Date().toISOString(),
-            } as Adventure
+            return { ...data, id: doc.id, createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() ?? new Date().toISOString() } as Adventure
         });
         setAdventures(fetchedAdventures);
-    }, (error: any) => {
-        console.error("Error fetching adventures:", error);
-    });
+    }, (error) => console.error("Error fetching adventures:", error));
 
     const storiesQuery = query(collection(db, "stories"), orderBy("createdAt", "desc"));
     const unsubStories = onSnapshot(storiesQuery, (snapshot) => {
         const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
         const freshStories = snapshot.docs.map(doc => {
             const data = doc.data();
-            return {
-                ...data,
-                id: doc.id,
-                createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() ?? new Date().toISOString(),
-            } as Story
+            return { ...data, id: doc.id, createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() ?? new Date().toISOString() } as Story
         }).filter(story => new Date(story.createdAt) > twentyFourHoursAgo);
         setStories(freshStories);
-    }, (error: any) => {
-        console.error("Error fetching stories:", error);
-    });
+    }, (error) => console.error("Error fetching stories:", error));
 
-    return () => {
-        unsubUsers();
-        unsubAdventures();
-        unsubStories();
-    };
+    return () => { unsubUsers(); unsubAdventures(); unsubStories(); };
   }, []);
 
   // User-specific Firestore Listeners (Notifications, Conversations)
   useEffect(() => {
-    if (!currentUser) {
-        setNotifications([]);
-        setConversations([]);
-        return;
-    }
+    if (!currentUser) { setNotifications([]); setConversations([]); return; }
 
     const notificationsQuery = query(collection(db, "notifications"), where("recipientId", "==", currentUser.id), orderBy("createdAt", "desc"));
     const unsubNotifications = onSnapshot(notificationsQuery, (snapshot) => {
         setNotifications(snapshot.docs.map(doc => {
              const data = doc.data();
-             return {
-                ...data,
-                id: doc.id,
-                createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() ?? new Date().toISOString(),
-            } as Notification
+             return { ...data, id: doc.id, createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() ?? new Date().toISOString() } as Notification
         }));
     });
 
@@ -221,105 +190,349 @@ const App: React.FC = () => {
     const unsubConversations = onSnapshot(conversationsQuery, (snapshot) => {
         setConversations(snapshot.docs.map(doc => {
              const data = doc.data();
-             return {
-                ...data,
-                id: doc.id,
-                updatedAt: (data.updatedAt as Timestamp)?.toDate().toISOString() ?? new Date().toISOString(),
-                lastMessage: data.lastMessage ? {
-                    ...data.lastMessage,
-                    createdAt: (data.lastMessage.createdAt as Timestamp)?.toDate().toISOString() ?? new Date().toISOString()
-                } : undefined,
-                unreadCount: data.unreadCount || {}, // Fetch unreadCount
-            } as Conversation
+             return { ...data, id: doc.id, updatedAt: (data.updatedAt as Timestamp)?.toDate().toISOString() ?? new Date().toISOString(), lastMessage: data.lastMessage ? { ...data.lastMessage, createdAt: (data.lastMessage.createdAt as Timestamp)?.toDate().toISOString() ?? new Date().toISOString() } : undefined, unreadCount: data.unreadCount || {}, } as Conversation
         }));
     });
 
-    return () => {
-        unsubNotifications();
-        unsubConversations();
-    };
+    return () => { unsubNotifications(); unsubConversations(); };
   }, [currentUser]);
+
+  // Comments listener
+  useEffect(() => {
+    if (commentListenerUnsub.current) { commentListenerUnsub.current(); }
+    if (!selectedAdventure) { setComments([]); return; }
+
+    const commentsQuery = query(collection(db, "posts", selectedAdventure.id, "comments"), orderBy("createdAt", "asc"));
+    commentListenerUnsub.current = onSnapshot(commentsQuery, (snapshot) => {
+        setComments(snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: (doc.data().createdAt as Timestamp)?.toDate().toISOString() ?? new Date().toISOString() } as Comment)));
+    });
+    return () => { if (commentListenerUnsub.current) { commentListenerUnsub.current(); } };
+  }, [selectedAdventure]);
 
 
   // Data Hydration
-  const hydratedAdventures: HydratedAdventure[] = useMemo(() => {
-      return adventures.map(adventure => {
-        const author = users.find(u => u.id === adventure.authorId) || guestUser;
-        return { ...adventure, author };
-      }).filter(Boolean);
-  }, [adventures, users]);
-
-  const hydratedStories: HydratedStory[] = useMemo(() => {
-    return stories
-      .map(story => {
-        const author = users.find(u => u.id === story.authorId);
-        if (!author) return null;
-        return { ...story, author };
-      })
-      .filter((s): s is HydratedStory => s !== null);
-  }, [stories, users]);
-
+  const hydratedAdventures: HydratedAdventure[] = useMemo(() => adventures.map(adventure => ({ ...adventure, author: users.find(u => u.id === adventure.authorId) || guestUser })).filter(Boolean), [adventures, users]);
+  const hydratedStories: HydratedStory[] = useMemo(() => stories.map(story => ({ ...story, author: users.find(u => u.id === story.authorId)! })).filter(s => s.author), [stories, users]);
   const hydratedConversations: HydratedConversation[] = useMemo(() => {
     if (!currentUser) return [];
-    return conversations
-        .map(convo => {
-            const participantId = convo.participants.find(p => p !== currentUser.id);
-            const participant = users.find(u => u.id === participantId);
-            if (!participant) return null;
-            return { ...convo, participant };
-        })
-        .filter((c): c is HydratedConversation => c !== null)
-        .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+    return conversations.map(convo => {
+        const participantId = convo.participants.find(p => p !== currentUser.id);
+        const participant = users.find(u => u.id === participantId);
+        if (!participant) return null;
+        return { ...convo, participant };
+    }).filter((c): c is HydratedConversation => c !== null).sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
   }, [conversations, users, currentUser]);
-  
-  // Fix: Rewrote hydration logic to avoid complex type predicate errors (TS2322, TS2677).
-  const hydratedNotifications: HydratedNotification[] = useMemo(() => {
-    const result: HydratedNotification[] = [];
-    for (const notif of notifications) {
-        const user = users.find(u => u.id === notif.userId);
-        if (user) {
-            const adventure = hydratedAdventures.find(p => p.id === notif.adventureId);
-            result.push({ ...notif, user, adventure });
-        }
-    }
-    return result;
-  }, [notifications, users, hydratedAdventures]);
-
-  const hydratedComments: HydratedComment[] = useMemo(() => {
-    return comments
-        .map(comment => {
-            const author = users.find(u => u.id === comment.authorId);
-            if (!author) return null; // Or use guest user
-            return { ...comment, author };
-        })
-        .filter((c): c is HydratedComment => c !== null);
-  }, [comments, users]);
-
+  const hydratedNotifications: HydratedNotification[] = useMemo(() => notifications.map(notif => {
+    const user = users.find(u => u.id === notif.userId);
+    const adventure = hydratedAdventures.find(p => p.id === notif.adventureId);
+    return { ...notif, user, adventure };
+  }).filter(n => n.user) as HydratedNotification[], [notifications, users, hydratedAdventures]);
+  const hydratedComments: HydratedComment[] = useMemo(() => comments.map(comment => ({ ...comment, author: users.find(u => u.id === comment.authorId)! })).filter(c => c.author), [comments, users]);
 
   const hasUnreadNotifications = useMemo(() => notifications.some(n => !n.read), [notifications]);
 
-  // Screen Navigation
-  const pushScreen = (screen: Screen) => {
-    setScreenStack(prev => [...prev, screen]);
-    setActiveScreen(screen);
-    mainContentRef.current?.scrollTo(0, 0);
+  // Navigation
+  const pushScreen = (screen: Screen) => { setScreenStack(prev => [...prev, screen]); setActiveScreen(screen); mainContentRef.current?.scrollTo(0, 0); };
+  const popScreen = () => { if (screenStack.length <= 1) return; const newStack = screenStack.slice(0, -1); setActiveScreen(newStack[newStack.length - 1]); setScreenStack(newStack); mainContentRef.current?.scrollTo(0, 0); };
+  const resetToScreen = (screen: Screen) => { setScreenStack([screen]); setActiveScreen(screen); };
+  
+  // Handlers
+  const handleShowToast = (message: string) => { setToastMessage(message); };
+  const handleGuestAction = () => { handleShowToast(t('guestToastMessage')); };
+
+  // --- Auth Handlers ---
+  const handleLogin = async (email: string, pass: string) => {
+    try { await signInWithEmailAndPassword(auth, email, pass); resetToScreen('feed'); } 
+    catch (error) { console.error(error); handleShowToast(t('invalidCredentials')); }
+  };
+  const handleSignUp = async (name: string, username: string, email: string, pass: string, birthday: string, gender: string, country: string) => {
+    try {
+        const usernameQuery = query(collection(db, "users"), where("username", "==", username));
+        const usernameSnap = await getDocs(usernameQuery);
+        if (!usernameSnap.empty) { handleShowToast(t('usernameExistsError')); return; }
+
+        const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+        // Fix: Cast `gender` to the correct type to resolve the TypeScript error.
+        const newUser: User = { id: userCredential.user.uid, name, username, email, followers: [], following: [], repostedAdventures: [], savedAdventures: [], activityLog: [], bio: '', interests: [], avatarUrl: `https://picsum.photos/seed/${userCredential.user.uid}/200`, coverUrl: `https://picsum.photos/seed/${userCredential.user.uid}-cover/800/200`, birthday, gender: gender as User['gender'], country, isPrivate: false, privacySettings: { showFollowLists: true, showStats: true, showCompletedActivities: true, allowTwinSearch: true } };
+        await setDoc(doc(db, 'users', userCredential.user.uid), newUser);
+        resetToScreen('feed');
+    } catch (error: any) { console.error(error); if (error.code === 'auth/email-already-in-use') { handleShowToast(t('emailExistsError')); } }
+  };
+  const handleSocialLogin = async (providerName: 'google') => {
+    const provider = new GoogleAuthProvider();
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      const userDocRef = doc(db, 'users', user.uid);
+      const docSnap = await getDoc(userDocRef);
+      if (!docSnap.exists()) {
+        const newUser: User = { id: user.uid, name: user.displayName || 'New User', username: user.email?.split('@')[0] || `user${Date.now()}`, email: user.email || '', followers: [], following: [], repostedAdventures: [], savedAdventures: [], activityLog: [], bio: '', interests: [], avatarUrl: user.photoURL || `https://picsum.photos/seed/${user.uid}/200`, isPrivate: false, privacySettings: { showFollowLists: true, showStats: true, showCompletedActivities: true, allowTwinSearch: true } };
+        await setDoc(userDocRef, newUser);
+      }
+      resetToScreen('feed');
+    } catch (error) { console.error("Social login error:", error); }
+  };
+  const handleGuestLogin = () => { setIsGuest(true); resetToScreen('feed'); };
+  const handleLogout = async () => { await signOut(auth); resetToScreen('feed'); };
+  const handleForgotPassword = async (email: string) => { try { await sendPasswordResetEmail(auth, email); } catch (error) { console.error(error); } };
+
+  // --- Adventure Handlers ---
+  const handleCreateAdventure = async (adventureData: Omit<Adventure, 'id' | 'authorId' | 'interestedUsers' | 'commentCount' | 'createdAt'>, mediaFile: File | null) => {
+    if (!currentUser) return;
+    try {
+        let media: Media | undefined = undefined;
+        if (mediaFile) {
+            const mediaRef = ref(storage, `posts/${currentUser.id}_${Date.now()}`);
+            await uploadBytes(mediaRef, mediaFile);
+            const url = await getDownloadURL(mediaRef);
+            media = { url, type: mediaFile.type.startsWith('video') ? 'video' : 'image' };
+        }
+        await addDoc(collection(db, 'posts'), { ...adventureData, authorId: currentUser.id, interestedUsers: [], commentCount: 0, createdAt: serverTimestamp(), ...(media && { media: [media] }) });
+        handleShowToast(t('adventurePublished'));
+        resetToScreen('feed');
+    } catch (error) { console.error("Error creating adventure:", error); }
+  };
+   const handleUpdateAdventure = async (adventureId: string, updatedData: Partial<Adventure>) => {
+    try {
+        const adventureRef = doc(db, 'posts', adventureId);
+        await updateDoc(adventureRef, updatedData);
+        handleShowToast(t('adventureUpdatedSuccessfully'));
+        setEditingAdventure(null);
+    } catch (error) { console.error("Error updating adventure:", error); }
+  };
+  const handleDeleteAdventure = async (adventureId: string) => {
+    try {
+      // Find adventure to get media URL for deletion
+      const adventureToDelete = adventures.find(p => p.id === adventureId);
+      if(adventureToDelete?.media?.[0]?.url) {
+        const mediaRef = ref(storage, adventureToDelete.media[0].url);
+        await deleteObject(mediaRef).catch(e => console.error("Could not delete storage object:", e));
+      }
+      await deleteDoc(doc(db, 'posts', adventureId));
+      handleShowToast(t('adventureDeletedSuccessfully'));
+    } catch(e) { console.error("Error deleting adventure:", e); }
+  };
+  const handleToggleInterest = async (adventureId: string) => {
+    if (!currentUser) return;
+    const adventureRef = doc(db, 'posts', adventureId);
+    const adventure = adventures.find(p => p.id === adventureId);
+    const isInterested = (adventure?.interestedUsers || []).includes(currentUser.id);
+    await updateDoc(adventureRef, { interestedUsers: isInterested ? arrayRemove(currentUser.id) : arrayUnion(currentUser.id) });
+    if (!isInterested && adventure?.authorId !== currentUser.id) {
+        await addDoc(collection(db, 'notifications'), { recipientId: adventure.authorId, userId: currentUser.id, adventureId, text: t('interestNotificationText', { title: adventure.title }), type: 'interest', read: false, createdAt: serverTimestamp() });
+    }
+  };
+  const handleToggleRepost = async (adventureId: string) => {
+    if (!currentUser) return;
+    const userRef = doc(db, 'users', currentUser.id);
+    const isReposted = (currentUser.repostedAdventures || []).includes(adventureId);
+    await updateDoc(userRef, { repostedAdventures: isReposted ? arrayRemove(adventureId) : arrayUnion(adventureId) });
+  };
+  const handleToggleSave = async (adventureId: string) => {
+    if (!currentUser) return;
+    const userRef = doc(db, 'users', currentUser.id);
+    const isSaved = (currentUser.savedAdventures || []).includes(adventureId);
+    await updateDoc(userRef, { savedAdventures: isSaved ? arrayRemove(adventureId) : arrayUnion(adventureId) });
+  };
+  const handleShareAdventure = async (adventure: HydratedAdventure) => {
+    if (navigator.share) {
+      await navigator.share({ title: adventure.title, text: t('shareAdventureText', { authorName: adventure.author.name }), url: window.location.href });
+    } else { handleShowToast(t('sharingNotSupported')); }
+  };
+  const handleShareProfile = async (user: User) => {
+     if (navigator.share) {
+      await navigator.share({ title: user.name, text: t('shareProfileText', { name: user.name }), url: window.location.href });
+    } else { handleShowToast(t('sharingNotSupported')); }
+  };
+  const handleToggleCompleted = async (adventureId: string) => {
+      if (!currentUser) return;
+      const adventure = adventures.find(p => p.id === adventureId);
+      if (!adventure || new Date(adventure.startDate) > new Date()) { handleShowToast(t('adventureNotEnded')); return; }
+      const userRef = doc(db, 'users', currentUser.id);
+      const activityLog = currentUser.activityLog || [];
+      const existingEntry = activityLog.find(a => a.adventureId === adventureId);
+
+      if (existingEntry) { handleShowToast(t('alreadyMarkedDone')); return; }
+
+      const newLog = [...activityLog, { adventureId, status: ActivityStatus.Pending }];
+      await updateDoc(userRef, { activityLog: newLog });
+      await addDoc(collection(db, 'notifications'), { recipientId: adventure.authorId, userId: currentUser.id, adventureId, attendeeId: currentUser.id, attendeeName: currentUser.name, text: t('attendanceRequestNotification', { title: adventure.title }), type: 'attendanceRequest', read: false, createdAt: serverTimestamp() });
+      handleShowToast(t('confirmationRequested'));
   };
 
-  // Fix: Modified popScreen to read from 'screenStack', resolving the "never read" error.
-  const popScreen = () => {
-    if (screenStack.length <= 1) return; // Prevent popping the last screen.
-    const newStack = screenStack.slice(0, -1);
-    setActiveScreen(newStack[newStack.length - 1]);
-    setScreenStack(newStack);
-    // Fix: Completed truncated line to scroll to top on screen pop.
-    mainContentRef.current?.scrollTo(0, 0);
+  // --- Story Handlers ---
+  const handleCreateStory = async (mediaFile: File) => {
+    if (!currentUser) return;
+    try {
+      const mediaRef = ref(storage, `stories/${currentUser.id}_${Date.now()}`);
+      await uploadBytes(mediaRef, mediaFile);
+      const url = await getDownloadURL(mediaRef);
+      const media: Media = { url, type: mediaFile.type.startsWith('video') ? 'video' : 'image' };
+      await addDoc(collection(db, 'stories'), { authorId: currentUser.id, media, createdAt: serverTimestamp() });
+    } catch (error) { console.error("Error creating story:", error); }
+  };
+  const handleDeleteStory = async (story: HydratedStory) => {
+    try {
+        const storyRef = doc(db, 'stories', story.id);
+        const mediaRef = ref(storage, story.media.url);
+        await deleteObject(mediaRef);
+        await deleteDoc(storyRef);
+    } catch (e) { console.error("Error deleting story:", e) }
   };
 
-  // NOTE: The original file was truncated. The following render logic is a placeholder
-  // to fix the compilation errors. The full UI implementation with all components
-  // and handlers needs to be restored.
+  // --- Social Handlers ---
+  const handleFollowToggle = async (userId: string) => {
+    if (!currentUser) return;
+    const myRef = doc(db, 'users', currentUser.id);
+    const theirRef = doc(db, 'users', userId);
+    const isFollowing = (currentUser.following || []).includes(userId);
+    const batch = writeBatch(db);
+    batch.update(myRef, { following: isFollowing ? arrayRemove(userId) : arrayUnion(userId) });
+    batch.update(theirRef, { followers: isFollowing ? arrayRemove(currentUser.id) : arrayUnion(currentUser.id) });
+    await batch.commit();
+  };
+  const handleRemoveFollower = async (followerId: string) => {
+     if (!currentUser) return;
+     const myRef = doc(db, 'users', currentUser.id);
+     const theirRef = doc(db, 'users', followerId);
+     const batch = writeBatch(db);
+     batch.update(myRef, { followers: arrayRemove(followerId) });
+     batch.update(theirRef, { following: arrayRemove(currentUser.id) });
+     await batch.commit();
+     handleShowToast(t('followerRemoved'));
+  };
 
-  // Fix: Added a return statement with a basic UI structure to resolve the 'React.FC' type error.
+  // --- Messaging Handlers ---
+  const handleSendMessage = async (receiverId: string, text: string) => {
+    if (!currentUser) return;
+    const convoId = [currentUser.id, receiverId].sort().join('_');
+    const convoRef = doc(db, 'conversations', convoId);
+    const message = { id: '', senderId: currentUser.id, text, createdAt: serverTimestamp() };
+
+    const docSnap = await getDoc(convoRef);
+    if (!docSnap.exists()) {
+        await setDoc(convoRef, { participants: [currentUser.id, receiverId], updatedAt: serverTimestamp(), unreadCount: { [receiverId]: 1 } });
+    } else {
+        await updateDoc(convoRef, { updatedAt: serverTimestamp(), [`unreadCount.${receiverId}`]: increment(1) });
+    }
+    await addDoc(collection(convoRef, 'messages'), message);
+    await updateDoc(convoRef, { lastMessage: { senderId: currentUser.id, text, createdAt: serverTimestamp() } });
+  };
+  
+  // --- Comment Handler ---
+  const handleAddComment = async (adventureId: string, text: string) => {
+    if (!currentUser) return;
+    const commentData = { authorId: currentUser.id, text, createdAt: serverTimestamp() };
+    await addDoc(collection(db, 'posts', adventureId, 'comments'), commentData);
+    await updateDoc(doc(db, 'posts', adventureId), { commentCount: increment(1) });
+    const adventure = adventures.find(p => p.id === adventureId);
+    if (adventure && adventure.authorId !== currentUser.id) {
+        await addDoc(collection(db, 'notifications'), { recipientId: adventure.authorId, userId: currentUser.id, adventureId, text: t('commentNotificationText', { title: adventure.title }), type: 'comment', read: false, createdAt: serverTimestamp() });
+    }
+  };
+  
+  // --- Notification Handlers ---
+  const handleConfirmAttendance = async (notificationId: string, adventureId: string, attendeeId: string, didAttend: boolean) => {
+    const notificationRef = doc(db, 'notifications', notificationId);
+    const adventure = adventures.find(p => p.id === adventureId);
+    if (didAttend && adventure) {
+        const attendeeRef = doc(db, 'users', attendeeId);
+        await runTransaction(db, async (transaction) => {
+            const attendeeDoc = await transaction.get(attendeeRef);
+            if (!attendeeDoc.exists()) throw "Attendee not found!";
+            const activityLog = attendeeDoc.data().activityLog || [];
+            const newLog = activityLog.map((entry: ActivityLogEntry) => entry.adventureId === adventureId ? { ...entry, status: ActivityStatus.Confirmed } : entry);
+            transaction.update(attendeeRef, { activityLog: newLog });
+        });
+        await addDoc(collection(db, 'notifications'), { recipientId: attendeeId, userId: currentUser!.id, adventureId, text: t('attendanceConfirmedNotification', { title: adventure.title }), type: 'attendanceConfirmed', read: false, createdAt: serverTimestamp() });
+        await addDoc(collection(db, 'notifications'), { recipientId: attendeeId, userId: currentUser!.id, adventureId, text: t('rateExperienceNotification', { title: adventure.title }), type: 'rateExperience', read: false, createdAt: serverTimestamp() });
+    }
+    await deleteDoc(notificationRef);
+  };
+  const handleMarkAllNotificationsAsRead = async () => {
+    if (!currentUser) return;
+    const unread = notifications.filter(n => !n.read);
+    if (unread.length === 0) return;
+    const batch = writeBatch(db);
+    unread.forEach(n => {
+      batch.update(doc(db, 'notifications', n.id), { read: true });
+    });
+    await batch.commit();
+  };
+  const handleNotificationClick = (notification: HydratedNotification) => {
+      if(notification.type === 'rateExperience' && notification.adventure) {
+          setRatingModalAdventure(notification.adventure);
+      } else if (notification.adventureId) {
+          const adventure = hydratedAdventures.find(p => p.id === notification.adventureId);
+          if (adventure) setSelectedAdventure(adventure);
+      }
+  };
+
+  // --- Rating Handler ---
+  const handleSubmitRating = async (adventureId: string, rating: number) => {
+    const adventure = adventures.find(p => p.id === adventureId);
+    if (!adventure) return;
+    const hostRef = doc(db, 'users', adventure.authorId);
+    await runTransaction(db, async (transaction) => {
+        const hostDoc = await transaction.get(hostRef);
+        if (!hostDoc.exists()) throw "Host not found!";
+        const currentTotal = hostDoc.data().totalRatings || 0;
+        const currentAvg = hostDoc.data().averageRating || 0;
+        const newTotal = currentTotal + 1;
+        const newAvg = ((currentAvg * currentTotal) + rating) / newTotal;
+        transaction.update(hostRef, { totalRatings: newTotal, averageRating: newAvg });
+    });
+    setRatingModalAdventure(null);
+    handleShowToast(t('feedbackThanks'));
+  };
+
+  // --- Profile Handler ---
+  const handleUpdateProfile = async (updatedData: Partial<User>, avatarFile?: File, coverFile?: File) => {
+    if (!currentUser) return;
+    try {
+        let avatarUrl = currentUser.avatarUrl;
+        let coverUrl = currentUser.coverUrl;
+        if (avatarFile) {
+            const avatarRef = ref(storage, `avatars/${currentUser.id}`);
+            await uploadBytes(avatarRef, avatarFile);
+            avatarUrl = await getDownloadURL(avatarRef);
+        }
+        if (coverFile) {
+            const coverRef = ref(storage, `covers/${currentUser.id}`);
+            await uploadBytes(coverRef, coverFile);
+            coverUrl = await getDownloadURL(coverRef);
+        }
+        await updateDoc(doc(db, 'users', currentUser.id), { ...updatedData, avatarUrl, coverUrl });
+        handleShowToast(t('settingsSaved'));
+        popScreen();
+    } catch (error) { console.error("Error updating profile:", error); }
+  };
+  
+  // Render Logic
+  const renderScreen = () => {
+    const userForProfile = (activeScreen === 'userProfile' && viewingUser) ? viewingUser : (currentUser || guestUser);
+    
+    switch (activeScreen) {
+      // Fix: Removed the `onGuestAction` prop from FeedScreen as it's not defined in its props.
+      case 'feed': return <FeedScreen adventures={hydratedAdventures.filter(p => !p.author.isPrivate || (currentUser?.following?.includes(p.author.id)) || p.author.id === currentUser?.id)} stories={hydratedStories} currentUser={currentUser || guestUser} onSelectAdventure={setSelectedAdventure} onSendMessage={(user) => { setSelectedConversationUser(user); pushScreen('chatDetail'); }} onToggleInterest={handleToggleInterest} onSelectStories={(stories) => { setViewingStories(stories); const firstStory = stories[0]; if(firstStory){ const newTimestamps = {...viewedStoryTimestamps, [firstStory.author.id]: new Date().toISOString()}; setViewedStoryTimestamps(newTimestamps); localStorage.setItem('viewedStoryTimestamps', JSON.stringify(newTimestamps)); } }} onAddStory={() => setIsAddStoryModalOpen(true)} onNavigateToNotifications={() => pushScreen('notifications')} hasUnreadNotifications={hasUnreadNotifications} onNavigateToChat={() => pushScreen('chat')} onViewProfile={(user) => { setViewingUser(user); pushScreen('userProfile'); }} onRepostToggle={handleToggleRepost} onSaveToggle={handleToggleSave} onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted} isGuest={isGuest} onViewLocationOnMap={(adv) => { setMapAdventuresToShow([adv]); resetToScreen('map'); }} onDeleteAdventure={handleDeleteAdventure} onEditAdventure={setEditingAdventure} viewedStoryTimestamps={viewedStoryTimestamps} />;
+      case 'map': return <MapScreen adventuresToShow={mapAdventuresToShow || adventures} isLoaded={isLoaded} onShowToast={handleShowToast} />;
+      case 'create': return <CreateAdventureScreen currentUser={currentUser!} onCreateAdventure={handleCreateAdventure} isLoaded={isLoaded} />;
+      case 'search': return <SearchScreen adventures={hydratedAdventures} allUsers={users} currentUser={currentUser || guestUser} isGuest={isGuest} isLoaded={isLoaded} onSelectAdventure={setSelectedAdventure} onSendMessage={(user) => { setSelectedConversationUser(user); pushScreen('chatDetail'); }} onToggleInterest={handleToggleInterest} onNavigateToFindTwins={() => pushScreen('findTwins')} onViewProfile={(user) => { setViewingUser(user); pushScreen('userProfile'); }} onShowResultsOnMap={(advs) => { setMapAdventuresToShow(advs); resetToScreen('map'); }} onRepostToggle={handleToggleRepost} onSaveToggle={handleToggleSave} onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted} onViewLocationOnMap={(adv) => { setMapAdventuresToShow([adv]); resetToScreen('map'); }} onDeleteAdventure={handleDeleteAdventure} onEditAdventure={setEditingAdventure} onFollowToggle={handleFollowToggle} />;
+      case 'chat': return <ChatScreen conversations={hydratedConversations} onSelectConversation={(user) => { setSelectedConversationUser(user); pushScreen('chatDetail'); }} onBack={popScreen} currentUser={currentUser!} />;
+      case 'profile': return <ProfileScreen user={currentUser || guestUser} allAdventures={hydratedAdventures} onSelectAdventure={setSelectedAdventure} onSendMessage={(user) => { setSelectedConversationUser(user); pushScreen('chatDetail'); }} onToggleInterest={handleToggleInterest} onViewProfile={(user) => { setViewingUser(user); pushScreen('userProfile'); }} onRepostToggle={handleToggleRepost} onSaveToggle={handleToggleSave} onShareProfile={handleShareProfile} onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted} onOpenFollowList={(user, listType) => setFollowListModal({ isOpen: true, user, listType })} onNavigateToSettings={() => pushScreen('settings')} onViewLocationOnMap={(adv) => { setMapAdventuresToShow([adv]); resetToScreen('map'); }} onDeleteAdventure={handleDeleteAdventure} onEditAdventure={setEditingAdventure} />;
+      case 'chatDetail': return <ChatDetailScreen participant={selectedConversationUser!} currentUser={currentUser!} onBack={popScreen} onSendMessage={handleSendMessage} />;
+      case 'findTwins': return <FindTwinsScreen currentUser={currentUser!} allUsers={users} onSendMessage={(user) => { setSelectedConversationUser(user); pushScreen('chatDetail'); }} onBack={popScreen} onFollowToggle={handleFollowToggle} onViewProfile={(user) => { setViewingUser(user); pushScreen('userProfile'); }} />;
+      case 'userProfile': return <UserProfileScreen user={viewingUser!} currentUser={currentUser || guestUser} allAdventures={hydratedAdventures} onBack={popScreen} onSelectAdventure={setSelectedAdventure} onSendMessage={(user) => { setSelectedConversationUser(user); pushScreen('chatDetail'); }} onToggleInterest={handleToggleInterest} onFollowToggle={handleFollowToggle} onViewProfile={(user) => { setViewingUser(user); pushScreen('userProfile'); }} onRepostToggle={handleToggleRepost} onSaveToggle={handleToggleSave} onShareProfile={handleShareProfile} onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted} onOpenFollowList={(user, listType) => setFollowListModal({ isOpen: true, user, listType })} isGuest={isGuest} onViewLocationOnMap={(adv) => { setMapAdventuresToShow([adv]); resetToScreen('map'); }} onDeleteAdventure={handleDeleteAdventure} onEditAdventure={setEditingAdventure} />;
+      case 'settings': return <SettingsScreen onBack={popScreen} onNavigate={pushScreen} onLogout={handleLogout} />;
+      case 'editProfile': return <EditProfileScreen onBack={popScreen} currentUser={currentUser!} onUpdateProfile={handleUpdateProfile} />;
+      case 'privacySecurity': return <PrivacySecurityScreen onBack={popScreen} currentUser={currentUser!} onUpdateProfile={handleUpdateProfile} />;
+      case 'language': return <LanguageScreen onBack={popScreen} />;
+      case 'savedAdventures': return <SavedAdventuresScreen onBack={popScreen} adventures={hydratedAdventures.filter(p => currentUser?.savedAdventures?.includes(p.id))} currentUser={currentUser!} onSelectAdventure={setSelectedAdventure} onSendMessage={(user) => { setSelectedConversationUser(user); pushScreen('chatDetail'); }} onToggleInterest={handleToggleInterest} onViewProfile={(user) => { setViewingUser(user); pushScreen('userProfile'); }} onRepostToggle={handleToggleRepost} onSaveToggle={handleToggleSave} onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted} onViewLocationOnMap={(adv) => { setMapAdventuresToShow([adv]); resetToScreen('map'); }} onDeleteAdventure={handleDeleteAdventure} onEditAdventure={setEditingAdventure} />;
+      case 'notifications': return <NotificationsScreen notifications={hydratedNotifications} onBack={popScreen} onConfirmAttendance={handleConfirmAttendance} onNotificationClick={handleNotificationClick} onMarkAllAsRead={handleMarkAllNotificationsAsRead} />;
+      default: return <div>Not implemented</div>;
+    }
+  };
+
   if (!authChecked) {
     return (
       <div className="h-screen w-screen bg-slate-50 dark:bg-neutral-950 flex items-center justify-center">
@@ -328,52 +541,32 @@ const App: React.FC = () => {
     );
   }
 
-  // Placeholder for AuthScreen, as handlers are missing.
   if (!currentUser && !isGuest) {
-    // A real implementation would require handler functions for login, signup, etc.
-    return (
-      <AuthScreen
-        onLogin={() => alert('Login handler not implemented.')}
-        onSignUp={() => alert('Sign-up handler not implemented.')}
-        onSocialLogin={() => alert('Social login handler not implemented.')}
-        onGuestLogin={() => alert('Guest login handler not implemented.')}
-        onForgotPassword={() => alert('Forgot password handler not implemented.')}
-      />
-    );
+    return <AuthScreen onLogin={handleLogin} onSignUp={handleSignUp} onSocialLogin={handleSocialLogin} onGuestLogin={handleGuestLogin} onForgotPassword={() => setIsForgotPasswordModalOpen(true)} />;
   }
 
   return (
-    <div className="w-screen h-screen flex bg-slate-50 dark:bg-neutral-950 text-gray-800 dark:text-gray-200">
-      {/* Placeholder for SideNav */}
-       <SideNav 
-        activeScreen={activeScreen} 
-        setActiveScreen={setActiveScreen} 
-        hasUnreadNotifications={hasUnreadNotifications} 
-        isGuest={isGuest} 
-        onGuestAction={() => { /* Placeholder */ }} 
-      />
+    <div className="w-screen h-screen flex bg-slate-100 dark:bg-neutral-950 text-gray-800 dark:text-gray-200">
+      <SideNav activeScreen={activeScreen} setActiveScreen={isGuest ? handleGuestAction : (screen) => resetToScreen(screen)} hasUnreadNotifications={hasUnreadNotifications} isGuest={isGuest} onGuestAction={handleGuestAction} />
       
-      <main ref={mainContentRef} className="flex-1 overflow-y-auto pb-16 xl:pb-0">
-        <Header title={`Screen: ${activeScreen}`} onBack={screenStack.length > 1 ? popScreen : undefined} />
-        <div className="p-4">
-          <p>Main content area for '{activeScreen}'.</p>
-          <p>This is a placeholder UI because the original file was incomplete.</p>
-          {/* A complete implementation would render the active screen component here */}
-        </div>
+      <main ref={mainContentRef} className="flex-1 max-w-2xl mx-auto xl:ms-0 xl:me-auto w-full border-x border-gray-200 dark:border-neutral-800 flex flex-col overflow-y-auto pb-16 xl:pb-0 bg-slate-50 dark:bg-neutral-950">
+        {isGuest && <GuestHeader onLoginClick={handleLogout} />}
+        {renderScreen()}
       </main>
       
-      {/* Placeholder for BottomNav */}
-       <BottomNav 
-        activeScreen={activeScreen} 
-        setActiveScreen={setActiveScreen} 
-        isGuest={isGuest} 
-        onGuestAction={() => { /* Placeholder */ }} 
-       />
-
+      <BottomNav activeScreen={activeScreen} setActiveScreen={(screen) => resetToScreen(screen)} isGuest={isGuest} onGuestAction={handleGuestAction} />
+      
+      {/* --- Modals --- */}
+      {selectedAdventure && <AdventureDetailModal adventure={selectedAdventure} comments={hydratedComments} currentUser={currentUser} onClose={() => setSelectedAdventure(null)} onAddComment={handleAddComment} />}
+      {viewingStories && <StoryViewer stories={viewingStories} onClose={() => setViewingStories(null)} currentUser={currentUser} onDeleteStory={handleDeleteStory} />}
+      {ratingModalAdventure && <RatingModal adventure={ratingModalAdventure} onClose={() => setRatingModalAdventure(null)} onSubmit={handleSubmitRating} />}
+      {followListModal.isOpen && <FollowListModal title={t(followListModal.listType!)} listOwner={followListModal.user!} currentUser={currentUser} users={users.filter(u => followListModal.user?.[followListModal.listType!]?.includes(u.id))} listType={followListModal.listType!} onClose={() => setFollowListModal({ isOpen: false, user: null, listType: null })} onViewProfile={(user) => { setViewingUser(user); setFollowListModal({ isOpen: false, user: null, listType: null }); pushScreen('userProfile'); }} onFollowToggle={handleFollowToggle} onRemoveFollower={handleRemoveFollower} />}
+      {isForgotPasswordModalOpen && <ForgotPasswordModal isOpen={isForgotPasswordModalOpen} onClose={() => setIsForgotPasswordModalOpen(false)} onSubmit={handleForgotPassword} />}
+      {isAddStoryModalOpen && !isGuest && <AddStoryModal isOpen={isAddStoryModalOpen} onClose={() => setIsAddStoryModalOpen(false)} onStoryCreate={handleCreateStory} />}
+      {editingAdventure && <EditAdventureModal adventure={editingAdventure} onClose={() => setEditingAdventure(null)} onUpdateAdventure={handleUpdateAdventure} isLoaded={isLoaded} />}
       {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage(null)} />}
     </div>
   );
 };
 
-// Fix: Added default export for the App component to resolve the module loading error in index.tsx.
 export default App;
