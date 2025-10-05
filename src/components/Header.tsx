@@ -10,9 +10,9 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ title, onBack, rightAction }) => {
   return (
-    <div className="sticky top-0 z-40 bg-slate-50/80 dark:bg-neutral-950/80 backdrop-blur-sm border-b border-gray-200 dark:border-neutral-800 h-14 flex items-center justify-center w-full">
+    <div className="sticky top-0 z-40 bg-light-bg-secondary/80 dark:bg-dark-bg-secondary/80 backdrop-blur-sm border-b border-gray-200 dark:border-neutral-800 h-14 flex items-center justify-center w-full">
       {onBack && (
-        <button onClick={onBack} className="absolute left-2 p-2 text-gray-600 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400">
+        <button onClick={onBack} className="absolute left-2 p-2 text-gray-600 dark:text-gray-300 hover:text-brand-orange dark:hover:text-brand-orange-light">
           <BackIcon />
         </button>
       )}

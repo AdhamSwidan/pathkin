@@ -116,7 +116,7 @@ const AdventureCard: React.FC<AdventureCardProps> = ({
   const disabledClasses = "cursor-not-allowed text-gray-400 dark:text-gray-600";
 
   return (
-    <div className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-lg shadow-sm mb-4">
+    <div className="bg-light-bg-secondary dark:bg-dark-bg-secondary rounded-xl shadow-md shadow-slate-200/50 dark:shadow-black/20 mb-4 overflow-hidden">
       <div className="p-4">
         {/* Adventure Header */}
         <div className="flex items-start justify-between mb-3">
@@ -165,7 +165,7 @@ const AdventureCard: React.FC<AdventureCardProps> = ({
       
       {/* Media Content */}
       {adventure.media && adventure.media.length > 0 && (
-        <div className="bg-gray-100 dark:bg-black">
+        <div className="bg-gray-100 dark:bg-black -mx-0.5">
           {adventure.media[0].type === 'image' ? (
             <img src={adventure.media[0].url} alt="Adventure media" className="w-full max-h-96 object-cover" />
           ) : (
@@ -200,7 +200,7 @@ const AdventureCard: React.FC<AdventureCardProps> = ({
       </div>
       
       {/* Adventure Actions */}
-      <div className="border-t border-gray-200 dark:border-neutral-800 px-4 py-2 flex justify-around items-center text-gray-500 dark:text-gray-400">
+      <div className="border-t border-gray-100 dark:border-neutral-800 px-4 py-2 flex justify-around items-center text-gray-500 dark:text-gray-400">
         <button
           onClick={() => onInterestToggle(adventure.id)}
           disabled={isGuest}

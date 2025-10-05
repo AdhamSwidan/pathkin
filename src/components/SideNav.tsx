@@ -18,7 +18,7 @@ interface SideNavProps {
 }
 
 const NavItem: React.FC<{ icon: React.ReactNode; label: string; isActive: boolean; onClick: () => void; disabled?: boolean; hasBadge?: boolean; }> = ({ icon, label, isActive, onClick, disabled = false, hasBadge = false }) => {
-  const activeClasses = 'bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400';
+  const activeClasses = 'bg-orange-100 dark:bg-orange-900/40 text-brand-orange dark:text-brand-orange-light';
   const inactiveClasses = 'hover:bg-gray-100 dark:hover:bg-neutral-800 text-gray-600 dark:text-gray-300';
   const disabledClasses = 'text-gray-400 dark:text-gray-600 cursor-not-allowed';
   
@@ -60,7 +60,7 @@ const SideNav: React.FC<SideNavProps> = ({ activeScreen, setActiveScreen, hasUnr
    ];
 
   return (
-    <div className="w-64 border-e border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 flex-col justify-between hidden xl:flex">
+    <div className="w-64 border-e border-gray-200 dark:border-neutral-800 bg-light-bg-secondary dark:bg-dark-bg-secondary p-4 flex-col justify-between hidden xl:flex">
         <div>
             <div className="flex items-center mb-8 px-2">
                 <img src="/logo.svg" alt="Pathkin Logo" className="w-8 h-8 mr-2" />

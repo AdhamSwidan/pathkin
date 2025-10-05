@@ -32,9 +32,9 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onSignUp, onSocialLogi
   
   const { t } = useTranslation();
 
-  const inputClasses = "w-full px-4 py-3 rounded-md bg-gray-100 dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-800 dark:text-gray-200";
+  const inputClasses = "w-full px-4 py-3 rounded-md bg-gray-100 dark:bg-dark-bg-secondary border border-gray-200 dark:border-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand-orange text-gray-800 dark:text-gray-200";
   const buttonClasses = "w-full py-3 rounded-md font-semibold text-white transition-colors";
-  const socialButtonClasses = "w-full flex items-center justify-center py-3 rounded-md border border-gray-300 dark:border-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-800 transition-colors";
+  const socialButtonClasses = "w-full flex items-center justify-center py-3 rounded-md border border-gray-300 dark:border-neutral-700 hover:bg-gray-50 dark:hover:bg-dark-bg-secondary transition-colors";
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -67,10 +67,10 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onSignUp, onSocialLogi
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-slate-50 dark:bg-neutral-950 p-4">
+    <div className="min-h-screen w-full flex items-center justify-center bg-light-bg dark:bg-dark-bg p-4">
       <div className="w-full max-w-sm mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-orange-500">{t('appName')}</h1>
+          <h1 className="text-3xl font-bold text-brand-orange">{t('appName')}</h1>
           <p className="text-gray-500 dark:text-gray-400 mt-2">
             {isLogin ? t('welcomeBack') : t('joinCommunity')}
           </p>
@@ -126,7 +126,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onSignUp, onSocialLogi
                     {country || t('selectOption')}
                   </button>
                   {isCountryDropdownOpen && (
-                    <div className="absolute z-10 w-full mt-1 bg-white dark:bg-neutral-800 border dark:border-neutral-700 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                    <div className="absolute z-10 w-full mt-1 bg-white dark:bg-dark-bg-secondary border dark:border-neutral-700 rounded-md shadow-lg max-h-60 overflow-y-auto">
                       <div className="p-2">
                         <input 
                           type="text" 
@@ -160,19 +160,19 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onSignUp, onSocialLogi
           
           {isLogin && (
             <div className="text-end -mt-2">
-                <button type="button" onClick={onForgotPassword} className="text-sm font-semibold text-orange-500 hover:text-orange-600">
+                <button type="button" onClick={onForgotPassword} className="text-sm font-semibold text-brand-orange hover:text-brand-orange-light">
                     {t('forgotPassword')}
                 </button>
             </div>
           )}
           
-          <button type="submit" className={`${buttonClasses} bg-orange-600 hover:bg-orange-700`}>
+          <button type="submit" className={`${buttonClasses} bg-brand-orange hover:bg-brand-orange-light`}>
             {isLogin ? t('logIn') : t('createAccount')}
           </button>
         </form>
 
         <div className="mt-4 text-center">
-             <button type="button" onClick={() => setIsLogin(!isLogin)} className="w-full py-3 rounded-md font-semibold text-orange-500 bg-orange-100/50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/40 transition-colors">
+             <button type="button" onClick={() => setIsLogin(!isLogin)} className="w-full py-3 rounded-md font-semibold text-brand-orange bg-orange-100/50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/40 transition-colors">
                 {isLogin ? t('createNewAccount') : t('backToLogin')}
             </button>
         </div>
@@ -182,7 +182,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onSignUp, onSocialLogi
             <div className="w-full border-t border-gray-300 dark:border-neutral-700" />
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-slate-50 dark:bg-neutral-950 text-gray-500 dark:text-gray-400">{t('or')}</span>
+            <span className="px-2 bg-light-bg dark:bg-dark-bg text-gray-500 dark:text-gray-400">{t('or')}</span>
           </div>
         </div>
 

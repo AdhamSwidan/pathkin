@@ -29,16 +29,16 @@ const containerStyle = {
 const FilterButton: React.FC<{ icon: React.ReactNode; label: string; isActive: boolean; onClick: () => void; }> = ({ icon, label, isActive, onClick }) => (
     <button
         onClick={onClick}
-        className={`flex-shrink-0 flex flex-col items-center justify-center w-20 h-16 rounded-lg transition-colors duration-200 ${
+        className={`flex-shrink-0 flex flex-col items-center justify-center w-20 h-16 rounded-xl transition-colors duration-200 ${
             isActive 
             ? 'bg-orange-100 dark:bg-orange-900/40' 
-            : 'bg-gray-50 dark:bg-neutral-800/50 hover:bg-gray-100 dark:hover:bg-neutral-800'
+            : 'bg-gray-50 dark:bg-dark-bg-secondary/50 hover:bg-gray-100 dark:hover:bg-dark-bg-secondary'
         }`}
     >
-        <div className={`w-6 h-6 flex items-center justify-center ${isActive ? 'text-orange-500' : 'text-gray-500 dark:text-gray-400'}`}>
+        <div className={`w-6 h-6 flex items-center justify-center ${isActive ? 'text-brand-orange' : 'text-gray-500 dark:text-gray-400'}`}>
             {icon}
         </div>
-        <span className={`text-xs mt-1 text-center ${isActive ? 'font-semibold text-orange-600 dark:text-orange-400' : 'text-gray-600 dark:text-gray-300'}`}>
+        <span className={`text-xs mt-1 text-center ${isActive ? 'font-semibold text-brand-orange dark:text-brand-orange-light' : 'text-gray-600 dark:text-gray-300'}`}>
             {label}
         </span>
     </button>
@@ -137,7 +137,7 @@ const MapScreen: React.FC<MapScreenProps> = ({ adventuresToShow, isLoaded, onSho
   return (
     <div className="w-full h-full flex flex-col">
       <Header title={t('mapView')} />
-      <div className="bg-white dark:bg-neutral-900 border-b dark:border-neutral-800 p-2 overflow-x-auto">
+      <div className="bg-light-bg-secondary dark:bg-dark-bg-secondary border-b dark:border-neutral-800 p-2 overflow-x-auto">
           <div className="flex space-x-2">
               {filterOptions.map(option => (
                   <FilterButton
@@ -161,6 +161,7 @@ const MapScreen: React.FC<MapScreenProps> = ({ adventuresToShow, isLoaded, onSho
               options={{
                 disableDefaultUI: true,
                 zoomControl: true,
+                mapTypeId: 'terrain'
               }}
             >
               {filteredAdventures.map(adventure => (
@@ -220,7 +221,7 @@ const MapScreen: React.FC<MapScreenProps> = ({ adventuresToShow, isLoaded, onSho
           </>
         ) : (
           <div className="h-full w-full flex items-center justify-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-orange-500"></div>
+            <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-brand-orange"></div>
           </div>
         )}
       </div>

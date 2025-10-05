@@ -9,6 +9,18 @@ export default {
   darkMode: 'class', // or 'media' or 'class'
   theme: {
     extend: {
+      colors: {
+        'light-bg': '#F8F9FA',
+        'light-bg-secondary': '#FFFFFF',
+        'dark-bg': '#121212',
+        'dark-bg-secondary': '#1E1E1E',
+        'brand-orange': '#F97316',
+        'brand-orange-light': '#FB923C',
+      },
+      borderRadius: {
+        'lg': '0.75rem',
+        'xl': '1rem',
+      },
       fontFamily: {
         sans: ['Tajawal', ...defaultTheme.fontFamily.sans],
       },
