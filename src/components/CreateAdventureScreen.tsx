@@ -142,7 +142,6 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ onCreateA
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [budget, setBudget] = useState('');
-  const [roomCount, setRoomCount] = useState('');
   const [eventCategory, setEventCategory] = useState('');
   const [otherEventCategory, setOtherEventCategory] = useState('');
   const [destinations, setDestinations] = useState<{ location: string; coordinates: { lat: number; lng: number } | null }[]>([]);
@@ -156,7 +155,7 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ onCreateA
     // Reset dynamic fields when adventure type changes
     setLocation(''); setCoordinates(null);
     setStartDate(''); setEndDate('');
-    setBudget(''); setRoomCount('');
+    setBudget('');
     setEventCategory(''); setOtherEventCategory('');
     setDestinations([]); setEndLocation(''); setEndCoordinates(null);
   }, [adventureType]);
@@ -209,10 +208,6 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ onCreateA
               adventureData.destinations = validDestinations;
             }
             break;
-        case AdventureType.Housing:
-            adventureData.budget = parseInt(budget, 10) || 0; // Price
-            if (roomCount) adventureData.roomCount = parseInt(roomCount, 10);
-            break;
         case AdventureType.Event:
             const finalCategory = eventCategory === 'Other' ? otherEventCategory : eventCategory;
             if (finalCategory) adventureData.eventCategory = finalCategory;
@@ -260,20 +255,6 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ onCreateA
                 <div><label className={labelBaseClasses}>{t('endDate')}</label><input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className={`${inputBaseClasses} text-gray-500`}/></div>
             </div>
             <div><label className={labelBaseClasses}>{t('budget')}</label><input type="number" value={budget} onChange={e => setBudget(e.target.value)} className={inputBaseClasses}/></div>
-          </>
-        );
-      case AdventureType.Housing:
-         return (
-          <>
-            <LocationInput label={t('location')} value={location} onValueChange={setLocation} onCoordsChange={setCoordinates} onLocationSelectFromMap={(addr, coords) => {setLocation(addr); setCoordinates(coords);}} isLoaded={isLoaded}/>
-            <div className="grid grid-cols-2 gap-4">
-                <div><label className={labelBaseClasses}>{t('price')}</label><input type="number" value={budget} onChange={e => setBudget(e.target.value)} className={inputBaseClasses}/></div>
-                <div><label className={labelBaseClasses}>{t('roomCount')}</label><input type="number" value={roomCount} onChange={e => setRoomCount(e.target.value)} className={inputBaseClasses}/></div>
-            </div>
-             <div className="grid grid-cols-2 gap-4">
-                <div><label className={labelBaseClasses}>{t('availableFrom')}</label><input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className={`${inputBaseClasses} text-gray-500`}/></div>
-                <div><label className={labelBaseClasses}>{t('availableTo')}</label><input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className={`${inputBaseClasses} text-gray-500`}/></div>
-            </div>
           </>
         );
       case AdventureType.Event:
@@ -336,7 +317,6 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ onCreateA
             <label className={labelBaseClasses}>{t('adventureType')}</label>
             <select value={adventureType} onChange={e => setAdventureType(e.target.value as AdventureType)} className={inputBaseClasses}>
               <option value={AdventureType.Travel}>{t('AdventureType_Travel')}</option>
-              <option value={AdventureType.Housing}>{t('AdventureType_Housing')}</option>
               <option value={AdventureType.Event}>{t('AdventureType_Event')}</option>
               <option value={AdventureType.Hiking}>{t('AdventureType_Hiking')}</option>
               <option value={AdventureType.Camping}>{t('AdventureType_Camping')}</option>

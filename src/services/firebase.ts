@@ -13,6 +13,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup
 } from "firebase/auth";
+// Fix: Changed import path to the scoped package '@firebase/firestore' to resolve module export errors.
 import { 
   getFirestore,
   collection, 
@@ -34,13 +35,14 @@ import {
   runTransaction,
   increment,
   writeBatch
-} from "firebase/firestore";
+} from "@firebase/firestore";
+// Fix: Changed import path to the scoped package '@firebase/storage' to resolve module export errors.
 import { 
   getStorage,
   ref, 
   uploadBytes, 
   getDownloadURL 
-} from "firebase/storage";
+} from "@firebase/storage";
 
 
 // Re-export v9 modular functions for convenience throughout the app

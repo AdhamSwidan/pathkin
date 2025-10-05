@@ -139,7 +139,6 @@ const EditAdventureModal: React.FC<EditAdventureModalProps> = ({ adventure, onCl
   const [startDate, setStartDate] = useState(adventure.startDate);
   const [endDate, setEndDate] = useState(adventure.endDate || '');
   const [budget, setBudget] = useState(adventure.budget.toString());
-  const [roomCount, setRoomCount] = useState(adventure.roomCount?.toString() || '');
   const [eventCategory, setEventCategory] = useState(adventure.eventCategory || '');
   const [otherEventCategory, setOtherEventCategory] = useState(''); // Simplified for edit
   const [destinations, setDestinations] = useState(adventure.destinations || []);
@@ -168,10 +167,6 @@ const EditAdventureModal: React.FC<EditAdventureModalProps> = ({ adventure, onCl
         case AdventureType.Travel:
             const validDestinations = destinations.filter(d => d.location && d.coordinates);
             updatedData.destinations = validDestinations.length > 0 ? validDestinations : null;
-            break;
-        case AdventureType.Housing:
-            updatedData.budget = parseInt(budget, 10) || 0; // Price
-            updatedData.roomCount = roomCount ? parseInt(roomCount, 10) : null;
             break;
         case AdventureType.Event:
             const finalCategory = eventCategory === 'Other' ? otherEventCategory : eventCategory;
@@ -228,20 +223,6 @@ const EditAdventureModal: React.FC<EditAdventureModalProps> = ({ adventure, onCl
                 <div><label className={labelBaseClasses}>{t('endDate')}</label><input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className={`${inputBaseClasses} text-gray-500`}/></div>
             </div>
             <div><label className={labelBaseClasses}>{t('budget')}</label><input type="number" value={budget} onChange={e => setBudget(e.target.value)} className={inputBaseClasses}/></div>
-          </>
-        );
-      case AdventureType.Housing:
-         return (
-          <>
-            <LocationInput label={t('location')} value={location} onValueChange={setLocation} onCoordsChange={setCoordinates} onLocationSelectFromMap={(addr, coords) => {setLocation(addr); setCoordinates(coords);}} isLoaded={isLoaded}/>
-            <div className="grid grid-cols-2 gap-4">
-                <div><label className={labelBaseClasses}>{t('price')}</label><input type="number" value={budget} onChange={e => setBudget(e.target.value)} className={inputBaseClasses}/></div>
-                <div><label className={labelBaseClasses}>{t('roomCount')}</label><input type="number" value={roomCount} onChange={e => setRoomCount(e.target.value)} className={inputBaseClasses}/></div>
-            </div>
-             <div className="grid grid-cols-2 gap-4">
-                <div><label className={labelBaseClasses}>{t('availableFrom')}</label><input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className={`${inputBaseClasses} text-gray-500`}/></div>
-                <div><label className={labelBaseClasses}>{t('availableTo')}</label><input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className={`${inputBaseClasses} text-gray-500`}/></div>
-            </div>
           </>
         );
       case AdventureType.Event:
@@ -308,7 +289,6 @@ const EditAdventureModal: React.FC<EditAdventureModalProps> = ({ adventure, onCl
                 <label className={labelBaseClasses}>{t('adventureType')}</label>
                 <select value={adventureType} onChange={e => setAdventureType(e.target.value as AdventureType)} className={inputBaseClasses}>
                   <option value={AdventureType.Travel}>{t('AdventureType_Travel')}</option>
-                  <option value={AdventureType.Housing}>{t('AdventureType_Housing')}</option>
                   <option value={AdventureType.Event}>{t('AdventureType_Event')}</option>
                   <option value={AdventureType.Hiking}>{t('AdventureType_Hiking')}</option>
                   <option value={AdventureType.Camping}>{t('AdventureType_Camping')}</option>

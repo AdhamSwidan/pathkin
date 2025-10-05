@@ -18,7 +18,6 @@ interface AdventureTypeFilterBarProps {
 const filterOptions: { type: AdventureType | 'all', icon: React.ReactNode, labelKey: string }[] = [
     { type: 'all', icon: <GridIcon />, labelKey: 'allTypes' },
     { type: AdventureType.Travel, icon: <PlaneIcon />, labelKey: `AdventureType_${AdventureType.Travel}` },
-    { type: AdventureType.Housing, icon: <HomeIcon />, labelKey: `AdventureType_${AdventureType.Housing}` },
     { type: AdventureType.Event, icon: <GroupIcon />, labelKey: `AdventureType_${AdventureType.Event}` },
     { type: AdventureType.Hiking, icon: <HikingIcon />, labelKey: `AdventureType_${AdventureType.Hiking}` },
     { type: AdventureType.Camping, icon: <TentIcon />, labelKey: `AdventureType_${AdventureType.Camping}` },

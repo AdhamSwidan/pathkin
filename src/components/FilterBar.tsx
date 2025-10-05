@@ -54,7 +54,6 @@ const FilterBar: React.FC<FilterBarProps> = ({
             >
               <option value="all">{t('allTypes')}</option>
               <option value={AdventureType.Travel}>{t('AdventureType_Travel')}</option>
-              <option value={AdventureType.Housing}>{t('AdventureType_Housing')}</option>
               <option value={AdventureType.Event}>{t('AdventureType_Event')}</option>
               <option value={AdventureType.Hiking}>{t('AdventureType_Hiking')}</option>
               <option value={AdventureType.Camping}>{t('AdventureType_Camping')}</option>

@@ -22,7 +22,6 @@ const activityIcons: Record<AdventureType, React.ReactNode> = {
   [AdventureType.Volunteering]: <HeartIcon />,
   [AdventureType.Event]: <MessageIcon />,
   [AdventureType.Travel]: <PlaneIcon />,
-  [AdventureType.Housing]: <HomeIcon />,
 };
 
 

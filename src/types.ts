@@ -1,6 +1,5 @@
 export enum AdventureType {
   Travel = 'Travel',
-  Housing = 'Housing',
   Event = 'Event',
   Hiking = 'Hiking',
   Camping = 'Camping',
@@ -89,9 +88,6 @@ export interface Adventure {
 
   // For Travel
   destinations?: { location: string; coordinates: { lat: number; lng: number } }[];
-
-  // For Housing
-  roomCount?: number;
 
   // For Event
   eventCategory?: string;

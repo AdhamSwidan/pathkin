@@ -128,7 +128,6 @@ const MapScreen: React.FC<MapScreenProps> = ({ adventuresToShow, isLoaded, onSho
   const filterOptions = [
     { type: 'all' as const, icon: <GridIcon />, labelKey: 'allTypes' },
     { type: AdventureType.Travel, icon: <PlaneIcon />, labelKey: `AdventureType_${AdventureType.Travel}` },
-    { type: AdventureType.Housing, icon: <HomeIcon />, labelKey: `AdventureType_${AdventureType.Housing}` },
     { type: AdventureType.Event, icon: <MessageIcon />, labelKey: `AdventureType_${AdventureType.Event}` },
     { type: AdventureType.Hiking, icon: <HikingIcon />, labelKey: `AdventureType_${AdventureType.Hiking}` },
     { type: AdventureType.Camping, icon: <TentIcon />, labelKey: `AdventureType_${AdventureType.Camping}` },

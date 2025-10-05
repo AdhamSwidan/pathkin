@@ -61,8 +61,6 @@ const AdventureCard: React.FC<AdventureCardProps> = ({
     switch (type) {
       case AdventureType.Travel:
         return 'bg-sky-100 text-sky-800 dark:bg-sky-900/50 dark:text-sky-300';
-      case AdventureType.Housing:
-        return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300';
       case AdventureType.Event:
         return 'bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-900/50 dark:text-fuchsia-300';
       case AdventureType.Hiking:
@@ -83,7 +81,7 @@ const AdventureCard: React.FC<AdventureCardProps> = ({
   };
   
   const formatBudget = () => {
-    const label = adventure.type === AdventureType.Housing ? t('price') : t('budget');
+    const label = t('budget');
     return `${label.replace(' ($)','')} ~$${adventure.budget}`;
   };
   
