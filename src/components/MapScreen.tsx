@@ -10,7 +10,7 @@ import TentIcon from './icons/TentIcon';
 import BicycleIcon from './icons/BicycleIcon';
 import PlaneIcon from './icons/PlaneIcon';
 import HeartIcon from './icons/HeartIcon';
-import GroupIcon from './icons/GroupIcon';
+import MessageIcon from './icons/MessageIcon';
 import GridIcon from './icons/GridIcon';
 
 
@@ -127,7 +127,7 @@ const MapScreen: React.FC<MapScreenProps> = ({ adventuresToShow, isLoaded, onSho
   const filterOptions = [
     { type: 'all' as const, icon: <GridIcon />, labelKey: 'allTypes' },
     { type: AdventureType.Travel, icon: <PlaneIcon />, labelKey: `AdventureType_${AdventureType.Travel}` },
-    { type: AdventureType.Event, icon: <GroupIcon />, labelKey: `AdventureType_${AdventureType.Event}` },
+    { type: AdventureType.Event, icon: <MessageIcon />, labelKey: `AdventureType_${AdventureType.Event}` },
     { type: AdventureType.Hiking, icon: <HikingIcon />, labelKey: `AdventureType_${AdventureType.Hiking}` },
     { type: AdventureType.Camping, icon: <TentIcon />, labelKey: `AdventureType_${AdventureType.Camping}` },
     { type: AdventureType.Volunteering, icon: <HeartIcon />, labelKey: `AdventureType_${AdventureType.Volunteering}` },
