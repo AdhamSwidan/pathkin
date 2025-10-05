@@ -72,9 +72,10 @@ export {
   ref, 
   uploadBytes, 
   getDownloadURL,
-  deleteObject,
-  FirebaseUser
+  deleteObject
 };
+
+export type { FirebaseUser };
 
 
 // Fix: Standardized on Vite's native `import.meta.env` for all environment variables.
