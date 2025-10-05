@@ -3,7 +3,6 @@ import { AdventureType } from '../types';
 import { useTranslation } from '../contexts/LanguageContext';
 import GridIcon from './icons/GridIcon';
 import PlaneIcon from './icons/PlaneIcon';
-import HomeIcon from './icons/HomeIcon';
 import GroupIcon from './icons/GroupIcon';
 import HikingIcon from './icons/HikingIcon';
 import TentIcon from './icons/TentIcon';

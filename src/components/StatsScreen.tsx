@@ -7,7 +7,6 @@ import BicycleIcon from './icons/BicycleIcon';
 import PlaneIcon from './icons/PlaneIcon';
 import HeartIcon from './icons/HeartIcon';
 import MessageIcon from './icons/MessageIcon';
-import HomeIcon from './icons/HomeIcon';
 import { useTranslation } from '../contexts/LanguageContext';
 
 interface StatsScreenProps {
