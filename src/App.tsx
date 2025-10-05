@@ -46,7 +46,8 @@ import {
   addDoc, serverTimestamp, arrayUnion, arrayRemove, Timestamp,
   runTransaction, deleteDoc,
   GoogleAuthProvider, signInWithPopup, increment,
-  writeBatch
+  writeBatch,
+  deleteObject
 } from './services/firebase';
 
 
@@ -102,6 +103,9 @@ const App: React.FC = () => {
   const [isForgotPasswordModalOpen, setIsForgotPasswordModalOpen] = useState(false);
   const [isAddStoryModalOpen, setIsAddStoryModalOpen] = useState(false);
   const [editingAdventure, setEditingAdventure] = useState<HydratedAdventure | null>(null);
+  const [viewedStoryTimestamps, setViewedStoryTimestamps] = useState<Record<string, string>>(() => 
+    JSON.parse(localStorage.getItem('viewedStoryTimestamps') || '{}')
+  );
   
   const mainContentRef = useRef<HTMLDivElement>(null);
   // Fix: Add a ref to hold the comment listener unsubscribe function.
@@ -170,14 +174,16 @@ const App: React.FC = () => {
 
     const storiesQuery = query(collection(db, "stories"), orderBy("createdAt", "desc"));
     const unsubStories = onSnapshot(storiesQuery, (snapshot) => {
-        setStories(snapshot.docs.map(doc => {
+        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const freshStories = snapshot.docs.map(doc => {
             const data = doc.data();
             return {
                 ...data,
                 id: doc.id,
                 createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() ?? new Date().toISOString(),
             } as Story
-        }));
+        }).filter(story => new Date(story.createdAt) > twentyFourHoursAgo);
+        setStories(freshStories);
     }, (error) => {
         console.error("Error fetching stories:", error);
     });
@@ -869,6 +875,46 @@ const App: React.FC = () => {
     }
   };
 
+  const handleStoriesViewed = (viewedGroup: HydratedStory[]) => {
+    if (viewedGroup.length > 0) {
+        const authorId = viewedGroup[0].authorId;
+        const latestTimestamp = viewedGroup.reduce((latest, story) => 
+            new Date(story.createdAt) > new Date(latest) ? story.createdAt : latest, 
+            viewedGroup[0].createdAt
+        );
+        
+        const newTimestamps = { ...viewedStoryTimestamps, [authorId]: latestTimestamp };
+        localStorage.setItem('viewedStoryTimestamps', JSON.stringify(newTimestamps));
+        setViewedStoryTimestamps(newTimestamps);
+    }
+    setViewingStories(null);
+  };
+
+  const handleDeleteStory = async (storyToDelete: HydratedStory) => {
+    if (!currentUser || currentUser.id !== storyToDelete.authorId) return;
+
+    try {
+        // Delete from Storage
+        const mediaRef = ref(storage, storyToDelete.media.url);
+        await deleteObject(mediaRef);
+        
+        // Delete from Firestore
+        await deleteDoc(doc(db, "stories", storyToDelete.id));
+
+        // Update local state to close viewer or move to next story
+        setViewingStories(prev => {
+            if (!prev) return null;
+            const newStories = prev.filter(s => s.id !== storyToDelete.id);
+            return newStories.length > 0 ? newStories : null;
+        });
+
+        setToastMessage('Story deleted.');
+    } catch (error) {
+        console.error("Error deleting story:", error);
+        setToastMessage('Failed to delete story.');
+    }
+  };
+
 
   // Main render logic
   if (!authChecked) {
@@ -906,6 +952,7 @@ const App: React.FC = () => {
                     onViewLocationOnMap={handleViewLocationOnMap}
                     onDeleteAdventure={handleDeleteAdventure}
                     onEditAdventure={setEditingAdventure}
+                    viewedStoryTimestamps={viewedStoryTimestamps}
                 />;
       case 'map':
         return <MapScreen adventuresToShow={mapAdventuresToShow || adventures} isLoaded={isLoaded} onShowToast={setToastMessage} />;
@@ -1056,7 +1103,7 @@ const App: React.FC = () => {
       
       {/* Modals and Overlays are moved here to be at the root, which is better for fixed positioning and z-index */}
       {selectedAdventure && <AdventureDetailModal adventure={selectedAdventure} comments={hydratedComments} currentUser={currentUser} onClose={handleCloseAdventureDetail} onAddComment={handleAddComment} />}
-      {viewingStories && <StoryViewer stories={viewingStories} onClose={() => setViewingStories(null)} />}
+      {viewingStories && <StoryViewer stories={viewingStories} onClose={() => handleStoriesViewed(viewingStories)} currentUser={currentUser} onDeleteStory={handleDeleteStory} />}
       {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage(null)} />}
       {ratingModalAdventure && <RatingModal adventure={ratingModalAdventure} onClose={() => setRatingModalAdventure(null)} onSubmit={() => {}} />}
       {followListModal.isOpen && followListModal.user && (

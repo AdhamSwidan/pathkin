@@ -6,7 +6,7 @@ import TentIcon from './icons/TentIcon';
 import BicycleIcon from './icons/BicycleIcon';
 import PlaneIcon from './icons/PlaneIcon';
 import HeartIcon from './icons/HeartIcon';
-import MessageIcon from './icons/MessageIcon';
+import GroupIcon from './icons/GroupIcon';
 import { useTranslation } from '../contexts/LanguageContext';
 
 interface StatsScreenProps {
@@ -19,7 +19,7 @@ const activityIcons: Record<AdventureType, React.ReactNode> = {
   [AdventureType.Camping]: <TentIcon />,
   [AdventureType.Cycling]: <BicycleIcon />,
   [AdventureType.Volunteering]: <HeartIcon />,
-  [AdventureType.Event]: <MessageIcon />,
+  [AdventureType.Event]: <GroupIcon />,
   [AdventureType.Travel]: <PlaneIcon />,
 };
 

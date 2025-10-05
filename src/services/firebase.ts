@@ -1,8 +1,10 @@
 // Fix: Replaced mixed compat/modular Firebase setup with a fully modular (v9+) approach.
 // This resolves errors where functions like `getFirestore` and `collection` were not found.
-import { initializeApp } from 'firebase/app';
+// Fix: Changed import path to use scoped package to resolve module export error.
+import { initializeApp } from '@firebase/app';
 // Fix: Refactored Firebase imports to be explicit, resolving module resolution errors.
 // This changes from re-exporting directly to importing and then exporting.
+// Fix: Changed import path to use scoped package to resolve module export errors.
 import { 
   getAuth,
   onAuthStateChanged, 
@@ -12,7 +14,7 @@ import {
   sendPasswordResetEmail,
   GoogleAuthProvider,
   signInWithPopup
-} from "firebase/auth";
+} from "@firebase/auth";
 // Fix: Changed import path to the scoped package '@firebase/firestore' to resolve module export errors.
 import { 
   getFirestore,
@@ -41,7 +43,8 @@ import {
   getStorage,
   ref, 
   uploadBytes, 
-  getDownloadURL 
+  getDownloadURL,
+  deleteObject
 } from "@firebase/storage";
 
 
@@ -75,7 +78,8 @@ export {
   writeBatch,
   ref, 
   uploadBytes, 
-  getDownloadURL 
+  getDownloadURL,
+  deleteObject
 };
 
 

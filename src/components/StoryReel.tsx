@@ -8,16 +8,17 @@ interface StoryReelProps {
   currentUser: User;
   onSelectStories: (stories: HydratedStory[]) => void;
   onAddStory: () => void;
+  viewedStoryTimestamps: Record<string, string>;
 }
 
 // Single item for a user's story reel
-const StoryReelItem: React.FC<{ author: User; hasBeenViewed?: boolean; onClick: () => void }> = ({ author, onClick }) => (
+const StoryReelItem: React.FC<{ author: User; hasUnviewed: boolean; onClick: () => void }> = ({ author, hasUnviewed, onClick }) => (
   <button onClick={onClick} className="flex-shrink-0 flex flex-col items-center space-y-1 w-20 text-center">
-    <div className="w-16 h-16 rounded-full p-0.5 bg-gradient-to-tr from-amber-400 via-rose-500 to-fuchsia-600">
+    <div className={`w-16 h-16 rounded-full p-0.5 ${hasUnviewed ? 'bg-gradient-to-tr from-amber-400 via-rose-500 to-fuchsia-600' : 'bg-gray-300 dark:bg-neutral-700'}`}>
       <img
         src={author.avatarUrl}
         alt={author.name}
-        className="w-full h-full rounded-full border-2 border-white dark:border-neutral-900"
+        className="w-full h-full rounded-full border-2 border-white dark:border-neutral-900 object-cover"
       />
     </div>
     <span className="text-xs text-gray-600 dark:text-gray-400 truncate w-full">{author.name}</span>
@@ -28,9 +29,10 @@ const StoryReelItem: React.FC<{ author: User; hasBeenViewed?: boolean; onClick: 
 const MyStoryReelItem: React.FC<{
   myStories: HydratedStory[];
   currentUser: User;
+  hasUnviewed: boolean;
   onAddStory: () => void;
   onViewMyStories: () => void;
-}> = ({ myStories, currentUser, onAddStory, onViewMyStories }) => {
+}> = ({ myStories, currentUser, hasUnviewed, onAddStory, onViewMyStories }) => {
   const { t } = useTranslation();
   const hasStory = myStories.length > 0;
 
@@ -42,23 +44,14 @@ const MyStoryReelItem: React.FC<{
           className="w-full h-full rounded-full"
           aria-label={hasStory ? t('myStory') : t('addStory')}
         >
-          {hasStory ? (
-            <div className="w-full h-full rounded-full p-0.5 bg-gradient-to-tr from-amber-400 via-rose-500 to-fuchsia-600">
-              <img
-                src={currentUser.avatarUrl}
-                alt={t('myStory')}
-                className="w-full h-full rounded-full border-2 border-white dark:border-neutral-900"
-              />
-            </div>
-          ) : (
+          <div className={`w-full h-full rounded-full p-0.5 ${hasStory && hasUnviewed ? 'bg-gradient-to-tr from-amber-400 via-rose-500 to-fuchsia-600' : (hasStory ? 'bg-gray-300 dark:bg-neutral-700' : '')}`}>
             <img
               src={currentUser.avatarUrl}
-              alt={t('addStory')}
-              className="w-full h-full rounded-full"
+              alt={t('myStory')}
+              className="w-full h-full rounded-full border-2 border-white dark:border-neutral-900 object-cover"
             />
-          )}
+          </div>
         </button>
-        {/* Always show the add button */}
         <button
           onClick={onAddStory}
           className="absolute w-6 h-6 bg-orange-500 rounded-full border-2 border-white dark:border-neutral-900 flex items-center justify-center bottom-0 end-0 z-10 hover:bg-orange-600"
@@ -73,8 +66,8 @@ const MyStoryReelItem: React.FC<{
 };
 
 
-const StoryReel: React.FC<StoryReelProps> = ({ stories, currentUser, onSelectStories, onAddStory }) => {
-  const { myStories, otherUserStoriesGrouped } = useMemo(() => {
+const StoryReel: React.FC<StoryReelProps> = ({ stories, currentUser, onSelectStories, onAddStory, viewedStoryTimestamps }) => {
+  const { myStories, otherUserStoriesGrouped, myStoriesHaveUnviewed } = useMemo(() => {
     const myStories = stories.filter(s => s.author.id === currentUser.id);
     
     const others = stories.filter(s => s.author.id !== currentUser.id);
@@ -86,8 +79,16 @@ const StoryReel: React.FC<StoryReelProps> = ({ stories, currentUser, onSelectSto
       return acc;
     }, {} as Record<string, HydratedStory[]>);
 
-    return { myStories, otherUserStoriesGrouped: Object.values(grouped) };
-  }, [stories, currentUser.id]);
+    const lastViewedForMe = viewedStoryTimestamps[currentUser.id];
+    const myLatestStory = myStories.length > 0 ? myStories.reduce((a, b) => new Date(a.createdAt) > new Date(b.createdAt) ? a : b) : null;
+    const myStoriesHaveUnviewed = myLatestStory ? !lastViewedForMe || new Date(myLatestStory.createdAt) > new Date(lastViewedForMe) : false;
+
+    return { myStories, otherUserStoriesGrouped: Object.values(grouped), myStoriesHaveUnviewed };
+  }, [stories, currentUser.id, viewedStoryTimestamps]);
+
+  const sortStoriesChronologically = (storyGroup: HydratedStory[]) => {
+    return storyGroup.slice().sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  };
 
   return (
     <div className="px-2 py-3 border-b border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
@@ -95,16 +96,25 @@ const StoryReel: React.FC<StoryReelProps> = ({ stories, currentUser, onSelectSto
         <MyStoryReelItem 
           myStories={myStories}
           currentUser={currentUser} 
+          hasUnviewed={myStoriesHaveUnviewed}
           onAddStory={onAddStory} 
-          onViewMyStories={() => onSelectStories(myStories)} 
+          onViewMyStories={() => onSelectStories(sortStoriesChronologically(myStories))} 
         />
-        {otherUserStoriesGrouped.map(storyGroup => (
-          <StoryReelItem 
-            key={storyGroup[0].author.id} 
-            author={storyGroup[0].author} 
-            onClick={() => onSelectStories(storyGroup)} 
-          />
-        ))}
+        {otherUserStoriesGrouped.map(storyGroup => {
+          const authorId = storyGroup[0].author.id;
+          const lastViewed = viewedStoryTimestamps[authorId];
+          const latestStory = storyGroup.reduce((a, b) => new Date(a.createdAt) > new Date(b.createdAt) ? a : b);
+          const hasUnviewed = !lastViewed || new Date(latestStory.createdAt) > new Date(lastViewed);
+
+          return (
+            <StoryReelItem 
+              key={authorId} 
+              author={storyGroup[0].author} 
+              hasUnviewed={hasUnviewed}
+              onClick={() => onSelectStories(sortStoriesChronologically(storyGroup))} 
+            />
+          );
+        })}
       </div>
     </div>
   );

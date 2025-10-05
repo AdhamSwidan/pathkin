@@ -29,6 +29,7 @@ interface FeedScreenProps {
   onViewLocationOnMap: (adventure: HydratedAdventure) => void;
   onDeleteAdventure: (adventureId: string) => void;
   onEditAdventure: (adventure: HydratedAdventure) => void;
+  viewedStoryTimestamps: Record<string, string>;
 }
 
 const FeedScreen: React.FC<FeedScreenProps> = ({ 
@@ -52,6 +53,7 @@ const FeedScreen: React.FC<FeedScreenProps> = ({
   onViewLocationOnMap,
   onDeleteAdventure,
   onEditAdventure,
+  viewedStoryTimestamps,
 }) => {
   const { t } = useTranslation();
   const [selectedAdventureType, setSelectedAdventureType] = useState<AdventureType | 'all'>('all');
@@ -83,7 +85,13 @@ const FeedScreen: React.FC<FeedScreenProps> = ({
         title=""
         rightAction={headerActions}
       />
-      <StoryReel stories={stories} currentUser={currentUser} onSelectStories={onSelectStories} onAddStory={onAddStory} />
+      <StoryReel 
+        stories={stories} 
+        currentUser={currentUser} 
+        onSelectStories={onSelectStories} 
+        onAddStory={onAddStory}
+        viewedStoryTimestamps={viewedStoryTimestamps}
+      />
       
       <AdventureTypeFilterBar 
         selectedType={selectedAdventureType} 
