@@ -153,20 +153,20 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ onCreateA
               </Chip>
             ))}
           </div>
-           {adventureType === AdventureType.Event && (
-            <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-2 ms-1">{t('eventCategory')}</label>
-              <select value={eventCategory} onChange={e => setEventCategory(e.target.value)} className={inputClasses}>
-                  <option value="">{t('selectCategory')}</option>
-                  <option value="Music">{t('categoryMusic')}</option>
-                  <option value="Art">{t('categoryArt')}</option>
-                  <option value="Food">{t('categoryFood')}</option>
-                  <option value="Sports">{t('categorySports')}</option>
-                  <option value="Other">{t('categoryOther')}</option>
-              </select>
-            </div>
-          )}
         </FormCard>
+
+        {adventureType === AdventureType.Event && (
+            <FormCard icon={<ListIcon />} title={t('eventCategory')}>
+                <select value={eventCategory} onChange={e => setEventCategory(e.target.value)} className={inputClasses}>
+                    <option value="">{t('selectCategory')}</option>
+                    <option value="Music">{t('categoryMusic')}</option>
+                    <option value="Art">{t('categoryArt')}</option>
+                    <option value="Food">{t('categoryFood')}</option>
+                    <option value="Sports">{t('categorySports')}</option>
+                    <option value="Other">{t('categoryOther')}</option>
+                </select>
+            </FormCard>
+        )}
 
         <FormCard icon={<PencilIcon />} title="Description*">
           <textarea id="description" value={description} onChange={e => setDescription(e.target.value)} rows={5} className={inputClasses} placeholder="We are going on a full day excursion..."></textarea>
