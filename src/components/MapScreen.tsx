@@ -31,8 +31,8 @@ const FilterButton: React.FC<{ icon: React.ReactNode; label: string; isActive: b
         onClick={onClick}
         className={`flex-shrink-0 flex flex-col items-center justify-center w-20 h-16 rounded-xl transition-colors duration-200 ${
             isActive 
-            ? 'bg-orange-100 dark:bg-orange-900/40' 
-            : 'bg-gray-50 dark:bg-dark-bg-secondary/50 hover:bg-gray-100 dark:hover:bg-dark-bg-secondary'
+            ? 'bg-brand-orange/10 dark:bg-brand-orange/20' 
+            : 'bg-light-bg-secondary dark:bg-dark-bg-secondary hover:bg-slate-100 dark:hover:bg-zinc-700/50'
         }`}
     >
         <div className={`w-6 h-6 flex items-center justify-center ${isActive ? 'text-brand-orange' : 'text-gray-500 dark:text-gray-400'}`}>
@@ -137,7 +137,7 @@ const MapScreen: React.FC<MapScreenProps> = ({ adventuresToShow, isLoaded, onSho
   return (
     <div className="w-full h-full flex flex-col">
       <Header title={t('mapView')} />
-      <div className="bg-light-bg-secondary dark:bg-dark-bg-secondary border-b dark:border-neutral-800 p-2 overflow-x-auto">
+      <div className="bg-light-bg dark:bg-dark-bg border-b dark:border-zinc-800 p-2 overflow-x-auto">
           <div className="flex space-x-2">
               {filterOptions.map(option => (
                   <FilterButton
@@ -213,7 +213,7 @@ const MapScreen: React.FC<MapScreenProps> = ({ adventuresToShow, isLoaded, onSho
             </GoogleMap>
             <button
               onClick={handleShowMyLocation}
-              className="absolute bottom-4 end-4 z-10 bg-white dark:bg-neutral-800 p-3 rounded-full shadow-lg"
+              className="absolute bottom-4 end-4 z-10 bg-white dark:bg-zinc-800 p-3 rounded-full shadow-lg"
               aria-label={t('showMyLocation')}
             >
               <MyLocationIcon className="w-6 h-6 text-gray-700 dark:text-gray-200" />

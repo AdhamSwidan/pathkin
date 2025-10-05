@@ -72,7 +72,7 @@ const AdventureCard: React.FC<AdventureCardProps> = ({
       case AdventureType.Cycling:
         return 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300';
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-neutral-700 dark:text-gray-200';
+        return 'bg-gray-100 text-gray-800 dark:bg-zinc-700 dark:text-gray-200';
     }
   };
 
@@ -116,11 +116,11 @@ const AdventureCard: React.FC<AdventureCardProps> = ({
   const disabledClasses = "cursor-not-allowed text-gray-400 dark:text-gray-600";
 
   return (
-    <div className="bg-light-bg-secondary dark:bg-dark-bg-secondary rounded-xl shadow-md shadow-slate-200/50 dark:shadow-black/20 mb-4 overflow-hidden">
+    <div className="bg-light-bg-secondary dark:bg-dark-bg-secondary rounded-2xl shadow-lg shadow-black/[.02] dark:shadow-none mb-4 border border-transparent dark:border-zinc-800">
       <div className="p-4">
         {/* Adventure Header */}
         <div className="flex items-start justify-between mb-3">
-            <button onClick={() => onViewProfile(adventure.author)} className="flex items-center text-left hover:bg-neutral-800/50 rounded-md p-1 -m-1 flex-grow min-w-0">
+            <button onClick={() => onViewProfile(adventure.author)} className="flex items-center text-left hover:bg-slate-100/50 dark:hover:bg-zinc-800/50 rounded-md p-1 -m-1 flex-grow min-w-0">
                 <img src={adventure.author.avatarUrl} alt={adventure.author.name} className="w-10 h-10 rounded-full me-3 flex-shrink-0" />
                 <div className="min-w-0">
                 <div className="flex items-center space-x-2">
@@ -142,7 +142,7 @@ const AdventureCard: React.FC<AdventureCardProps> = ({
                             e.stopPropagation();
                             setIsMenuOpen(prev => !prev);
                         }}
-                        className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-neutral-800"
+                        className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-zinc-800"
                     >
                         <MoreIcon />
                     </button>
@@ -159,17 +159,19 @@ const AdventureCard: React.FC<AdventureCardProps> = ({
         </div>
 
         {/* Adventure Content */}
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{adventure.title}</h3>
-        <p className="text-gray-700 dark:text-gray-300 text-sm mb-4">{adventure.description}</p>
+        <div className="px-1">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{adventure.title}</h3>
+            <p className="text-gray-700 dark:text-gray-300 text-sm mb-4">{adventure.description}</p>
+        </div>
       </div>
       
       {/* Media Content */}
       {adventure.media && adventure.media.length > 0 && (
-        <div className="bg-gray-100 dark:bg-black -mx-0.5">
+        <div className="px-4 pb-4">
           {adventure.media[0].type === 'image' ? (
-            <img src={adventure.media[0].url} alt="Adventure media" className="w-full max-h-96 object-cover" />
+            <img src={adventure.media[0].url} alt="Adventure media" className="w-full max-h-96 object-cover rounded-xl" />
           ) : (
-            <div className="relative flex justify-center items-center bg-black">
+            <div className="relative flex justify-center items-center bg-black rounded-xl overflow-hidden">
               <video src={adventure.media[0].url} className="w-full max-h-96" playsInline muted loop />
               <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center pointer-events-none">
                  <div className="bg-black bg-opacity-50 rounded-full p-3">
@@ -181,26 +183,26 @@ const AdventureCard: React.FC<AdventureCardProps> = ({
         </div>
       )}
 
-      <div className="p-4">
+      <div className="px-5 pb-4">
         {/* Adventure Details */}
         <div className="flex flex-wrap gap-2 text-xs text-gray-600 dark:text-gray-300">
           <span className={`px-2 py-1 rounded-full font-medium ${getTagStyle(adventure.type)}`}>{t(`AdventureType_${adventure.type}`)}</span>
           <button 
              onClick={() => onViewLocationOnMap(adventure)}
              disabled={!adventure.coordinates}
-             className="px-2 py-1 rounded-full bg-gray-100 dark:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-200 dark:hover:bg-neutral-700"
+             className="px-2 py-1 rounded-full bg-slate-100 dark:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-200 dark:hover:bg-zinc-700"
           >
             📍 {getLocationText()}
           </button>
-          <span className="px-2 py-1 rounded-full bg-gray-100 dark:bg-neutral-800">
+          <span className="px-2 py-1 rounded-full bg-slate-100 dark:bg-zinc-800">
             🗓️ {formatDates()}
           </span>
-          <span className="px-2 py-1 rounded-full bg-gray-100 dark:bg-neutral-800">💰 {formatBudget()}</span>
+          <span className="px-2 py-1 rounded-full bg-slate-100 dark:bg-zinc-800">💰 {formatBudget()}</span>
         </div>
       </div>
       
       {/* Adventure Actions */}
-      <div className="border-t border-gray-100 dark:border-neutral-800 px-4 py-2 flex justify-around items-center text-gray-500 dark:text-gray-400">
+      <div className="px-4 pb-3 pt-1 flex justify-around items-center text-gray-500 dark:text-gray-400">
         <button
           onClick={() => onInterestToggle(adventure.id)}
           disabled={isGuest}

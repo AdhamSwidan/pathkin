@@ -52,7 +52,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeScreen, setActiveScreen, is
 
   return (
     <div className="xl:hidden fixed bottom-0 left-0 right-0 z-50 h-16 flex justify-center">
-      <div className="w-full max-w-2xl bg-light-bg-secondary/80 dark:bg-dark-bg-secondary/80 backdrop-blur-sm border-t border-gray-200 dark:border-neutral-800 flex items-center justify-around">
+      <div className="w-full max-w-2xl bg-light-bg-secondary/70 dark:bg-dark-bg-secondary/70 backdrop-blur-lg border-t border-slate-200/60 dark:border-zinc-800/60 flex items-center justify-around">
         {navItems.map((item) => (
           <NavItem
             key={item.screen}

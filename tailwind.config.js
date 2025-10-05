@@ -10,16 +10,17 @@ export default {
   theme: {
     extend: {
       colors: {
-        'light-bg': '#F8F9FA',
+        'light-bg': '#F7F7F8',
         'light-bg-secondary': '#FFFFFF',
-        'dark-bg': '#121212',
-        'dark-bg-secondary': '#1E1E1E',
+        'dark-bg': '#18181B',
+        'dark-bg-secondary': '#27272A',
         'brand-orange': '#F97316',
         'brand-orange-light': '#FB923C',
       },
       borderRadius: {
         'lg': '0.75rem',
         'xl': '1rem',
+        '2xl': '1.25rem',
       },
       fontFamily: {
         sans: ['Tajawal', ...defaultTheme.fontFamily.sans],
