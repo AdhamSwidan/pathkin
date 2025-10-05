@@ -28,24 +28,24 @@ const AdventureTypeFilterBar: React.FC<AdventureTypeFilterBarProps> = ({ selecte
     const { t } = useTranslation();
 
     return (
-        <div className="border-b border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
-            <div className="flex flex-wrap justify-center gap-2 p-2">
+        <div className="px-2">
+            <div className="flex space-x-2 overflow-x-auto pb-2 -mb-2">
                 {filterOptions.map(option => {
                     const isActive = selectedType === option.type;
                     return (
                         <button
                             key={option.type}
                             onClick={() => onSelectType(option.type)}
-                            className={`flex-shrink-0 flex flex-col items-center justify-center w-16 h-16 rounded-lg transition-colors duration-200 ${
+                            className={`flex-shrink-0 flex flex-col items-center justify-center w-24 h-[72px] rounded-2xl transition-colors duration-200 ${
                                 isActive 
-                                ? 'bg-orange-100 dark:bg-orange-900/40' 
-                                : 'bg-gray-50 dark:bg-neutral-800/50 hover:bg-gray-100 dark:hover:bg-neutral-800'
+                                ? 'bg-brand-orange/10 dark:bg-brand-orange/20' 
+                                : 'bg-slate-100 dark:bg-dark-bg-secondary hover:bg-slate-200 dark:hover:bg-zinc-700/50'
                             }`}
                         >
-                            <div className={`w-7 h-7 flex items-center justify-center ${isActive ? 'text-orange-500' : 'text-gray-500 dark:text-gray-400'}`}>
+                            <div className={`w-7 h-7 flex items-center justify-center ${isActive ? 'text-brand-orange' : 'text-gray-500 dark:text-gray-400'}`}>
                                 {option.icon}
                             </div>
-                            <span className={`text-xs mt-1 text-center ${isActive ? 'font-semibold text-orange-600 dark:text-orange-400' : 'text-gray-600 dark:text-gray-300'}`}>
+                            <span className={`text-xs mt-1.5 text-center ${isActive ? 'font-semibold text-brand-orange dark:text-brand-orange-light' : 'text-gray-600 dark:text-gray-300'}`}>
                                 {t(option.labelKey)}
                             </span>
                         </button>

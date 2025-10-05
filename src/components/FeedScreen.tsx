@@ -5,7 +5,7 @@ import AdventureCard from './AdventureCard';
 import StoryReel from './StoryReel';
 import BellIcon from './icons/BellIcon';
 import MessageIcon from './icons/MessageIcon';
-import { useTranslation } from '../contexts/LanguageContext';
+import { useTranslation } from './contexts/LanguageContext';
 import AdventureTypeFilterBar from './AdventureTypeFilterBar';
 
 interface FeedScreenProps {
@@ -85,18 +85,20 @@ const FeedScreen: React.FC<FeedScreenProps> = ({
         title=""
         rightAction={headerActions}
       />
-      <StoryReel 
-        stories={stories} 
-        currentUser={currentUser} 
-        onSelectStories={onSelectStories} 
-        onAddStory={onAddStory}
-        viewedStoryTimestamps={viewedStoryTimestamps}
-      />
-      
-      <AdventureTypeFilterBar 
-        selectedType={selectedAdventureType} 
-        onSelectType={setSelectedAdventureType} 
-      />
+      <div className="space-y-3">
+        <StoryReel 
+          stories={stories} 
+          currentUser={currentUser} 
+          onSelectStories={onSelectStories} 
+          onAddStory={onAddStory}
+          viewedStoryTimestamps={viewedStoryTimestamps}
+        />
+        
+        <AdventureTypeFilterBar 
+          selectedType={selectedAdventureType} 
+          onSelectType={setSelectedAdventureType} 
+        />
+      </div>
 
       <div className="px-2 pt-2">
         {filteredAdventures.map(adventure => (
