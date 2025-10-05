@@ -17,20 +17,20 @@ interface NotificationsScreenProps {
 }
 
 const NotificationIcon: React.FC<{ type: NotificationType }> = ({ type }) => {
-  const commonClasses = "w-6 h-6";
+  const commonClasses = "w-5 h-5";
   switch (type) {
     case NotificationType.Interest:
-      return <div className="bg-rose-100 dark:bg-rose-900/50 p-1.5 rounded-full"><HeartIcon className={`${commonClasses} text-rose-500`} /></div>;
+      return <div className="bg-rose-100 dark:bg-rose-500/20 p-2 rounded-full"><HeartIcon className={`${commonClasses} text-rose-500`} /></div>;
     case NotificationType.Comment:
-      return <div className="bg-sky-100 dark:bg-sky-900/50 p-1.5 rounded-full"><CommentIcon className={`${commonClasses} text-sky-500`} /></div>;
+      return <div className="bg-sky-100 dark:bg-sky-500/20 p-2 rounded-full"><CommentIcon className={`${commonClasses} text-sky-500`} /></div>;
     case NotificationType.Message:
-      return <div className="bg-orange-100 dark:bg-orange-900/50 p-1.5 rounded-full"><MessageIcon className={`${commonClasses} text-orange-500`} /></div>;
+      return <div className="bg-orange-100 dark:bg-orange-500/20 p-2 rounded-full"><MessageIcon className={`${commonClasses} text-orange-500`} /></div>;
     case NotificationType.AttendanceRequest:
-      return <div className="bg-amber-100 dark:bg-amber-900/50 p-1.5 rounded-full"><CheckCircleIcon className={`${commonClasses} text-amber-500`} /></div>;
+      return <div className="bg-amber-100 dark:bg-amber-500/20 p-2 rounded-full"><CheckCircleIcon className={`${commonClasses} text-amber-500`} /></div>;
     case NotificationType.AttendanceConfirmed:
-      return <div className="bg-green-100 dark:bg-green-900/50 p-1.5 rounded-full"><CheckCircleIcon className={`${commonClasses} text-green-500`} /></div>;
+      return <div className="bg-green-100 dark:bg-green-500/20 p-2 rounded-full"><CheckCircleIcon className={`${commonClasses} text-green-500`} /></div>;
     case NotificationType.RateExperience:
-      return <div className="bg-yellow-100 dark:bg-yellow-900/50 p-1.5 rounded-full"><StarIcon className={`${commonClasses} text-yellow-400`} /></div>;
+      return <div className="bg-yellow-100 dark:bg-yellow-500/20 p-2 rounded-full"><StarIcon className={`${commonClasses} text-yellow-400`} /></div>;
     default:
       return null;
   }
@@ -87,11 +87,11 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ notifications
     const NotificationGroup: React.FC<{ title: string; items: HydratedNotification[] }> = ({ title, items }) => {
         if (items.length === 0) return null;
         return (
-            <div>
-                <h2 className="px-4 py-2 text-sm font-semibold text-gray-500 dark:text-gray-400">{title}</h2>
-                <div className="bg-white dark:bg-neutral-900">
+            <div className="px-2">
+                <h2 className="px-2 py-2 text-sm font-semibold text-gray-500 dark:text-gray-400">{title}</h2>
+                <div className="bg-light-bg-secondary/70 dark:bg-dark-bg-secondary/70 backdrop-blur-sm rounded-2xl overflow-hidden">
                     {items.map((notif, index) => (
-                        <div key={notif.id} className={`${index > 0 ? 'border-t border-gray-100 dark:border-neutral-800' : ''}`}>
+                        <div key={notif.id} className={`${index > 0 ? 'border-t border-slate-200/50 dark:border-zinc-800/50' : ''}`}>
                              <NotificationItem notif={notif} />
                         </div>
                     ))}
@@ -101,8 +101,8 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ notifications
     };
 
     const NotificationItem: React.FC<{ notif: HydratedNotification }> = ({ notif }) => (
-        <button onClick={() => onNotificationClick(notif)} className="w-full text-left p-4 flex items-start space-x-4 hover:bg-gray-50 dark:hover:bg-neutral-800/50 transition-colors">
-            {!notif.read && <div className="w-2 h-2 rounded-full bg-blue-500 mt-2 flex-shrink-0"></div>}
+        <button onClick={() => onNotificationClick(notif)} className="w-full text-left p-4 flex items-start space-x-4 hover:bg-slate-100/50 dark:hover:bg-zinc-800/50 transition-colors">
+            {!notif.read && <div className="w-2 h-2 rounded-full bg-blue-500 mt-2.5 flex-shrink-0"></div>}
             <div className={`flex-shrink-0 ${notif.read ? 'ms-2' : ''}`}><NotificationIcon type={notif.type} /></div>
             <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between">
@@ -138,13 +138,13 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ notifications
     );
 
     return (
-        <div className="h-full flex flex-col bg-slate-100 dark:bg-neutral-950">
+        <div className="h-full flex flex-col">
             <Header title={t('notifications')} onBack={onBack} rightAction={headerActions} />
             <div className="flex-grow overflow-y-auto">
                 {notifications.length === 0 ? (
                     <p className="text-center text-gray-500 dark:text-gray-400 py-10">{t('noNewNotifications')}</p>
                 ) : (
-                    <div className="space-y-4 pb-4">
+                    <div className="space-y-4 py-2">
                         <NotificationGroup title={t('notifications.today')} items={groupedNotifications.today} />
                         <NotificationGroup title={t('notifications.yesterday')} items={groupedNotifications.yesterday} />
                         <NotificationGroup title={t('notifications.thisWeek')} items={groupedNotifications.thisWeek} />

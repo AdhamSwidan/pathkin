@@ -548,10 +548,10 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="w-screen h-screen flex bg-light-bg dark:bg-dark-bg text-gray-800 dark:text-gray-200">
+    <div className="w-screen h-screen flex bg-transparent text-gray-800 dark:text-gray-200">
       <SideNav activeScreen={activeScreen} setActiveScreen={isGuest ? handleGuestAction : (screen) => resetToScreen(screen)} hasUnreadNotifications={hasUnreadNotifications} isGuest={isGuest} onGuestAction={handleGuestAction} />
       
-      <main ref={mainContentRef} className="flex-1 max-w-2xl mx-auto xl:ms-0 xl:me-auto w-full border-x border-slate-200 dark:border-zinc-800 flex flex-col overflow-y-auto pb-16 xl:pb-0 bg-light-bg-secondary dark:bg-dark-bg">
+      <main ref={mainContentRef} className="flex-1 max-w-2xl mx-auto xl:ms-0 xl:me-auto w-full flex flex-col overflow-y-auto pb-16 xl:pb-0">
         {isGuest && <GuestHeader onLoginClick={handleLogout} />}
         {renderScreen()}
       </main>

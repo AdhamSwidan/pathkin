@@ -116,7 +116,7 @@ const AdventureCard: React.FC<AdventureCardProps> = ({
   const disabledClasses = "cursor-not-allowed text-gray-400 dark:text-gray-600";
 
   return (
-    <div className="bg-light-bg-secondary dark:bg-dark-bg-secondary rounded-2xl shadow-lg shadow-black/[.02] dark:shadow-none mb-4 border border-transparent dark:border-zinc-800">
+    <div className="bg-light-bg-secondary/70 dark:bg-dark-bg-secondary/70 backdrop-blur-sm rounded-3xl shadow-lg shadow-black/[.02] dark:shadow-black/[.05] mb-4">
       <div className="p-4">
         {/* Adventure Header */}
         <div className="flex items-start justify-between mb-3">
@@ -169,9 +169,9 @@ const AdventureCard: React.FC<AdventureCardProps> = ({
       {adventure.media && adventure.media.length > 0 && (
         <div className="px-4 pb-4">
           {adventure.media[0].type === 'image' ? (
-            <img src={adventure.media[0].url} alt="Adventure media" className="w-full max-h-96 object-cover rounded-xl" />
+            <img src={adventure.media[0].url} alt="Adventure media" className="w-full max-h-96 object-cover rounded-2xl" />
           ) : (
-            <div className="relative flex justify-center items-center bg-black rounded-xl overflow-hidden">
+            <div className="relative flex justify-center items-center bg-black rounded-2xl overflow-hidden">
               <video src={adventure.media[0].url} className="w-full max-h-96" playsInline muted loop />
               <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center pointer-events-none">
                  <div className="bg-black bg-opacity-50 rounded-full p-3">

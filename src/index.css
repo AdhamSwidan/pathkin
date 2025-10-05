@@ -3,8 +3,15 @@
 @tailwind utilities;
 
 body {
-  @apply bg-light-bg dark:bg-dark-bg;
+  background-color: #FEFDFB;
+  background-image: radial-gradient(ellipse at top, #FEFDFB, #F4EFE6);
 }
+
+.dark body {
+    background-color: #1C1A1A;
+    background-image: radial-gradient(ellipse at top, #2C2A2A, #1C1A1A);
+}
+
 
 /* Ensure proper word spacing in all languages, especially for RTL */
 html[dir="rtl"] body {

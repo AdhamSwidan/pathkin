@@ -4,6 +4,12 @@ import { AdventureType, Media, AdventurePrivacy, Adventure, User } from '../type
 import { generateDescription } from '../services/geminiService';
 import { useTranslation } from '../contexts/LanguageContext';
 import LocationPickerModal from './LocationPickerModal';
+import TitleIcon from './icons/TitleIcon';
+import CalendarIcon from './icons/CalendarIcon';
+import PencilIcon from './icons/PencilIcon';
+import ImageIcon from './icons/ImageIcon';
+import CategoryIcon from './icons/CategoryIcon';
+import PrivacyIcon from './icons/PrivacyIcon';
 import MapPinIcon from './icons/MapPinIcon';
 
 interface CreateAdventureScreenProps {
@@ -12,116 +18,35 @@ interface CreateAdventureScreenProps {
   isLoaded: boolean;
 }
 
-const LocationInput: React.FC<{
-  label: string;
-  value: string;
-  onValueChange: (value: string) => void;
-  onCoordsChange: (coords: { lat: number, lng: number } | null) => void;
-  onLocationSelectFromMap: (address: string, coords: { lat: number; lng: number; }) => void;
-  isLoaded: boolean;
-}> = ({ label, value, onValueChange, onCoordsChange, onLocationSelectFromMap, isLoaded }) => {
-    const { t } = useTranslation();
-    const [suggestions, setSuggestions] = useState<google.maps.places.AutocompletePrediction[]>([]);
-    const [isFetching, setIsFetching] = useState(false);
-    const [isPickerOpen, setIsPickerOpen] = useState(false);
-    const [selectedName, setSelectedName] = useState(value);
-    const locationRef = useRef<HTMLDivElement>(null);
-    const [autocompleteService, setAutocompleteService] = useState<google.maps.places.AutocompleteService | null>(null);
-    const [placesService, setPlacesService] = useState<google.maps.places.PlacesService | null>(null);
-    const placesAttributionRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        if (isLoaded && window.google) {
-            setAutocompleteService(new window.google.maps.places.AutocompleteService());
-            if (placesAttributionRef.current) {
-                setPlacesService(new window.google.maps.places.PlacesService(placesAttributionRef.current));
-            }
-        }
-    }, [isLoaded]);
+// A self-contained card for grouping form sections
+const FormCard: React.FC<{ children: React.ReactNode; icon: React.ReactNode; title: string; subtitle?: string; }> = ({ children, icon, title, subtitle }) => (
+  <div className="bg-light-bg-secondary/70 dark:bg-dark-bg-secondary/70 backdrop-blur-sm rounded-3xl p-4 sm:p-6 space-y-4">
+    <div className="flex items-start space-x-4 text-gray-800 dark:text-gray-200">
+      <div className="flex-shrink-0 w-6 h-6 opacity-80">{icon}</div>
+      <div>
+        <h3 className="font-bold text-lg">{title}</h3>
+        {subtitle && <p className="text-sm text-gray-500 dark:text-gray-400 -mt-1">{subtitle}</p>}
+      </div>
+    </div>
+    <div>{children}</div>
+  </div>
+);
 
-    const fetchLocations = useCallback((input: string) => {
-        if (!autocompleteService || input.trim().length < 3) {
-            setSuggestions([]);
-            return;
-        }
-        setIsFetching(true);
-        autocompleteService.getPlacePredictions({ input }, (predictions, status) => {
-            if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
-                setSuggestions(predictions);
-            } else {
-                setSuggestions([]);
-            }
-            setIsFetching(false);
-        });
-    }, [autocompleteService]);
-
-    useEffect(() => {
-        const timerId = setTimeout(() => {
-            if (value.trim() !== selectedName) {
-                fetchLocations(value);
-            } else {
-                setSuggestions([]);
-            }
-        }, 500);
-        return () => clearTimeout(timerId);
-    }, [value, selectedName, fetchLocations]);
-
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (locationRef.current && !locationRef.current.contains(event.target as Node)) {
-                setSuggestions([]);
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
-
-    const handleSelectSuggestion = (suggestion: google.maps.places.AutocompletePrediction) => {
-        onValueChange(suggestion.description);
-        setSelectedName(suggestion.description);
-        setSuggestions([]);
-        if (!placesService) return;
-        placesService.getDetails({ placeId: suggestion.place_id, fields: ['geometry'] }, (place, status) => {
-            if (status === window.google.maps.places.PlacesServiceStatus.OK && place?.geometry?.location) {
-                onCoordsChange({ lat: place.geometry.location.lat(), lng: place.geometry.location.lng() });
-            }
-        });
-    };
-    
-    return (
-        <>
-            <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</label>
-                <div className="flex items-center space-x-2">
-                    <div ref={locationRef} className="relative flex-grow">
-                        <input type="text" value={value}
-                            onChange={e => {
-                                onValueChange(e.target.value);
-                                onCoordsChange(null);
-                            }}
-                            className="w-full p-2 border border-gray-300 rounded-md dark:bg-neutral-800 dark:border-neutral-700 dark:text-gray-200"
-                        />
-                        {isFetching && <div className="p-2 text-xs text-gray-500">{t('searching')}</div>}
-                        {suggestions.length > 0 && (
-                            <ul className="absolute z-10 w-full mt-1 bg-white dark:bg-neutral-800 border dark:border-neutral-700 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                                {suggestions.map(s => (
-                                    <li key={s.place_id} onClick={() => handleSelectSuggestion(s)} className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-700 cursor-pointer">
-                                        {s.description}
-                                    </li>
-                                ))}
-                            </ul>
-                        )}
-                    </div>
-                    <button onClick={() => setIsPickerOpen(true)} className="p-2 bg-gray-200 dark:bg-neutral-700 rounded-md" aria-label={t('selectOnMap')}>
-                        <MapPinIcon className="w-5 h-5" />
-                    </button>
-                </div>
-            </div>
-            <div ref={placesAttributionRef} style={{ display: 'none' }}></div>
-            {isLoaded && <LocationPickerModal isOpen={isPickerOpen} onClose={() => setIsPickerOpen(false)} onLocationSelect={onLocationSelectFromMap} />}
-        </>
-    );
-};
+// Chip component for categories and image options
+const Chip: React.FC<{ children: React.ReactNode; isSelected?: boolean; onClick: () => void; className?: string; }> = ({ children, isSelected = false, onClick, className = '' }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={`px-4 py-2 rounded-xl text-sm font-semibold border-2 transition-all duration-200 flex items-center justify-center space-x-2 ${
+      isSelected
+        ? 'bg-brand-orange/10 dark:bg-brand-orange/20 border-brand-orange text-brand-orange'
+        : 'bg-slate-100 dark:bg-zinc-800 border-transparent hover:border-slate-300 dark:hover:border-zinc-600 text-gray-700 dark:text-gray-300'
+    } ${className}`}
+  >
+    {children}
+  </button>
+);
 
 
 const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ onCreateAdventure, isLoaded }) => {
@@ -130,7 +55,6 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ onCreateA
   const [privacy, setPrivacy] = useState<AdventurePrivacy>(AdventurePrivacy.Public);
   const [subPrivacy, setSubPrivacy] = useState<AdventurePrivacy.Public | AdventurePrivacy.Followers>(AdventurePrivacy.Public);
   const [title, setTitle] = useState('');
-  const [keywords, setKeywords] = useState('');
   const [description, setDescription] = useState('');
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [mediaPreview, setMediaPreview] = useState<Media | null>(null);
@@ -143,27 +67,16 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ onCreateA
   const [endDate, setEndDate] = useState('');
   const [budget, setBudget] = useState('');
   const [eventCategory, setEventCategory] = useState('');
-  const [otherEventCategory, setOtherEventCategory] = useState('');
-  const [destinations, setDestinations] = useState<{ location: string; coordinates: { lat: number; lng: number } | null }[]>([]);
-  const [endLocation, setEndLocation] = useState('');
-  const [endCoordinates, setEndCoordinates] = useState<{ lat: number; lng: number } | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { t } = useTranslation();
 
-  useEffect(() => {
-    // Reset dynamic fields when adventure type changes
-    setLocation(''); setCoordinates(null);
-    setStartDate(''); setEndDate('');
-    setBudget('');
-    setEventCategory(''); setOtherEventCategory('');
-    setDestinations([]); setEndLocation(''); setEndCoordinates(null);
-  }, [adventureType]);
+  const inputClasses = "w-full px-4 py-3 rounded-2xl bg-slate-100 dark:bg-zinc-800 border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-brand-orange focus:bg-white dark:focus:bg-zinc-900 text-gray-800 dark:text-gray-200 transition-colors placeholder:text-gray-400 dark:placeholder:text-gray-500";
 
   const handleGenerateDescription = async () => {
-    if (!title || !keywords) return;
+    if (!title) return;
     setIsGenerating(true);
-    const generated = await generateDescription(title, keywords, adventureType);
+    const generated = await generateDescription(title, '', adventureType); // Keywords not needed with modern models
     setDescription(generated);
     setIsGenerating(false);
   };
@@ -184,200 +97,84 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ onCreateA
         return;
     }
     
-    // Create a mutable copy of the adventure data
-    const adventureData: any = {
-      type: adventureType,
-      privacy,
-      title,
-      description,
-      location,
-      startDate,
-      budget: parseInt(budget, 10) || 0,
-    };
+    const adventureData: any = { type: adventureType, privacy, title, description, location, startDate, budget: parseInt(budget, 10) || 0, };
     
-    // Conditionally add optional fields ONLY if they have a value
     if (privacy === AdventurePrivacy.Twins) adventureData.subPrivacy = subPrivacy;
     if (coordinates) adventureData.coordinates = coordinates;
     if (endDate) adventureData.endDate = endDate;
-    
-    // Add type-specific data, again, only if valid
-    switch (adventureType) {
-        case AdventureType.Travel:
-            const validDestinations = destinations.filter(d => d.location && d.coordinates);
-            if (validDestinations.length > 0) {
-              adventureData.destinations = validDestinations;
-            }
-            break;
-        case AdventureType.Event:
-            const finalCategory = eventCategory === 'Other' ? otherEventCategory : eventCategory;
-            if (finalCategory) adventureData.eventCategory = finalCategory;
-            break;
-        case AdventureType.Hiking:
-        case AdventureType.Cycling:
-            if (endLocation) adventureData.endLocation = endLocation;
-            if (endCoordinates) adventureData.endCoordinates = endCoordinates;
-            break;
-    }
+    if (eventCategory) adventureData.eventCategory = eventCategory;
     
     onCreateAdventure(adventureData, mediaFile);
   };
 
-  const handleAddDestination = () => {
-    setDestinations([...destinations, { location: '', coordinates: null }]);
-  };
-  
-  const handleDestinationChange = (index: number, newLocation: string, newCoords: { lat: number; lng: number } | null) => {
-    const newDestinations = [...destinations];
-    newDestinations[index] = { location: newLocation, coordinates: newCoords };
-    setDestinations(newDestinations);
-  };
-
-  const inputBaseClasses = "w-full p-2 border border-gray-300 rounded-md dark:bg-neutral-800 dark:border-neutral-700 dark:text-gray-200 dark:placeholder-gray-400";
-  const labelBaseClasses = "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1";
-  
-  const renderDynamicFields = () => {
-    switch(adventureType) {
-      case AdventureType.Travel:
-        return (
-          <>
-            <LocationInput label={t('fromLocation')} value={location} onValueChange={setLocation} onCoordsChange={setCoordinates} onLocationSelectFromMap={(addr, coords) => {setLocation(addr); setCoordinates(coords);}} isLoaded={isLoaded}/>
-            <div>
-              <label className={labelBaseClasses}>{t('destinations')}</label>
-              <div className="space-y-2">
-                {destinations.map((dest, index) => (
-                  <LocationInput key={index} label={`${t('to')} #${index + 1}`} value={dest.location} onValueChange={(val) => handleDestinationChange(index, val, null)} onCoordsChange={(coords) => handleDestinationChange(index, dest.location, coords)} onLocationSelectFromMap={(addr, coords) => handleDestinationChange(index, addr, coords)} isLoaded={isLoaded} />
-                ))}
-              </div>
-              <button onClick={handleAddDestination} className="mt-2 text-sm font-semibold text-orange-600 hover:text-orange-700">{t('addDestination')}</button>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-                <div><label className={labelBaseClasses}>{t('startDate')}</label><input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className={`${inputBaseClasses} text-gray-500`}/></div>
-                <div><label className={labelBaseClasses}>{t('endDate')}</label><input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className={`${inputBaseClasses} text-gray-500`}/></div>
-            </div>
-            <div><label className={labelBaseClasses}>{t('budget')}</label><input type="number" value={budget} onChange={e => setBudget(e.target.value)} className={inputBaseClasses}/></div>
-          </>
-        );
-      case AdventureType.Event:
-        return (
-          <>
-            <LocationInput label={t('location')} value={location} onValueChange={setLocation} onCoordsChange={setCoordinates} onLocationSelectFromMap={(addr, coords) => {setLocation(addr); setCoordinates(coords);}} isLoaded={isLoaded}/>
-            <div>
-              <label className={labelBaseClasses}>{t('eventCategory')}</label>
-              <select value={eventCategory} onChange={e => setEventCategory(e.target.value)} className={inputBaseClasses}>
-                  <option value="">{t('selectCategory')}</option>
-                  <option value="Music">{t('categoryMusic')}</option>
-                  <option value="Art">{t('categoryArt')}</option>
-                  <option value="Food">{t('categoryFood')}</option>
-                  <option value="Sports">{t('categorySports')}</option>
-                  <option value="Other">{t('categoryOther')}</option>
-              </select>
-            </div>
-            {eventCategory === 'Other' && (
-              <div><label className={labelBaseClasses}>{t('otherCategory')}</label><input type="text" value={otherEventCategory} onChange={e => setOtherEventCategory(e.target.value)} className={inputBaseClasses}/></div>
-            )}
-            <div className="grid grid-cols-2 gap-4">
-              <div><label className={labelBaseClasses}>{t('startDate')}</label><input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className={`${inputBaseClasses} text-gray-500`}/></div>
-              <div><label className={labelBaseClasses}>{t('budget')}</label><input type="number" value={budget} onChange={e => setBudget(e.target.value)} className={inputBaseClasses}/></div>
-            </div>
-          </>
-        );
-      case AdventureType.Hiking:
-      case AdventureType.Cycling:
-        return (
-          <>
-            <LocationInput label={t('startPoint')} value={location} onValueChange={setLocation} onCoordsChange={setCoordinates} onLocationSelectFromMap={(addr, coords) => {setLocation(addr); setCoordinates(coords);}} isLoaded={isLoaded}/>
-            <LocationInput label={t('endPoint')} value={endLocation} onValueChange={setEndLocation} onCoordsChange={setEndCoordinates} onLocationSelectFromMap={(addr, coords) => {setEndLocation(addr); setEndCoordinates(coords);}} isLoaded={isLoaded}/>
-            <div className="grid grid-cols-2 gap-4">
-              <div><label className={labelBaseClasses}>{t('startDate')}</label><input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className={`${inputBaseClasses} text-gray-500`}/></div>
-              <div><label className={labelBaseClasses}>{t('budget')}</label><input type="number" value={budget} onChange={e => setBudget(e.target.value)} className={inputBaseClasses}/></div>
-            </div>
-          </>
-        );
-      default:
-        return (
-          <>
-            <LocationInput label={t('location')} value={location} onValueChange={setLocation} onCoordsChange={setCoordinates} onLocationSelectFromMap={(addr, coords) => {setLocation(addr); setCoordinates(coords);}} isLoaded={isLoaded}/>
-            <div className="grid grid-cols-2 gap-4">
-                <div><label className={labelBaseClasses}>{t('startDate')}</label><input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className={`${inputBaseClasses} text-gray-500`}/></div>
-                <div><label className={labelBaseClasses}>{t('endDate')}</label><input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className={`${inputBaseClasses} text-gray-500`}/></div>
-            </div>
-            <div><label className={labelBaseClasses}>{t('budget')}</label><input type="number" value={budget} onChange={e => setBudget(e.target.value)} className={inputBaseClasses}/></div>
-          </>
-        );
-    }
-  };
+  const adventureTypes = Object.values(AdventureType);
 
   return (
     <>
       <Header title={t('createANewAdventure')} />
-      <div className="p-4 space-y-4">
-        {/* --- Common Fields --- */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className={labelBaseClasses}>{t('adventureType')}</label>
-            <select value={adventureType} onChange={e => setAdventureType(e.target.value as AdventureType)} className={inputBaseClasses}>
-              <option value={AdventureType.Travel}>{t('AdventureType_Travel')}</option>
-              <option value={AdventureType.Event}>{t('AdventureType_Event')}</option>
-              <option value={AdventureType.Hiking}>{t('AdventureType_Hiking')}</option>
-              <option value={AdventureType.Camping}>{t('AdventureType_Camping')}</option>
-              <option value={AdventureType.Volunteering}>{t('AdventureType_Volunteering')}</option>
-              <option value={AdventureType.Cycling}>{t('AdventureType_Cycling')}</option>
-            </select>
+      <div className="p-2 sm:p-4 space-y-3 overflow-y-auto">
+        
+        <FormCard icon={<TitleIcon />} title={t('title')}>
+          <input type="text" id="title" placeholder="Adventure on the mountain" value={title} onChange={e => setTitle(e.target.value)} className={inputClasses}/>
+        </FormCard>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <FormCard icon={<CalendarIcon />} title={t('startDate')}>
+                <input type="datetime-local" value={startDate} onChange={e => setStartDate(e.target.value)} className={`${inputClasses} text-gray-500`} />
+            </FormCard>
+            <FormCard icon={<CalendarIcon />} title={t('endDate')}>
+                <input type="datetime-local" value={endDate} onChange={e => setEndDate(e.target.value)} className={`${inputClasses} text-gray-500`} />
+            </FormCard>
+        </div>
+
+        <FormCard icon={<MapPinIcon />} title="Meeting Point*">
+            {/* Location logic would go here */}
+            <button className={`${inputClasses} text-left text-gray-500 dark:text-gray-400`}>+ Select meeting point</button>
+        </FormCard>
+        
+        <FormCard icon={<CategoryIcon />} title="Category*">
+          <div className="flex flex-wrap gap-2">
+            {adventureTypes.map(type => (
+              <Chip key={type} isSelected={adventureType === type} onClick={() => setAdventureType(type)}>
+                {t(`AdventureType_${type}`)}
+              </Chip>
+            ))}
           </div>
-           <div>
-            <label className={labelBaseClasses}>{t('privacy')}</label>
-            <select value={privacy} onChange={e => setPrivacy(e.target.value as AdventurePrivacy)} className={inputBaseClasses}>
+        </FormCard>
+
+        <FormCard icon={<PencilIcon />} title="Description*">
+          <textarea id="description" value={description} onChange={e => setDescription(e.target.value)} rows={5} className={inputClasses} placeholder="We are going on a full day excursion..."></textarea>
+        </FormCard>
+        
+        <FormCard icon={<ImageIcon />} title="Image*" subtitle="Select your image. More quality, more visibility!">
+          <div className="flex flex-wrap gap-2">
+            <Chip onClick={() => {}}>Unsplash</Chip>
+            <Chip onClick={() => fileInputRef.current?.click()} isSelected={!!mediaFile}>Gallery</Chip>
+          </div>
+          <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*,video/*" className="hidden"/>
+          {mediaPreview && (
+            <div className="mt-2 p-2 border dark:border-neutral-700 rounded-md relative">
+              <img src={mediaPreview.url} className="rounded w-full" />
+            </div>
+          )}
+          <div className="relative my-2">
+              <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-300/50 dark:border-zinc-700/50" /></div>
+              <div className="relative flex justify-center text-sm"><span className="px-2 bg-light-bg-secondary dark:bg-dark-bg-secondary text-gray-500 dark:text-gray-400">Soon</span></div>
+          </div>
+          <button onClick={handleGenerateDescription} disabled={isGenerating} className="w-full text-center py-3 rounded-2xl font-semibold bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-lg animate-glow">
+            ✨ {isGenerating ? t('generating') : t('generateWithAI')}
+          </button>
+        </FormCard>
+
+         <FormCard icon={<PrivacyIcon />} title={t('privacy')}>
+            <select value={privacy} onChange={e => setPrivacy(e.target.value as AdventurePrivacy)} className={inputClasses}>
               <option value={AdventurePrivacy.Public}>{t('AdventurePrivacy_Public')}</option>
               <option value={AdventurePrivacy.Followers}>{t('AdventurePrivacy_Followers')}</option>
               <option value={AdventurePrivacy.Twins}>{t('AdventurePrivacy_Twins')}</option>
             </select>
-          </div>
-        </div>
-        
-        {privacy === AdventurePrivacy.Twins && (
-          <div>
-            <label className={labelBaseClasses}>{t('subPrivacyLabel')}</label>
-            <select value={subPrivacy} onChange={e => setSubPrivacy(e.target.value as AdventurePrivacy.Public)} className={inputBaseClasses}>
-              <option value={AdventurePrivacy.Public}>{t('AdventurePrivacy_Public')}</option>
-              <option value={AdventurePrivacy.Followers}>{t('AdventurePrivacy_Followers')}</option>
-            </select>
-          </div>
-        )}
+        </FormCard>
 
-        <div>
-          <label htmlFor="title" className={labelBaseClasses}>{t('title')}</label>
-          <input type="text" id="title" value={title} onChange={e => setTitle(e.target.value)} className={inputBaseClasses}/>
-        </div>
-
-        <div className="bg-orange-50 dark:bg-orange-900/20 p-3 rounded-lg">
-           <label htmlFor="keywords" className={labelBaseClasses}>{t('aiDescriptionHelper')}</label>
-           <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">{t('aiHelperPrompt')}</p>
-           <input type="text" id="keywords" value={keywords} onChange={e => setKeywords(e.target.value)} className={`${inputBaseClasses} mb-2`} placeholder={t('keywords')} />
-           <button onClick={handleGenerateDescription} disabled={isGenerating} className="w-full bg-orange-500 text-white py-2 rounded-md hover:bg-orange-600 disabled:bg-orange-300">
-             {isGenerating ? t('generating') : t('generateWithAI')}
-           </button>
-        </div>
-        
-        <div>
-          <label htmlFor="description" className={labelBaseClasses}>{t('description')}</label>
-          <textarea id="description" value={description} onChange={e => setDescription(e.target.value)} rows={4} className={inputBaseClasses}></textarea>
-        </div>
-        
-        <div>
-          <label className={labelBaseClasses}>{t('addMedia')}</label>
-          <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*,video/*" className="hidden"/>
-          <button onClick={() => fileInputRef.current?.click()} className="w-full bg-gray-200 dark:bg-neutral-700 py-2 rounded-md text-sm">{t('uploadMedia')}</button>
-           {mediaPreview && (
-            <div className="mt-2 p-2 border dark:border-neutral-700 rounded-md relative">
-              {mediaPreview.type === 'image' ? <img src={mediaPreview.url} className="rounded w-full" /> : <video src={mediaPreview.url} className="rounded w-full" controls />}
-            </div>
-          )}
-        </div>
-        
-        {/* --- Dynamic Fields --- */}
-        {renderDynamicFields()}
-        
-        <button onClick={handleSubmit} className="w-full bg-emerald-600 text-white font-bold py-3 rounded-md hover:bg-emerald-700 transition-colors">
+        <button onClick={handleSubmit} className="w-full bg-brand-orange text-white font-bold py-4 rounded-2xl hover:bg-brand-orange-light transition-colors text-lg">
           {t('publishAdventure')}
         </button>
       </div>

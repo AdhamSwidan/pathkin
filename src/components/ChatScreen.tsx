@@ -16,11 +16,11 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversations, onSelectConversa
     <>
       <Header title={t('messages')} onBack={onBack} />
       {conversations.length > 0 ? (
-        <div className="divide-y divide-gray-200 dark:divide-neutral-800">
+        <div className="p-2 space-y-2">
           {conversations.map(convo => {
             const unreadCount = convo.unreadCount?.[currentUser.id] || 0;
             return (
-              <div key={convo.id} onClick={() => onSelectConversation(convo.participant)} className="p-4 flex items-center space-x-4 hover:bg-gray-50 dark:hover:bg-neutral-800/50 cursor-pointer">
+              <div key={convo.id} onClick={() => onSelectConversation(convo.participant)} className="p-4 rounded-2xl bg-light-bg-secondary/70 dark:bg-dark-bg-secondary/70 backdrop-blur-sm flex items-center space-x-4 hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary cursor-pointer transition-colors">
                 <img src={convo.participant.avatarUrl} alt={convo.participant.name} className="w-12 h-12 rounded-full" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">

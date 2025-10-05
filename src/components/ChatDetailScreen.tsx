@@ -88,7 +88,7 @@ const ChatDetailScreen: React.FC<ChatDetailScreenProps> = ({ participant, curren
                 {message.senderId !== currentUser.id && (
                   <img src={participant.avatarUrl} className="w-6 h-6 rounded-full self-end" alt="avatar" />
                 )}
-                <div className={`max-w-[75%] sm:max-w-[60%] p-2 px-3 rounded-2xl ${message.senderId === currentUser.id ? 'bg-orange-600 text-white' : 'bg-gray-200 dark:bg-neutral-700 text-gray-800 dark:text-gray-200'}`}>
+                <div className={`max-w-[75%] sm:max-w-[60%] p-3 rounded-2xl ${message.senderId === currentUser.id ? 'bg-orange-600 text-white rounded-br-lg' : 'bg-light-bg-secondary dark:bg-dark-bg-secondary text-gray-800 dark:text-gray-200 rounded-bl-lg'}`}>
                   <p className="text-sm" style={{wordBreak: 'break-word'}}>{message.text}</p>
                    <p className={`text-xs mt-1 text-right ${message.senderId === currentUser.id ? 'text-orange-200' : 'text-gray-500 dark:text-gray-400'}`}>
                     {messageDate.toLocaleTimeString(language, { hour: '2-digit', minute: '2-digit' })}
@@ -100,12 +100,12 @@ const ChatDetailScreen: React.FC<ChatDetailScreenProps> = ({ participant, curren
         })}
         <div ref={messagesEndRef} />
       </div>
-      <div className="p-2 border-t dark:border-neutral-800 bg-white dark:bg-neutral-950">
+      <div className="p-2 border-t dark:border-zinc-800/50 bg-light-bg-secondary/50 dark:bg-dark-bg/50 backdrop-blur-sm">
         <div className="flex items-center space-x-2">
           <input 
             type="text" 
             placeholder="Type a message..." 
-            className="flex-1 p-2 border border-gray-300 rounded-full dark:bg-neutral-800 dark:border-neutral-700 dark:text-white"
+            className="flex-1 p-2 border border-gray-300 rounded-full dark:bg-dark-bg-secondary dark:border-zinc-700 dark:text-white"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSend()}

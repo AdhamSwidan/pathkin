@@ -21,6 +21,7 @@ export default {
         'lg': '0.75rem',
         'xl': '1rem',
         '2xl': '1.25rem',
+        '3xl': '1.5rem', // New, very rounded corners for the modern design
       },
       fontFamily: {
         sans: ['Tajawal', ...defaultTheme.fontFamily.sans],
@@ -28,6 +29,7 @@ export default {
       animation: {
         'fade-in': 'fadeIn 0.2s ease-out',
         'fade-in-up': 'fadeInUp 0.3s ease-out forwards',
+        'glow': 'glow 2.5s ease-in-out infinite',
       },
       keyframes: {
         fadeIn: {
@@ -38,6 +40,10 @@ export default {
           '0%': { opacity: 0, transform: 'translateY(10px)' },
           '100%': { opacity: 1, transform: 'translateY(0)' },
         },
+        glow: {
+          '0%, 100%': { 'box-shadow': '0 0 8px 0px rgba(251, 146, 60, 0.5)' },
+          '50%': { 'box-shadow': '0 0 20px 5px rgba(251, 146, 60, 0.2)' },
+        }
       },
     },
   },
