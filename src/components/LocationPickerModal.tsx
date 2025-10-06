@@ -1,4 +1,5 @@
 
+
 import React, { useState, useRef, useCallback } from 'react';
 import { GoogleMap, MarkerF, StandaloneSearchBox } from '@react-google-maps/api';
 import { useTranslation } from '../contexts/LanguageContext';
@@ -26,6 +27,7 @@ const LocationPickerModal: React.FC<LocationPickerModalProps> = ({ isOpen, onClo
   const [markerPosition, setMarkerPosition] = useState<google.maps.LatLngLiteral | null>(initialPosition || null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const searchBoxRef = useRef<google.maps.places.SearchBox | null>(null);
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
   
   const onMapLoad = useCallback((map: google.maps.Map) => {
     mapRef.current = map;
@@ -64,7 +66,7 @@ const LocationPickerModal: React.FC<LocationPickerModalProps> = ({ isOpen, onClo
             onLocationSelect(results[0].formatted_address, markerPosition);
         } else {
             console.error('Geocoder failed due to: ' + status);
-            alert(t('noAddressFound'))
+            setAlertMessage(t('noAddressFound'));
         }
     });
   };
@@ -82,11 +84,11 @@ const LocationPickerModal: React.FC<LocationPickerModalProps> = ({ isOpen, onClo
           mapRef.current?.setZoom(15);
         },
         () => {
-          alert(t('locationPermissionDenied'));
+          setAlertMessage(t('locationPermissionDenied'));
         }
       );
     } else {
-      alert(t('locationUnavailable'));
+      setAlertMessage(t('locationUnavailable'));
     }
   };
 
@@ -94,7 +96,7 @@ const LocationPickerModal: React.FC<LocationPickerModalProps> = ({ isOpen, onClo
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-70 z-[102] flex justify-center items-center p-4 animate-fade-in">
-      <div className="bg-white dark:bg-neutral-900 rounded-lg shadow-xl w-full max-w-2xl h-[80vh] flex flex-col">
+      <div className="bg-white dark:bg-neutral-900 rounded-lg shadow-xl w-full max-w-2xl h-[80vh] flex flex-col relative">
         <div className="p-4 border-b dark:border-neutral-800 flex justify-between items-center">
           <h2 className="text-xl font-bold dark:text-white">{t('selectOnMap')}</h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white text-2xl font-bold">&times;</button>
@@ -136,6 +138,20 @@ const LocationPickerModal: React.FC<LocationPickerModalProps> = ({ isOpen, onClo
             {t('confirmLocation')}
           </button>
         </div>
+
+        {alertMessage && (
+          <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center z-20" role="alertdialog" aria-modal="true" aria-labelledby="alert-dialog-title">
+            <div className="bg-light-bg-secondary dark:bg-dark-bg-secondary rounded-2xl p-6 w-11/12 max-w-sm text-center shadow-xl animate-fade-in-up">
+              <p id="alert-dialog-title" className="text-gray-800 dark:text-gray-200 mb-6">{alertMessage}</p>
+              <button
+                onClick={() => setAlertMessage(null)}
+                className="bg-brand-orange text-white px-8 py-2.5 rounded-full font-semibold hover:bg-brand-orange-light transition-colors"
+              >
+                {t('ok')}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

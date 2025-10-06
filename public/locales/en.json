@@ -199,5 +199,6 @@
   "otherCategory": "Other Category",
   "startPoint": "Start Point",
   "endPoint": "End Point",
+  "ok": "OK",
   "mapLoadError": "Failed to load map. Please check your API key and Google Cloud settings."
 }

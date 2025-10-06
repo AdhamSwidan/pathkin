@@ -1,10 +1,10 @@
 export enum AdventureType {
   Travel = 'Travel',
-  Event = 'Event',
+  Volunteering = 'Volunteering',
   Hiking = 'Hiking',
   Camping = 'Camping',
-  Volunteering = 'Volunteering',
   Cycling = 'Cycling',
+  Event = 'Event',
 }
 
 export enum NotificationType {
