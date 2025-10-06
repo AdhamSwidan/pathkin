@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { GoogleMap, MarkerF, InfoWindowF, DirectionsRenderer } from '@react-google-maps/api';
-import { Adventure, AdventureType } from '../types';
+import { HydratedAdventure, AdventureType } from '../types';
 import { useTranslation } from '../contexts/LanguageContext';
 import MyLocationIcon from './icons/MyLocationIcon';
 import { getAdventureIconDataUrl } from '../utils/mapIconUtils';
@@ -14,10 +14,10 @@ import GridIcon from './icons/GridIcon';
 
 
 interface MapScreenProps {
-  adventuresToShow: Adventure[];
+  adventuresToShow: HydratedAdventure[];
   isLoaded: boolean;
   onShowToast: (message: string) => void;
-  onSelectAdventure: (adventure: Adventure) => void;
+  onSelectAdventure: (adventure: HydratedAdventure) => void;
 }
 
 const containerStyle = {
@@ -47,7 +47,7 @@ const FilterButton: React.FC<{ icon: React.ReactNode; label: string; isActive: b
 
 const MapScreen: React.FC<MapScreenProps> = ({ adventuresToShow, isLoaded, onShowToast, onSelectAdventure }) => {
   const { t, language } = useTranslation();
-  const [selectedAdventure, setSelectedAdventure] = useState<Adventure | null>(null);
+  const [selectedAdventure, setSelectedAdventure] = useState<HydratedAdventure | null>(null);
   const [myPosition, setMyPosition] = useState<google.maps.LatLngLiteral | null>(null);
   const [filterType, setFilterType] = useState<AdventureType | 'all'>('all');
   const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
@@ -74,7 +74,7 @@ const MapScreen: React.FC<MapScreenProps> = ({ adventuresToShow, isLoaded, onSho
     lng: firstAdventureWithCoords?.coordinates?.lng ?? -0.09,
   };
 
-  const onMarkerClick = (adventure: Adventure) => {
+  const onMarkerClick = (adventure: HydratedAdventure) => {
     setSelectedAdventure(adventure);
     setDirections(null); // Clear previous directions
     if ( (adventure.type === AdventureType.Hiking || adventure.type === AdventureType.Cycling) && adventure.coordinates && adventure.endCoordinates) {
