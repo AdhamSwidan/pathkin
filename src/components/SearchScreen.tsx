@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { User, AdventureType, HydratedAdventure } from '../types';
 import AdventureCard from './AdventureCard';
@@ -31,7 +32,7 @@ interface SearchScreenProps {
   onSaveToggle: (adventureId: string) => void;
   onShareAdventure: (adventure: HydratedAdventure) => void;
   onToggleCompleted: (adventureId: string) => void;
-  onViewLocationOnMap: (adventure: HydratedAdventure) => void;
+  onViewLocationOnMap: (adventure: HydratedAdventure | null) => void;
   onDeleteAdventure: (adventureId: string) => void;
   onEditAdventure: (adventure: HydratedAdventure) => void;
   onFollowToggle: (userId: string) => void;

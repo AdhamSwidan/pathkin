@@ -5,6 +5,7 @@
 
 
 
+
 import React, { useMemo } from 'react';
 import { User, HydratedAdventure, ActivityStatus, AdventureType, ProfileTab } from '../types';
 import Header from './Header';
@@ -37,7 +38,7 @@ interface ProfileScreenProps {
   onToggleCompleted: (adventureId: string) => void;
   onOpenFollowList: (user: User, listType: 'followers' | 'following') => void;
   onNavigateToSettings: () => void;
-  onViewLocationOnMap: (adventure: HydratedAdventure) => void;
+  onViewLocationOnMap: (adventure: HydratedAdventure | null) => void;
   onDeleteAdventure: (adventureId: string) => void;
   onEditAdventure: (adventure: HydratedAdventure) => void;
   onJoinGroupChat: (adventure: HydratedAdventure) => void;

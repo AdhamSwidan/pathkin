@@ -27,7 +27,7 @@ interface AdventuresScreenProps {
   onToggleCompleted: (adventureId: string) => void;
   isGuest: boolean;
   onGuestAction: () => void;
-  onViewLocationOnMap: (adventure: HydratedAdventure) => void;
+  onViewLocationOnMap: (adventure: HydratedAdventure | null) => void;
   onDeleteAdventure: (adventureId: string) => void;
   onEditAdventure: (adventure: HydratedAdventure) => void;
   onJoinGroupChat: (adventure: HydratedAdventure) => void;

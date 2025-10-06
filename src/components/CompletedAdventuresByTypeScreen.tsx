@@ -1,4 +1,5 @@
 
+
 import React, { useMemo } from 'react';
 import { User, HydratedAdventure, AdventureType, ActivityStatus } from '../types';
 import Header from './Header';
@@ -20,7 +21,7 @@ interface CompletedAdventuresByTypeScreenProps {
   onSaveToggle: (adventureId: string) => void;
   onShareAdventure: (adventure: HydratedAdventure) => void;
   onToggleCompleted: (adventureId: string) => void;
-  onViewLocationOnMap: (adventure: HydratedAdventure) => void;
+  onViewLocationOnMap: (adventure: HydratedAdventure | null) => void;
   onDeleteAdventure: (adventureId: string) => void;
   onEditAdventure: (adventure: HydratedAdventure) => void;
   onJoinGroupChat: (adventure: HydratedAdventure) => void;

@@ -16,7 +16,7 @@ interface SavedAdventuresScreenProps {
   onSaveToggle: (adventureId: string) => void;
   onShareAdventure: (adventure: HydratedAdventure) => void;
   onToggleCompleted: (adventureId: string) => void;
-  onViewLocationOnMap: (adventure: HydratedAdventure) => void;
+  onViewLocationOnMap: (adventure: HydratedAdventure | null) => void;
   onDeleteAdventure: (adventureId: string) => void;
   onEditAdventure: (adventure: HydratedAdventure) => void;
   // Fix: Add onJoinGroupChat to the props interface to resolve TypeScript error.

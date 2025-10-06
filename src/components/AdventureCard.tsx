@@ -1,5 +1,6 @@
 
 
+
 import React, { useState } from 'react';
 import { AdventureType, User, ActivityStatus, HydratedAdventure, AdventurePrivacy } from '../types';
 import InterestIcon from './icons/InterestIcon';
@@ -30,7 +31,7 @@ interface AdventureCardProps {
   onSaveToggle: (adventureId: string) => void;
   onShareAdventure: (adventure: HydratedAdventure) => void;
   onToggleCompleted: (adventureId: string) => void;
-  onViewLocationOnMap: (adventure: HydratedAdventure) => void;
+  onViewLocationOnMap: (adventure: HydratedAdventure | null) => void;
   onDeleteAdventure: (adventureId: string) => void;
   onEditAdventure: (adventure: HydratedAdventure) => void;
   onJoinGroupChat: (adventure: HydratedAdventure) => void;
@@ -63,6 +64,18 @@ const AdventureCard: React.FC<AdventureCardProps> = ({
   
   const activityLogEntry = currentUser ? (currentUser.activityLog || []).find(a => a.adventureId === adventure.id) : undefined;
   const activityStatus = activityLogEntry?.status;
+
+  const adventureEndDate = new Date(adventure.endDate || adventure.startDate);
+  adventureEndDate.setHours(23, 59, 59, 999); // Consider the adventure past after its end day is fully over.
+  const isPast = new Date() > adventureEndDate;
+
+  const handleLocationClick = () => {
+    if (isPast) {
+      onViewLocationOnMap(null);
+    } else {
+      onViewLocationOnMap(adventure);
+    }
+  };
 
 
   const getTagStyle = (type: AdventureType) => {
@@ -222,8 +235,8 @@ const AdventureCard: React.FC<AdventureCardProps> = ({
         <div className="flex flex-wrap gap-2 text-xs text-gray-600 dark:text-gray-300">
           <span className={`px-2 py-1 rounded-full font-medium ${getTagStyle(adventure.type)}`}>{t(`AdventureType_${adventure.type}`)}</span>
           <button 
-             onClick={() => onViewLocationOnMap(adventure)}
-             disabled={!adventure.coordinates}
+             onClick={handleLocationClick}
+             disabled={!isPast && !adventure.coordinates}
              className="px-2 py-1 rounded-full bg-slate-100 dark:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-200 dark:hover:bg-zinc-700"
           >
             📍 {getLocationText()}
