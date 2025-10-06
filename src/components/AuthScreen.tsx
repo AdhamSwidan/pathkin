@@ -80,7 +80,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onSignUp, onSocialLogi
           {!isLogin && (
             <>
               <input type="text" placeholder={t('fullName')} className={inputClasses} value={fullName} onChange={e => setFullName(e.target.value)} required />
-              <input type="text" placeholder={t('username')} className={inputClasses} value={username} onChange={e => setUsername(e.target.value)} required />
+              <input type="text" placeholder={t('username')} className={inputClasses} value={username} onChange={e => setUsername(e.target.value.replace(/\s/g, ''))} required />
             </>
           )}
           <input type="email" placeholder={t('emailAddress')} className={inputClasses} value={email} onChange={e => setEmail(e.target.value)} required />

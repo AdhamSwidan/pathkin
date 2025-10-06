@@ -219,15 +219,18 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
         {/* Profile Info */}
         <div className="pt-4 px-4">
             <div className="flex justify-between items-start">
-                <div className="flex items-center space-x-2 mr-2 flex-shrink min-w-0">
-                    <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 truncate">{user.name}</h2>
-                    {flagUrl && <img src={flagUrl} alt={`${user.country} flag`} className="w-6 h-auto rounded-sm flex-shrink-0" />}
-                     {user.averageRating && (
-                        <div className="flex items-center space-x-1 text-amber-500 bg-amber-100 dark:bg-amber-900/50 px-2 py-0.5 rounded-full flex-shrink-0">
-                            <StarIcon className="w-4 h-4 fill-current" />
-                            <span className="font-bold text-sm">{user.averageRating.toFixed(1)}</span>
-                        </div>
-                    )}
+                <div className="flex-shrink min-w-0">
+                    <div className="flex items-center space-x-2 mr-2">
+                        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 truncate">{user.name}</h2>
+                        {flagUrl && <img src={flagUrl} alt={`${user.country} flag`} className="w-6 h-auto rounded-sm flex-shrink-0" />}
+                        {user.averageRating && (
+                            <div className="flex items-center space-x-1 text-amber-500 bg-amber-100 dark:bg-amber-900/50 px-2 py-0.5 rounded-full flex-shrink-0">
+                                <StarIcon className="w-4 h-4 fill-current" />
+                                <span className="font-bold text-sm">{user.averageRating.toFixed(1)}</span>
+                            </div>
+                        )}
+                    </div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">@{user.username}</p>
                 </div>
                 <div className="flex space-x-2 flex-shrink-0 mt-1">
                     <button

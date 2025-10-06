@@ -130,7 +130,7 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ onBack, currentUs
           </div>
           <div>
             <label htmlFor="username" className={labelClasses}>{t('username')}</label>
-            <input id="username" type="text" value={username} onChange={e => setUsername(e.target.value)} className={inputClasses} />
+            <input id="username" type="text" value={username} onChange={e => setUsername(e.target.value.replace(/\s/g, ''))} className={inputClasses} />
           </div>
           <div>
             <label htmlFor="bio" className={labelClasses}>{t('description')}</label>

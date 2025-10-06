@@ -192,7 +192,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                     </div>
                 )}
             </div>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">{user.bio}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">@{user.username}</p>
+            <p className="text-gray-600 dark:text-gray-400 mt-2">{user.bio}</p>
         </div>
         
         <div className="mt-4 border-t border-b border-gray-200 dark:border-neutral-800 flex">
