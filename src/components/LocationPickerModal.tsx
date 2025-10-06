@@ -141,15 +141,15 @@ const LocationPickerModal: React.FC<LocationPickerModalProps> = ({ isOpen, onClo
     }
   };
   
-  const resetState = () => {
-    setMarkerPosition(initialPosition || null);
+  const resetRouteState = () => {
     setStartPoint(null);
     setEndPoint(null);
     setDirections(null);
   };
   
   const handleClose = () => {
-      resetState();
+      setMarkerPosition(initialPosition || null);
+      resetRouteState();
       onClose();
   };
 
@@ -214,8 +214,13 @@ const LocationPickerModal: React.FC<LocationPickerModalProps> = ({ isOpen, onClo
             </button>
         </div>
         
-        <div className="p-4 border-t dark:border-neutral-800">
-          <button onClick={handleConfirm} disabled={isConfirmDisabled} className="w-full bg-orange-600 text-white font-bold py-3 rounded-md hover:bg-orange-700 disabled:bg-orange-300 transition-colors">
+        <div className="p-4 border-t dark:border-neutral-800 flex items-center space-x-2">
+            {mode === 'route' && startPoint && (
+                <button onClick={resetRouteState} className="flex-grow bg-gray-200 dark:bg-zinc-700 text-gray-800 dark:text-gray-200 font-bold py-3 rounded-md hover:bg-gray-300 dark:hover:bg-zinc-600 transition-colors">
+                    {t('reset')}
+                </button>
+            )}
+          <button onClick={handleConfirm} disabled={isConfirmDisabled} className="flex-grow bg-orange-600 text-white font-bold py-3 rounded-md hover:bg-orange-700 disabled:bg-orange-300 transition-colors">
             {t('confirmLocation')}
           </button>
         </div>

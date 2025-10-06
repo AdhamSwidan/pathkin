@@ -209,6 +209,45 @@ const App: React.FC = () => {
     return () => { if (commentListenerUnsub.current) { commentListenerUnsub.current(); } };
   }, [selectedAdventure]);
 
+  // Auto-complete authored adventures
+  useEffect(() => {
+    const checkAndCompleteAuthoredAdventures = async () => {
+        if (!currentUser || !adventures.length) return;
+
+        const now = new Date();
+        const loggedAdventureIds = new Set((currentUser.activityLog || []).map(entry => entry.adventureId));
+
+        const adventuresToComplete = adventures.filter(adv => {
+            if (adv.authorId !== currentUser.id) return false;
+            if (loggedAdventureIds.has(adv.id)) return false;
+
+            const adventureEndDate = adv.endDate ? new Date(adv.endDate) : new Date(adv.startDate);
+            // Add one day to the end date to ensure the day is fully over before marking as complete
+            adventureEndDate.setDate(adventureEndDate.getDate() + 1); 
+            return now > adventureEndDate;
+        });
+
+        if (adventuresToComplete.length > 0) {
+            try {
+                const userRef = doc(db, 'users', currentUser.id);
+                const newLogEntries = adventuresToComplete.map(adv => ({
+                    adventureId: adv.id,
+                    status: ActivityStatus.Confirmed
+                }));
+                
+                // Use arrayUnion with spread to add multiple items idempotently
+                await updateDoc(userRef, {
+                    activityLog: arrayUnion(...newLogEntries)
+                });
+            } catch (error) {
+                console.error("Error auto-completing adventures:", error);
+            }
+        }
+    };
+
+    checkAndCompleteAuthoredAdventures();
+  }, [currentUser, adventures]);
+
 
   // Data Hydration
   const hydratedAdventures: HydratedAdventure[] = useMemo(() => adventures.map(adventure => ({ ...adventure, author: users.find(u => u.id === adventure.authorId) || guestUser })).filter(Boolean), [adventures, users]);

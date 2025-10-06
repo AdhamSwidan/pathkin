@@ -209,5 +209,6 @@
   "selectStartPoint": "Select start point",
   "selectEndPoint": "Select end point",
   "routeSelected": "Route selected",
-  "loading": "Loading..."
+  "loading": "Loading...",
+  "reset": "Reset"
 }
