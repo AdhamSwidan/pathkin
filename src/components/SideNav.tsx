@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Screen } from '../types';
 import HomeIcon from './icons/HomeIcon';
@@ -62,10 +63,10 @@ const SideNav: React.FC<SideNavProps> = ({ activeScreen, setActiveScreen, hasUnr
   return (
     <div className="w-64 border-e border-slate-200 dark:border-zinc-800 bg-light-bg-secondary dark:bg-dark-bg-secondary p-4 flex-col justify-between hidden xl:flex">
         <div>
-            <div className="flex items-center mb-8 px-2">
+            <button onClick={() => handleNavItemClick('adventures')} className="flex items-center mb-8 px-2">
                 <img src="/logo.svg" alt="Pathkin Logo" className="w-8 h-8 mr-2" />
                 <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">{t('appName')}</h1>
-            </div>
+            </button>
             <nav>
             {mainNavItems.map((item) => (
                 <NavItem

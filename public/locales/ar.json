@@ -123,7 +123,7 @@
   "appearInTwinSearchDescription": "اسمح للآخرين بالعثور عليك إذا كنتم تشاركون نفس تاريخ الميلاد.",
   "countriesVisited": "الدول التي تمت زيارتها",
   "noCountries": "لم يتم تسجيل أي مغامرات دولية مؤكدة بعد!",
-  "activityBreakdown": "تفاصيل الأنشطة",
+  "activityBreakdown": "المغامرات المكتملة",
   "noActivities": "أكمل وأكد بعض الأنشطة لرؤية التفاصيل.",
   "guestHeader": "أنت تتصفح كضيف.",
   "AdventureType_Travel": "سفر",
@@ -211,5 +211,8 @@
   "loading": "جار التحميل...",
   "reset": "إعادة ضبط",
   "adventurers": "المغامرون",
-  "groupChat": "محادثة جماعية"
+  "groupChat": "محادثة جماعية",
+  "joinGroupChatConfirmationTitle": "الانضمام لمحادثة المغامرة؟",
+  "joinGroupChatConfirmationMessage": "بالانضمام، أنت تؤكد نيتك بالمشاركة في هذه المغامرة. هل تريد المتابعة؟",
+  "completedAdventuresTitle": "المغامرات المكتملة: {{type}}"
 }

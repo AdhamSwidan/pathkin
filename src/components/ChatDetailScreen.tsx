@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { User, Message, HydratedConversation } from '../types';
 import Header from './Header';
@@ -95,8 +96,10 @@ const ChatDetailScreen: React.FC<ChatDetailScreenProps> = ({ conversation, curre
                   </div>
               )}
               <div className={`flex items-end gap-2 ${isMe ? 'justify-end' : 'justify-start'}`}>
-                {!isMe && (
-                  <img src={sender?.avatarUrl} className="w-6 h-6 rounded-full self-end" alt="avatar" />
+                {!isMe && sender && (
+                  <button onClick={() => onViewProfile(sender)}>
+                    <img src={sender.avatarUrl} className="w-6 h-6 rounded-full self-end" alt="avatar" />
+                  </button>
                 )}
                 <div className="flex flex-col" style={{ maxWidth: '75%'}}>
                    {!isMe && conversation.type === 'group' && (

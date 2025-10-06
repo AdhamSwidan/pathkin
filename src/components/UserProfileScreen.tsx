@@ -1,7 +1,8 @@
 
 
+
 import React, { useState, useMemo } from 'react';
-import { User, ActivityStatus, HydratedAdventure } from '../types';
+import { User, ActivityStatus, HydratedAdventure, AdventureType } from '../types';
 import Header from './Header';
 import AdventureCard from './AdventureCard';
 import GridIcon from './icons/GridIcon';
@@ -36,8 +37,8 @@ interface UserProfileScreenProps {
   onViewLocationOnMap: (adventure: HydratedAdventure) => void;
   onDeleteAdventure: (adventureId: string) => void;
   onEditAdventure: (adventure: HydratedAdventure) => void;
-  // Fix: Add onJoinGroupChat to the props interface to resolve TypeScript error.
   onJoinGroupChat: (adventure: HydratedAdventure) => void;
+  onViewCompletedByType: (user: User, type: AdventureType) => void;
 }
 
 type ProfileTab = 'adventures' | 'reposts' | 'completed' | 'stats';
@@ -63,6 +64,7 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
   onDeleteAdventure,
   onEditAdventure,
   onJoinGroupChat,
+  onViewCompletedByType,
 }) => {
   const [activeTab, setActiveTab] = useState<ProfileTab>('adventures');
   const { t } = useTranslation();
@@ -132,7 +134,7 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
         );
     }
     if (activeTab === 'stats') {
-      return <StatsScreen user={user} allAdventures={allAdventures} />;
+      return <StatsScreen user={user} allAdventures={allAdventures} onViewCompletedByType={(type) => onViewCompletedByType(user, type)} />;
     }
 
     return (

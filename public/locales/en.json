@@ -123,7 +123,7 @@
   "appearInTwinSearchDescription": "Allow others to find you if you share a birthday.",
   "countriesVisited": "Countries Visited",
   "noCountries": "No confirmed international adventures logged yet!",
-  "activityBreakdown": "Activity Breakdown",
+  "activityBreakdown": "Done Adventures",
   "noActivities": "Complete and confirm some activities to see a breakdown.",
   "guestHeader": "You are browsing as a guest.",
   "AdventureType_Travel": "Travel",
@@ -211,5 +211,8 @@
   "loading": "Loading...",
   "reset": "Reset",
   "adventurers": "Adventurers",
-  "groupChat": "Group Chat"
+  "groupChat": "Group Chat",
+  "joinGroupChatConfirmationTitle": "Join Adventure Chat?",
+  "joinGroupChatConfirmationMessage": "By joining, you confirm that you will participate in this adventure. Proceed?",
+  "completedAdventuresTitle": "Completed {{type}} Adventures"
 }

@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { Adventure, AdventureType, User, ActivityStatus } from '../types';
 import { getCountryFromLocation, getFlagUrl } from '../utils/countryUtils';
@@ -12,6 +13,7 @@ import { useTranslation } from '../contexts/LanguageContext';
 interface StatsScreenProps {
   user: User;
   allAdventures: Adventure[];
+  onViewCompletedByType: (type: AdventureType) => void;
 }
 
 const activityIcons: Record<AdventureType, React.ReactNode> = {
@@ -24,7 +26,7 @@ const activityIcons: Record<AdventureType, React.ReactNode> = {
 };
 
 
-const StatsScreen: React.FC<StatsScreenProps> = ({ user, allAdventures }) => {
+const StatsScreen: React.FC<StatsScreenProps> = ({ user, allAdventures, onViewCompletedByType }) => {
   const { t } = useTranslation();
   const stats = useMemo(() => {
     // Only count activities that have been confirmed by the host
@@ -67,12 +69,12 @@ const StatsScreen: React.FC<StatsScreenProps> = ({ user, allAdventures }) => {
     </div>
   );
   
-  const ActivityCard: React.FC<{ type: AdventureType, count: number }> = ({ type, count }) => (
-    <div className="bg-slate-100 dark:bg-neutral-800/50 rounded-lg p-3 flex flex-col items-center justify-center text-center">
+  const ActivityCard: React.FC<{ type: AdventureType, count: number, onClick: () => void }> = ({ type, count, onClick }) => (
+    <button onClick={onClick} className="bg-slate-100 dark:bg-neutral-800/50 rounded-lg p-3 flex flex-col items-center justify-center text-center hover:bg-slate-200 dark:hover:bg-neutral-700 transition-colors">
         <div className="text-orange-500 mb-1 w-6 h-6">{activityIcons[type]}</div>
         <p className="font-bold text-xl text-gray-800 dark:text-gray-100">{count}</p>
         <p className="text-xs text-gray-500 dark:text-gray-400">{t(`AdventureType_${type}`)}</p>
-    </div>
+    </button>
   );
 
   const homeCountryFlagUrl = user.country ? getFlagUrl(user.country) : null;
@@ -116,7 +118,12 @@ const StatsScreen: React.FC<StatsScreenProps> = ({ user, allAdventures }) => {
         {Object.keys(stats.activityCounts).length > 0 ? (
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
             {Object.entries(stats.activityCounts).map(([type, count]) => (
-              <ActivityCard key={type} type={type as AdventureType} count={count} />
+              <ActivityCard 
+                key={type} 
+                type={type as AdventureType} 
+                count={count} 
+                onClick={() => onViewCompletedByType(type as AdventureType)}
+              />
             ))}
           </div>
         ) : (

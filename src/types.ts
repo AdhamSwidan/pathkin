@@ -1,3 +1,4 @@
+
 export enum AdventureType {
   Travel = 'Travel',
   Volunteering = 'Volunteering',
@@ -190,4 +191,5 @@ export type Screen =
   | 'language'
   | 'savedAdventures'
   | 'notifications'
-  | 'editAdventure';
+  | 'editAdventure'
+  | 'completedAdventuresByType';
