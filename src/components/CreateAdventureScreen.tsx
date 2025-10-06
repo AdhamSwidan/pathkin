@@ -151,12 +151,6 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ currentUs
   const handleAddDestination = () => {
     setDestinations([...destinations, { location: '', coordinates: null }]);
   };
-  
-  const handleDestinationLocationChange = (index: number, newLocation: string) => {
-    const newDestinations = [...destinations];
-    newDestinations[index] = { ...newDestinations[index], location: newLocation };
-    setDestinations(newDestinations);
-  };
 
   const adventureTypes = Object.values(AdventureType);
   const inputBaseClasses = "w-full p-2 border border-gray-200 dark:border-zinc-700 rounded-lg bg-slate-50 dark:bg-zinc-800 focus:ring-brand-orange focus:border-brand-orange";
