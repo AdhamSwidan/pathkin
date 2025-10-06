@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { AdventureType, User, ActivityStatus, HydratedAdventure } from '../types';
+import { AdventureType, User, ActivityStatus, HydratedAdventure, AdventurePrivacy } from '../types';
 import InterestIcon from './icons/InterestIcon';
 import CommentIcon from './icons/CommentIcon';
 import PlayIcon from './icons/PlayIcon';
@@ -12,6 +12,9 @@ import StarIcon from './icons/StarIcon';
 import { useTranslation } from '../contexts/LanguageContext';
 import MoreIcon from './icons/MoreIcon';
 import AdventureOptionsMenu from './AdventureOptionsMenu';
+import GlobeIcon from './icons/GlobeIcon';
+import UsersIcon from './icons/UsersIcon';
+import CakeIcon from './icons/CakeIcon';
 
 interface AdventureCardProps {
   adventure: HydratedAdventure;
@@ -77,6 +80,25 @@ const AdventureCard: React.FC<AdventureCardProps> = ({
     }
   };
 
+  const getPrivacyInfo = (privacy: AdventurePrivacy, subPrivacy?: AdventurePrivacy.Public | AdventurePrivacy.Followers) => {
+    switch (privacy) {
+        case AdventurePrivacy.Public:
+            return { icon: <GlobeIcon className="w-3 h-3" />, text: t('AdventurePrivacy_Public') };
+        case AdventurePrivacy.Followers:
+            return { icon: <UsersIcon className="w-3 h-3" />, text: t('AdventurePrivacy_Followers') };
+        case AdventurePrivacy.Twins:
+            let text = t('AdventurePrivacy_Twins');
+            if (subPrivacy === AdventurePrivacy.Public) {
+                text += ` + ${t('AdventurePrivacy_Public')}`;
+            } else if (subPrivacy === AdventurePrivacy.Followers) {
+                text += ` + ${t('AdventurePrivacy_Followers')}`;
+            }
+            return { icon: <CakeIcon className="w-3 h-3" />, text: text };
+        default:
+            return { icon: <GlobeIcon className="w-3 h-3" />, text: t('AdventurePrivacy_Public') };
+    }
+  }
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString(language, { month: 'short', day: 'numeric', year: 'numeric' });
   };
@@ -133,7 +155,14 @@ const AdventureCard: React.FC<AdventureCardProps> = ({
                     </div>
                     )}
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">{new Date(adventure.createdAt).toLocaleString(language)}</p>
+                 <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {new Date(adventure.createdAt).toLocaleString(language)}
+                    {' · '}
+                    <span className="inline-flex items-center space-x-1">
+                        {getPrivacyInfo(adventure.privacy, adventure.subPrivacy).icon}
+                        <span>{getPrivacyInfo(adventure.privacy, adventure.subPrivacy).text}</span>
+                    </span>
+                </p>
                 </div>
             </button>
             <div className="relative flex-shrink-0 ms-2">

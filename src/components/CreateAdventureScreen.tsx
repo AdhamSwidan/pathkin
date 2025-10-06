@@ -4,16 +4,9 @@ import Header from './Header';
 import { AdventureType, Media, AdventurePrivacy, Adventure, User } from '../types';
 import { useTranslation } from '../contexts/LanguageContext';
 import LocationPickerModal from './LocationPickerModal';
-import TitleIcon from './icons/TitleIcon';
-import CalendarIcon from './icons/CalendarIcon';
-import PencilIcon from './icons/PencilIcon';
+import { generateDescription } from '../services/geminiService';
 import ImageIcon from './icons/ImageIcon';
-import CategoryIcon from './icons/CategoryIcon';
-import PrivacyIcon from './icons/PrivacyIcon';
-import MapPinIcon from './icons/MapPinIcon';
-import DollarSignIcon from './icons/DollarSignIcon';
-import ListIcon from './icons/ListIcon';
-import FormCard from './FormCard';
+import PlayIcon from './icons/PlayIcon';
 
 interface CreateAdventureScreenProps {
   currentUser: User;
@@ -21,23 +14,7 @@ interface CreateAdventureScreenProps {
   isLoaded: boolean;
 }
 
-// Chip component for categories and image options
-const Chip: React.FC<{ children: React.ReactNode; isSelected?: boolean; onClick: () => void; className?: string; }> = ({ children, isSelected = false, onClick, className = '' }) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className={`px-4 py-2 rounded-xl text-sm font-semibold border-2 transition-all duration-200 flex items-center justify-center space-x-2 ${
-      isSelected
-        ? 'bg-brand-orange/10 dark:bg-brand-orange/20 border-brand-orange text-brand-orange'
-        : 'bg-slate-100 dark:bg-zinc-800 border-transparent hover:border-slate-300 dark:hover:border-zinc-600 text-gray-700 dark:text-gray-300'
-    } ${className}`}
-  >
-    {children}
-  </button>
-);
-
-
-const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ onCreateAdventure, isLoaded }) => {
+const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ currentUser, onCreateAdventure, isLoaded }) => {
   // Common State
   const [adventureType, setAdventureType] = useState<AdventureType>(AdventureType.Travel);
   const [privacy, setPrivacy] = useState<AdventurePrivacy>(AdventurePrivacy.Public);
@@ -47,6 +24,8 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ onCreateA
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [mediaPreview, setMediaPreview] = useState<Media | null>(null);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const [keywords, setKeywords] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
 
   // Dynamic State
   const [location, setLocation] = useState('');
@@ -59,8 +38,6 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ onCreateA
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { t } = useTranslation();
 
-  const inputClasses = "w-full px-4 py-3 rounded-2xl bg-slate-100 dark:bg-zinc-800 border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-brand-orange focus:bg-white dark:focus:bg-zinc-900 text-gray-800 dark:text-gray-200 transition-colors placeholder:text-gray-400 dark:placeholder:text-gray-500";
-  
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -77,6 +54,23 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ onCreateA
     setIsPickerOpen(false);
   };
   
+  const handleGenerateDescription = async () => {
+    if (!title && !keywords) {
+      alert("Please enter a title or some keywords first.");
+      return;
+    }
+    setIsGenerating(true);
+    try {
+      const generatedDesc = await generateDescription(title, keywords, adventureType);
+      setDescription(generatedDesc);
+    } catch (error) {
+      console.error(error);
+      alert("Failed to generate description.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   const handleSubmit = () => {
     if (!title || !description || !location || !startDate) {
         alert("Please fill in all required fields: title, description, location, and start date.");
@@ -94,93 +88,109 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ onCreateA
   };
 
   const adventureTypes = Object.values(AdventureType);
+  const inputBaseClasses = "w-full p-2 border border-gray-200 dark:border-zinc-700 rounded-lg bg-slate-50 dark:bg-zinc-800 focus:ring-brand-orange focus:border-brand-orange";
+  const tagButtonClasses = "px-2 py-1 rounded-full text-xs font-semibold";
 
   return (
     <>
       <Header title={t('createANewAdventure')} />
-      <div className="p-2 sm:p-4 space-y-3 overflow-y-auto">
-        
-        <FormCard icon={<CategoryIcon />} title={`${t('adventure')}*`}>
-          <div className="flex flex-wrap gap-2">
-            {adventureTypes.map(type => (
-              <Chip key={type} isSelected={adventureType === type} onClick={() => setAdventureType(type)}>
-                {t(`AdventureType_${type}`)}
-              </Chip>
-            ))}
-          </div>
-        </FormCard>
-
-        <FormCard icon={<PrivacyIcon />} title={t('privacy')}>
-            <select value={privacy} onChange={e => setPrivacy(e.target.value as AdventurePrivacy)} className={inputClasses}>
-              <option value={AdventurePrivacy.Public}>{t('AdventurePrivacy_Public')}</option>
-              <option value={AdventurePrivacy.Followers}>{t('AdventurePrivacy_Followers')}</option>
-              <option value={AdventurePrivacy.Twins}>{t('AdventurePrivacy_Twins')}</option>
-            </select>
-             {privacy === AdventurePrivacy.Twins && (
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-2 ms-1">{t('subPrivacyLabel')}</label>
-                <select value={subPrivacy} onChange={e => setSubPrivacy(e.target.value as AdventurePrivacy.Public | AdventurePrivacy.Followers)} className={inputClasses}>
+      <div className="p-2 sm:p-4 space-y-4 overflow-y-auto">
+        {/* Live Preview Card */}
+        <div className="bg-light-bg-secondary/70 dark:bg-dark-bg-secondary/70 backdrop-blur-sm rounded-3xl shadow-lg shadow-black/[.02] dark:shadow-black/[.05]">
+          {/* Header */}
+          <div className="p-4 flex items-center space-x-3">
+            <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-10 h-10 rounded-full flex-shrink-0" />
+            <div className="flex-grow">
+              <p className="font-semibold text-gray-800 dark:text-gray-100">{currentUser.name}</p>
+              <div className="flex items-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
+                <select value={privacy} onChange={e => setPrivacy(e.target.value as AdventurePrivacy)} className="bg-transparent border-none p-0 focus:ring-0">
                   <option value={AdventurePrivacy.Public}>{t('AdventurePrivacy_Public')}</option>
                   <option value={AdventurePrivacy.Followers}>{t('AdventurePrivacy_Followers')}</option>
+                  <option value={AdventurePrivacy.Twins}>{t('AdventurePrivacy_Twins')}</option>
                 </select>
+                 {privacy === AdventurePrivacy.Twins && (
+                    <>
+                    <span>+</span>
+                    <select value={subPrivacy} onChange={e => setSubPrivacy(e.target.value as AdventurePrivacy.Public | AdventurePrivacy.Followers)} className="bg-transparent border-none p-0 focus:ring-0">
+                        <option value={AdventurePrivacy.Public}>{t('AdventurePrivacy_Public')}</option>
+                        <option value={AdventurePrivacy.Followers}>{t('AdventurePrivacy_Followers')}</option>
+                    </select>
+                    </>
+                 )}
               </div>
-            )}
-        </FormCard>
-
-        <FormCard icon={<TitleIcon />} title={t('title')}>
-          <input type="text" id="title" placeholder="Adventure on the mountain" value={title} onChange={e => setTitle(e.target.value)} className={inputClasses}/>
-        </FormCard>
-
-        <FormCard icon={<PencilIcon />} title="Description*">
-          <textarea id="description" value={description} onChange={e => setDescription(e.target.value)} rows={5} className={inputClasses} placeholder="We are going on a full day excursion..."></textarea>
-        </FormCard>
-        
-        <FormCard icon={<ImageIcon />} title="Media*" subtitle="Select an image or video. More quality, more visibility!">
-          <div className="flex flex-wrap gap-2">
-            <Chip onClick={() => fileInputRef.current?.click()} isSelected={!!mediaFile}>Gallery</Chip>
-          </div>
-          <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*,video/*" className="hidden"/>
-          {mediaPreview && (
-            <div className="mt-4 p-2 border-2 border-dashed dark:border-zinc-700 rounded-2xl relative">
-              <img src={mediaPreview.url} className="rounded-xl w-full" alt="Preview"/>
             </div>
-          )}
-        </FormCard>
+          </div>
+          {/* Content Inputs */}
+          <div className="px-4 space-y-2">
+            <input type="text" placeholder={t('title')} value={title} onChange={e => setTitle(e.target.value)} className="text-lg font-bold w-full bg-transparent border-none p-0 focus:ring-0 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500" />
+            <textarea placeholder={t('description')} value={description} onChange={e => setDescription(e.target.value)} rows={3} className="text-sm w-full bg-transparent border-none p-0 focus:ring-0 text-gray-700 dark:text-gray-300 placeholder:text-gray-400 dark:placeholder:text-gray-500 resize-none"></textarea>
+            {/* AI Helper */}
+            <div className="p-2 bg-slate-100 dark:bg-zinc-800 rounded-lg space-y-2">
+              <label htmlFor="keywords" className="text-xs font-semibold text-gray-500 dark:text-gray-400">{t('aiDescriptionHelper')}</label>
+              <div className="flex space-x-2">
+                <input id="keywords" type="text" placeholder={t('keywords')} value={keywords} onChange={e => setKeywords(e.target.value)} className="flex-grow text-sm bg-white dark:bg-zinc-900 rounded-md px-2 py-1 border-gray-300 dark:border-zinc-700 focus:ring-1 focus:ring-brand-orange"/>
+                <button onClick={handleGenerateDescription} disabled={isGenerating} className="text-sm bg-brand-orange text-white px-3 py-1 rounded-md font-semibold disabled:bg-brand-orange-light">
+                  {isGenerating ? t('generating') : t('generateWithAI')}
+                </button>
+              </div>
+            </div>
+          </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <FormCard icon={<CalendarIcon />} title={t('startDate')}>
-                <input type="datetime-local" value={startDate} onChange={e => setStartDate(e.target.value)} className={`${inputClasses} text-gray-500`} />
-            </FormCard>
-            <FormCard icon={<CalendarIcon />} title={t('endDate')}>
-                <input type="datetime-local" value={endDate} onChange={e => setEndDate(e.target.value)} className={`${inputClasses} text-gray-500`} />
-            </FormCard>
+          {/* Media Input */}
+          <div className="p-4">
+            <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*,video/*" className="hidden"/>
+            <button onClick={() => fileInputRef.current?.click()} className="w-full aspect-video bg-slate-100 dark:bg-zinc-800 rounded-2xl flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 border-2 border-dashed border-gray-300 dark:border-zinc-700 hover:border-brand-orange transition-colors">
+              {mediaPreview ? (
+                 <div className="w-full h-full relative">
+                    {mediaPreview.type === 'image' ? (
+                       <img src={mediaPreview.url} alt="Preview" className="w-full h-full object-cover rounded-2xl"/>
+                    ) : (
+                       <video src={mediaPreview.url} className="w-full h-full object-cover rounded-2xl" playsInline muted loop/>
+                    )}
+                 </div>
+              ) : (
+                 <>
+                    <ImageIcon className="w-8 h-8 mb-2" />
+                    <span className="font-semibold">{t('addMedia')}</span>
+                 </>
+              )}
+            </button>
+          </div>
+
+          {/* Details Footer */}
+          <div className="p-4 space-y-4">
+            <div>
+              <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">Adventure Type</label>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {adventureTypes.map(type => (
+                  <button key={type} onClick={() => setAdventureType(type)} className={`${tagButtonClasses} ${adventureType === type ? 'bg-brand-orange text-white' : 'bg-slate-200 dark:bg-zinc-700 text-gray-700 dark:text-gray-300'}`}>
+                    {t(`AdventureType_${type}`)}
+                  </button>
+                ))}
+              </div>
+            </div>
+             <div>
+                <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">Location</label>
+                <button onClick={() => setIsPickerOpen(true)} className="w-full mt-2 text-left p-2 border border-gray-200 dark:border-zinc-700 rounded-lg bg-slate-50 dark:bg-zinc-800">
+                  {location || t('selectOnMap')}
+                </button>
+            </div>
+             <div className="grid grid-cols-2 gap-4">
+                <div>
+                    <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">Start Date</label>
+                    <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className={`${inputBaseClasses} mt-2 text-gray-500`} />
+                </div>
+                 <div>
+                    <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">End Date</label>
+                    <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className={`${inputBaseClasses} mt-2 text-gray-500`} />
+                </div>
+            </div>
+             <div>
+                <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">Budget ($)</label>
+                <input type="number" value={budget} onChange={e => setBudget(e.target.value)} className={`${inputBaseClasses} mt-2`} placeholder="0"/>
+            </div>
+          </div>
         </div>
-
-        <FormCard icon={<MapPinIcon />} title="Meeting Point*">
-          <button 
-            onClick={() => setIsPickerOpen(true)} 
-            className={`${inputClasses} text-left ${location ? 'text-gray-800 dark:text-gray-200' : 'text-gray-500 dark:text-gray-400'}`}
-          >
-            {location || '+ Select meeting point'}
-          </button>
-        </FormCard>
-        
-        {adventureType === AdventureType.Event && (
-            <FormCard icon={<ListIcon />} title={t('eventCategory')}>
-                <select value={eventCategory} onChange={e => setEventCategory(e.target.value)} className={inputClasses}>
-                    <option value="">{t('selectCategory')}</option>
-                    <option value="Music">{t('categoryMusic')}</option>
-                    <option value="Art">{t('categoryArt')}</option>
-                    <option value="Food">{t('categoryFood')}</option>
-                    <option value="Sports">{t('categorySports')}</option>
-                    <option value="Other">{t('categoryOther')}</option>
-                </select>
-            </FormCard>
-        )}
-
-        <FormCard icon={<DollarSignIcon />} title={t('budget')}>
-            <input type="number" value={budget} onChange={e => setBudget(e.target.value)} className={inputClasses} placeholder="0"/>
-        </FormCard>
 
         <button onClick={handleSubmit} className="w-full bg-brand-orange text-white font-bold py-4 rounded-2xl hover:bg-brand-orange-light transition-colors text-lg">
           {t('publishAdventure')}
