@@ -1,6 +1,4 @@
 
-
-
 import React, { useState } from 'react';
 import { AdventureType, User, ActivityStatus, HydratedAdventure, AdventurePrivacy } from '../types';
 import InterestIcon from './icons/InterestIcon';
@@ -71,9 +69,9 @@ const AdventureCard: React.FC<AdventureCardProps> = ({
 
   const handleLocationClick = () => {
     if (isPast) {
-      onViewLocationOnMap(null);
-    } else {
-      onViewLocationOnMap(adventure);
+      onViewLocationOnMap(null); // For past adventures, show the general map
+    } else if (adventure.coordinates) {
+      onViewLocationOnMap(adventure); // For current/future, show specific location if available
     }
   };
 
@@ -154,6 +152,11 @@ const AdventureCard: React.FC<AdventureCardProps> = ({
   
   const actionButtonClasses = "flex items-center space-x-1 transition-colors";
   const disabledClasses = "cursor-not-allowed text-gray-400 dark:text-gray-600";
+
+  // The button is disabled only if the adventure is NOT in the past AND it has no coordinates.
+  // It is always enabled for past adventures, so the user can see the general map.
+  const isLocationButtonDisabled = !isPast && !adventure.coordinates;
+
 
   return (
     <div className="bg-light-bg-secondary/70 dark:bg-dark-bg-secondary/70 backdrop-blur-sm rounded-3xl shadow-lg shadow-black/[.02] dark:shadow-black/[.05] mb-4">
@@ -236,7 +239,7 @@ const AdventureCard: React.FC<AdventureCardProps> = ({
           <span className={`px-2 py-1 rounded-full font-medium ${getTagStyle(adventure.type)}`}>{t(`AdventureType_${adventure.type}`)}</span>
           <button 
              onClick={handleLocationClick}
-             disabled={!isPast && !adventure.coordinates}
+             disabled={isLocationButtonDisabled}
              className="px-2 py-1 rounded-full bg-slate-100 dark:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-200 dark:hover:bg-zinc-700"
           >
             📍 {getLocationText()}
