@@ -6,7 +6,6 @@ import { useTranslation } from '../contexts/LanguageContext';
 import LocationPickerModal from './LocationPickerModal';
 import { generateDescription } from '../services/geminiService';
 import ImageIcon from './icons/ImageIcon';
-import PlayIcon from './icons/PlayIcon';
 
 interface CreateAdventureScreenProps {
   currentUser: User;
@@ -160,7 +159,7 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ currentUs
           {/* Details Footer */}
           <div className="p-4 space-y-4">
             <div>
-              <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">Adventure Type</label>
+              <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">{t('adventureType')}</label>
               <div className="flex flex-wrap gap-2 mt-2">
                 {adventureTypes.map(type => (
                   <button key={type} onClick={() => setAdventureType(type)} className={`${tagButtonClasses} ${adventureType === type ? 'bg-brand-orange text-white' : 'bg-slate-200 dark:bg-zinc-700 text-gray-700 dark:text-gray-300'}`}>
@@ -169,24 +168,39 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ currentUs
                 ))}
               </div>
             </div>
-             <div>
-                <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">Location</label>
+
+            {adventureType === AdventureType.Event && (
+              <div>
+                <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">{t('eventCategory')}</label>
+                <select value={eventCategory} onChange={e => setEventCategory(e.target.value)} className={`${inputBaseClasses} mt-2`}>
+                    <option value="">{t('selectCategory')}</option>
+                    <option value="Music">{t('categoryMusic')}</option>
+                    <option value="Art">{t('categoryArt')}</option>
+                    <option value="Food">{t('categoryFood')}</option>
+                    <option value="Sports">{t('categorySports')}</option>
+                    <option value="Other">{t('categoryOther')}</option>
+                </select>
+              </div>
+            )}
+
+            <div>
+                <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">{t('location')}</label>
                 <button onClick={() => setIsPickerOpen(true)} className="w-full mt-2 text-left p-2 border border-gray-200 dark:border-zinc-700 rounded-lg bg-slate-50 dark:bg-zinc-800">
                   {location || t('selectOnMap')}
                 </button>
             </div>
              <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">Start Date</label>
+                    <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">{t('startDate')}</label>
                     <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className={`${inputBaseClasses} mt-2 text-gray-500`} />
                 </div>
                  <div>
-                    <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">End Date</label>
+                    <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">{t('endDate')}</label>
                     <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className={`${inputBaseClasses} mt-2 text-gray-500`} />
                 </div>
             </div>
              <div>
-                <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">Budget ($)</label>
+                <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">{t('budget')}</label>
                 <input type="number" value={budget} onChange={e => setBudget(e.target.value)} className={`${inputBaseClasses} mt-2`} placeholder="0"/>
             </div>
           </div>
