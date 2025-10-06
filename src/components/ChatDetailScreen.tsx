@@ -11,6 +11,7 @@ interface ChatDetailScreenProps {
   allUsers: User[];
   onBack: () => void;
   onSendMessage: (conversation: HydratedConversation, text: string) => void;
+  onViewProfile: (user: User) => void;
 }
 
 const isSameDay = (d1: Date, d2: Date) => {
@@ -19,7 +20,7 @@ const isSameDay = (d1: Date, d2: Date) => {
            d1.getDate() === d2.getDate();
 };
 
-const ChatDetailScreen: React.FC<ChatDetailScreenProps> = ({ conversation, currentUser, allUsers, onBack, onSendMessage }) => {
+const ChatDetailScreen: React.FC<ChatDetailScreenProps> = ({ conversation, currentUser, allUsers, onBack, onSendMessage, onViewProfile }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -66,11 +67,18 @@ const ChatDetailScreen: React.FC<ChatDetailScreenProps> = ({ conversation, curre
   };
 
   let lastMessageDate: Date | null = null;
-  const headerTitle = conversation.type === 'private' ? conversation.participant?.name : conversation.name;
-
+  const participant = conversation.participant;
+  const headerTitle = conversation.type === 'private' ? participant?.name : conversation.name;
+  const avatarUrl = conversation.type === 'private' ? participant?.avatarUrl : conversation.imageUrl;
+  
   return (
     <div className="h-full flex flex-col">
-      <Header title={headerTitle || ''} onBack={onBack} />
+      <Header 
+        title={headerTitle || ''} 
+        onBack={onBack}
+        avatarUrl={avatarUrl}
+        onTitleClick={conversation.type === 'private' && participant ? () => onViewProfile(participant) : undefined}
+      />
       <div className="flex-1 overflow-y-auto p-4 space-y-1">
         {messages.map(message => {
           const messageDate = new Date(message.createdAt);

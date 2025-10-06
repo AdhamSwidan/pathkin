@@ -8,13 +8,16 @@ interface ChatScreenProps {
   onSelectConversation: (conversation: HydratedConversation) => void;
   onBack: () => void;
   currentUser: User;
+  onViewProfile: (user: User) => void;
 }
 
-const ChatScreen: React.FC<ChatScreenProps> = ({ conversations, onSelectConversation, onBack, currentUser }) => {
+const ChatScreen: React.FC<ChatScreenProps> = ({ conversations, onSelectConversation, onBack, currentUser, onViewProfile }) => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'adventurers' | 'adventures'>('adventurers');
 
-  const privateConversations = conversations.filter(c => c.type === 'private');
+  // Fix: Filter private conversations locally to ensure participant data is loaded before rendering.
+  // This prevents items from rendering without a name/avatar and resolves the "disappearing chats" issue.
+  const privateConversations = conversations.filter(c => c.type === 'private' && c.participant);
   const groupConversations = conversations.filter(c => c.type === 'group');
   
   const TabButton: React.FC<{ id: 'adventurers' | 'adventures', label: string }> = ({ id, label }) => {
@@ -43,10 +46,13 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversations, onSelectConversa
                 const unreadCount = convo.unreadCount?.[currentUser.id] || 0;
                 const name = convo.type === 'private' ? convo.participant?.name : convo.name;
                 const imageUrl = convo.type === 'private' ? convo.participant?.avatarUrl : convo.imageUrl;
+                const participant = convo.participant;
 
                 return (
                     <div key={convo.id} onClick={() => onSelectConversation(convo)} className="p-4 rounded-2xl bg-light-bg-secondary/70 dark:bg-dark-bg-secondary/70 backdrop-blur-sm flex items-center space-x-4 hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary cursor-pointer transition-colors">
-                        <img src={imageUrl} alt={name} className="w-12 h-12 rounded-full object-cover" />
+                        <button onClick={(e) => { e.stopPropagation(); if (participant) onViewProfile(participant); }} className="flex-shrink-0">
+                          <img src={imageUrl} alt={name} className="w-12 h-12 rounded-full object-cover" />
+                        </button>
                         <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
                             <p className="font-semibold text-gray-800 dark:text-gray-100 truncate">{name}</p>

@@ -5,23 +5,42 @@ interface HeaderProps {
   title: string;
   onBack?: () => void;
   rightAction?: React.ReactNode;
+  avatarUrl?: string;
+  onTitleClick?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ title, onBack, rightAction }) => {
-  const hasLeftContent = onBack || title;
+const Header: React.FC<HeaderProps> = ({ title, onBack, rightAction, avatarUrl, onTitleClick }) => {
+  const hasLeftContent = onBack || title || avatarUrl;
+
+  const HeaderContent = () => (
+    <div className="flex items-center space-x-2">
+        {onBack && (
+          <button onClick={onBack} className="p-2 text-gray-600 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-zinc-700 rounded-full flex-shrink-0">
+            <BackIcon />
+          </button>
+        )}
+        {avatarUrl && (
+            <img src={avatarUrl} alt="avatar" className="w-8 h-8 rounded-full" />
+        )}
+        <h1 className={`font-semibold text-gray-800 dark:text-gray-100 truncate ${!onBack && !avatarUrl ? 'pl-3' : ''} pr-3`}>
+            {title}
+        </h1>
+    </div>
+  );
 
   return (
     <div className="sticky top-0 z-40 h-16 w-full p-3 flex items-center justify-between pointer-events-none">
       {hasLeftContent ? (
-        <div className="flex items-center space-x-2 p-1 bg-light-bg-secondary/80 dark:bg-dark-bg-secondary/80 rounded-full backdrop-blur-lg shadow-md pointer-events-auto">
-            {onBack && (
-              <button onClick={onBack} className="p-2 text-gray-600 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-zinc-700 rounded-full">
-                <BackIcon />
-              </button>
-            )}
-            <h1 className={`font-semibold text-gray-800 dark:text-gray-100 pr-3 ${!onBack ? 'pl-3' : ''}`}>{title}</h1>
+        <div className="p-1 bg-light-bg-secondary/80 dark:bg-dark-bg-secondary/80 rounded-full backdrop-blur-lg shadow-md pointer-events-auto">
+          {onTitleClick ? (
+            <button onClick={onTitleClick} className="w-full h-full text-left">
+                <HeaderContent />
+            </button>
+          ) : (
+            <HeaderContent />
+          )}
         </div>
-      ) : <div />} {/* Empty div to keep right action on the right */}
+      ) : <div />}
       
       {rightAction && (
         <div className="p-1 bg-light-bg-secondary/80 dark:bg-dark-bg-secondary/80 rounded-full backdrop-blur-lg shadow-md pointer-events-auto">
