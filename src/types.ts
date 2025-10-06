@@ -1,4 +1,7 @@
 
+
+export type ProfileTab = 'adventures' | 'saved' | 'reposts' | 'completed' | 'stats';
+
 export enum AdventureType {
   Travel = 'Travel',
   Volunteering = 'Volunteering',

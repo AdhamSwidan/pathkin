@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import BottomNav from './components/BottomNav';
 import AdventuresScreen from './components/AdventuresScreen';
@@ -33,7 +34,7 @@ import CompletedAdventuresByTypeScreen from './components/CompletedAdventuresByT
 import { useTranslation } from './contexts/LanguageContext';
 import { useJsApiLoader } from '@react-google-maps/api';
 // Fix: Import `ActivityLogEntry` to resolve type error in `handleConfirmAttendance`.
-import { Screen, Adventure, User, Story, Notification, HydratedAdventure, HydratedStory, HydratedConversation, Conversation, HydratedComment, Comment, HydratedNotification, Media, ActivityStatus, ActivityLogEntry, AdventureType } from './types';
+import { Screen, Adventure, User, Story, Notification, HydratedAdventure, HydratedStory, HydratedConversation, Conversation, HydratedComment, Comment, HydratedNotification, Media, ActivityStatus, ActivityLogEntry, AdventureType, ProfileTab } from './types';
 import {
   auth, db, storage,
   // Fix: Corrected import to use `FirebaseUser` directly, as exported from the firebase service.
@@ -110,6 +111,11 @@ const App: React.FC = () => {
     JSON.parse(localStorage.getItem('viewedStoryTimestamps') || '{}')
   );
   
+  // State for profile tabs, lifted up to App component
+  const [profileTab, setProfileTab] = useState<ProfileTab>('adventures');
+  const [userProfileTab, setUserProfileTab] = useState<ProfileTab>('adventures');
+
+
   const mainContentRef = useRef<HTMLDivElement>(null);
   const commentListenerUnsub = useRef<(() => void) | null>(null);
   const { t } = useTranslation();
@@ -345,6 +351,10 @@ const App: React.FC = () => {
     mainContentRef.current?.scrollTo(0, 0);
   };
   const resetToScreen = (screen: Screen) => {
+    // When navigating to a profile screen, reset its tab to the default
+    if (screen === 'profile') setProfileTab('adventures');
+    if (screen === 'userProfile') setUserProfileTab('adventures');
+
     if (activeScreen === screen) {
         mainContentRef.current?.scrollTo(0, 0);
     } else {
@@ -777,6 +787,8 @@ const App: React.FC = () => {
       resetToScreen('profile');
     } else {
       // For any other user, push their profile onto the navigation stack.
+      // Reset the tab for the user profile being viewed
+      setUserProfileTab('adventures');
       setViewingUser(userToView);
       pushScreen('userProfile');
     }
@@ -802,10 +814,10 @@ const App: React.FC = () => {
       case 'create': return <CreateAdventureScreen currentUser={currentUser!} onCreateAdventure={handleCreateAdventure} isLoaded={isLoaded} />;
       case 'search': return <SearchScreen adventures={hydratedAdventures} allUsers={users} currentUser={currentUser || guestUser} isGuest={isGuest} isLoaded={isLoaded} onSelectAdventure={setSelectedAdventure} onSendMessage={handleStartPrivateConversation} onToggleInterest={handleToggleInterest} onNavigateToFindTwins={() => pushScreen('findTwins')} onViewProfile={handleViewProfile} onShowResultsOnMap={(advs) => { setMapAdventuresToShow(advs); resetToScreen('map'); }} onRepostToggle={handleToggleRepost} onSaveToggle={handleToggleSave} onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted} onViewLocationOnMap={(adv) => { setMapAdventuresToShow([adv]); resetToScreen('map'); }} onDeleteAdventure={handleDeleteAdventure} onEditAdventure={handleStartEditAdventure} onFollowToggle={handleFollowToggle} onJoinGroupChat={handleAttemptJoinGroupChat}/>;
       case 'chat': return <ChatScreen conversations={hydratedConversations} onSelectConversation={(convo) => { setSelectedConversation(convo); pushScreen('chatDetail'); }} onBack={popScreen} currentUser={currentUser!} onViewProfile={handleViewProfile} />;
-      case 'profile': return <ProfileScreen user={currentUser || guestUser} allAdventures={hydratedAdventures} onSelectAdventure={setSelectedAdventure} onSendMessage={handleStartPrivateConversation} onToggleInterest={handleToggleInterest} onViewProfile={handleViewProfile} onRepostToggle={handleToggleRepost} onSaveToggle={handleToggleSave} onShareProfile={handleShareProfile} onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted} onOpenFollowList={(user, listType) => setFollowListModal({ isOpen: true, user, listType })} onNavigateToSettings={() => pushScreen('settings')} onViewLocationOnMap={(adv) => { setMapAdventuresToShow([adv]); resetToScreen('map'); }} onDeleteAdventure={handleDeleteAdventure} onEditAdventure={handleStartEditAdventure} onJoinGroupChat={handleAttemptJoinGroupChat} onViewCompletedByType={handleViewCompletedByType}/>;
+      case 'profile': return <ProfileScreen user={currentUser || guestUser} allAdventures={hydratedAdventures} onSelectAdventure={setSelectedAdventure} onSendMessage={handleStartPrivateConversation} onToggleInterest={handleToggleInterest} onViewProfile={handleViewProfile} onRepostToggle={handleToggleRepost} onSaveToggle={handleToggleSave} onShareProfile={handleShareProfile} onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted} onOpenFollowList={(user, listType) => setFollowListModal({ isOpen: true, user, listType })} onNavigateToSettings={() => pushScreen('settings')} onViewLocationOnMap={(adv) => { setMapAdventuresToShow([adv]); resetToScreen('map'); }} onDeleteAdventure={handleDeleteAdventure} onEditAdventure={handleStartEditAdventure} onJoinGroupChat={handleAttemptJoinGroupChat} onViewCompletedByType={handleViewCompletedByType} activeTab={profileTab} setActiveTab={setProfileTab}/>;
       case 'chatDetail': return <ChatDetailScreen conversation={selectedConversation!} currentUser={currentUser!} allUsers={users} onBack={popScreen} onSendMessage={handleSendMessage} onViewProfile={handleViewProfile} />;
       case 'findTwins': return <FindTwinsScreen currentUser={currentUser!} allUsers={users} onSendMessage={handleStartPrivateConversation} onBack={popScreen} onFollowToggle={handleFollowToggle} onViewProfile={handleViewProfile} />;
-      case 'userProfile': return <UserProfileScreen user={viewingUser!} currentUser={currentUser || guestUser} allAdventures={hydratedAdventures} onBack={popScreen} onSelectAdventure={setSelectedAdventure} onSendMessage={handleStartPrivateConversation} onToggleInterest={handleToggleInterest} onFollowToggle={handleFollowToggle} onViewProfile={handleViewProfile} onRepostToggle={handleToggleRepost} onSaveToggle={handleToggleSave} onShareProfile={handleShareProfile} onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted} onOpenFollowList={(user, listType) => setFollowListModal({ isOpen: true, user, listType })} isGuest={isGuest} onViewLocationOnMap={(adv) => { setMapAdventuresToShow([adv]); resetToScreen('map'); }} onDeleteAdventure={handleDeleteAdventure} onEditAdventure={handleStartEditAdventure} onJoinGroupChat={handleAttemptJoinGroupChat} onViewCompletedByType={handleViewCompletedByType} />;
+      case 'userProfile': return <UserProfileScreen user={viewingUser!} currentUser={currentUser || guestUser} allAdventures={hydratedAdventures} onBack={popScreen} onSelectAdventure={setSelectedAdventure} onSendMessage={handleStartPrivateConversation} onToggleInterest={handleToggleInterest} onFollowToggle={handleFollowToggle} onViewProfile={handleViewProfile} onRepostToggle={handleToggleRepost} onSaveToggle={handleToggleSave} onShareProfile={handleShareProfile} onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted} onOpenFollowList={(user, listType) => setFollowListModal({ isOpen: true, user, listType })} isGuest={isGuest} onViewLocationOnMap={(adv) => { setMapAdventuresToShow([adv]); resetToScreen('map'); }} onDeleteAdventure={handleDeleteAdventure} onEditAdventure={handleStartEditAdventure} onJoinGroupChat={handleAttemptJoinGroupChat} onViewCompletedByType={handleViewCompletedByType} activeTab={userProfileTab} setActiveTab={setUserProfileTab} />;
       case 'settings': return <SettingsScreen onBack={popScreen} onNavigate={pushScreen} onLogout={handleLogout} />;
       case 'editProfile': return <EditProfileScreen onBack={popScreen} currentUser={currentUser!} onUpdateProfile={handleUpdateProfile} />;
       case 'privacySecurity': return <PrivacySecurityScreen onBack={popScreen} currentUser={currentUser!} onUpdateProfile={handleUpdateProfile} />;

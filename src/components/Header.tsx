@@ -2,7 +2,7 @@ import React from 'react';
 import BackIcon from './icons/BackIcon';
 
 interface HeaderProps {
-  title: string;
+  title?: string;
   onBack?: () => void;
   rightAction?: React.ReactNode;
   avatarUrl?: string;
@@ -26,9 +26,11 @@ const Header: React.FC<HeaderProps> = ({ title, onBack, rightAction, avatarUrl, 
               <img src={avatarUrl} alt="avatar" className="w-8 h-8 rounded-full" />
             </button>
           )}
-          <h1 className={`font-semibold text-gray-800 dark:text-gray-100 truncate pr-3`}>
-              {title}
-          </h1>
+          {title && (
+            <h1 className={`font-semibold text-gray-800 dark:text-gray-100 truncate pr-3`}>
+                {title}
+            </h1>
+          )}
         </div>
       ) : <div />}
       

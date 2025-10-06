@@ -47,7 +47,7 @@ const FilterButton: React.FC<{ icon: React.ReactNode; label: string; isActive: b
 
 const MapScreen: React.FC<MapScreenProps> = ({ adventuresToShow, isLoaded, onShowToast, onSelectAdventure }) => {
   const { t, language } = useTranslation();
-  const [selectedAdventure, setSelectedAdventure] = useState<HydratedAdventure | null>(null);
+  const [selectedLocalAdventure, setSelectedLocalAdventure] = useState<HydratedAdventure | null>(null);
   const [myPosition, setMyPosition] = useState<google.maps.LatLngLiteral | null>(null);
   const [filterType, setFilterType] = useState<AdventureType | 'all'>('all');
   const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
@@ -60,7 +60,7 @@ const MapScreen: React.FC<MapScreenProps> = ({ adventuresToShow, isLoaded, onSho
   const filteredAdventures = useMemo(() => {
     const now = new Date();
     // Filter for adventures that have not started yet
-    const futureAdventures = adventuresToShow.filter(adv => new Date(adv.startDate) > now);
+    const futureAdventures = adventuresToShow.filter(adv => new Date(adv.startDate) >= now);
 
     if (filterType === 'all') {
       return futureAdventures;
@@ -75,7 +75,7 @@ const MapScreen: React.FC<MapScreenProps> = ({ adventuresToShow, isLoaded, onSho
   };
 
   const onMarkerClick = (adventure: HydratedAdventure) => {
-    setSelectedAdventure(adventure);
+    setSelectedLocalAdventure(adventure);
     setDirections(null); // Clear previous directions
     if ( (adventure.type === AdventureType.Hiking || adventure.type === AdventureType.Cycling) && adventure.coordinates && adventure.endCoordinates) {
         const directionsService = new window.google.maps.DirectionsService();
@@ -97,9 +97,14 @@ const MapScreen: React.FC<MapScreenProps> = ({ adventuresToShow, isLoaded, onSho
   };
   
   const onInfoWindowClose = () => {
-    setSelectedAdventure(null);
+    setSelectedLocalAdventure(null);
     setDirections(null);
   }
+
+  const handleViewDetails = (adventure: HydratedAdventure) => {
+    onSelectAdventure(adventure); // Open the main modal
+    setSelectedLocalAdventure(null); // Close the info window
+  };
 
   const handleShowMyLocation = () => {
     if (navigator.geolocation) {
@@ -124,7 +129,7 @@ const MapScreen: React.FC<MapScreenProps> = ({ adventuresToShow, isLoaded, onSho
 
   // Clear selections when filter changes
   useEffect(() => {
-    setSelectedAdventure(null);
+    setSelectedLocalAdventure(null);
     setDirections(null);
   }, [filterType]);
 
@@ -199,20 +204,20 @@ const MapScreen: React.FC<MapScreenProps> = ({ adventuresToShow, isLoaded, onSho
                 />
               )}
 
-              {selectedAdventure && selectedAdventure.coordinates && !directions && (
+              {selectedLocalAdventure && selectedLocalAdventure.coordinates && !directions && (
                 <InfoWindowF
-                  position={selectedAdventure.coordinates}
+                  position={selectedLocalAdventure.coordinates}
                   onCloseClick={onInfoWindowClose}
                 >
                   <div className="p-1 w-48 text-gray-800">
-                    <p className="text-xs font-semibold text-brand-orange">{t(`AdventureType_${selectedAdventure.type}`)}</p>
-                    <h3 className="font-bold text-base mb-1">{selectedAdventure.title}</h3>
+                    <p className="text-xs font-semibold text-brand-orange">{t(`AdventureType_${selectedLocalAdventure.type}`)}</p>
+                    <h3 className="font-bold text-base mb-1">{selectedLocalAdventure.title}</h3>
                     <p className="text-xs text-gray-600">
-                        🗓️ {formatDate(selectedAdventure.startDate)}
-                        {selectedAdventure.endDate && ` - ${formatDate(selectedAdventure.endDate)}`}
+                        🗓️ {formatDate(selectedLocalAdventure.startDate)}
+                        {selectedLocalAdventure.endDate && ` - ${formatDate(selectedLocalAdventure.endDate)}`}
                     </p>
                     <button
-                      onClick={() => onSelectAdventure(selectedAdventure)}
+                      onClick={() => handleViewDetails(selectedLocalAdventure)}
                       className="mt-2 w-full bg-brand-orange text-white text-xs font-bold py-1 px-2 rounded-md hover:bg-brand-orange-light transition-colors"
                     >
                       {t('viewAdventure')}

@@ -2,8 +2,11 @@
 
 
 
-import React, { useState, useMemo } from 'react';
-import { User, HydratedAdventure, ActivityStatus, AdventureType } from '../types';
+
+
+
+import React, { useMemo } from 'react';
+import { User, HydratedAdventure, ActivityStatus, AdventureType, ProfileTab } from '../types';
 import Header from './Header';
 import AdventureCard from './AdventureCard';
 import GridIcon from './icons/GridIcon';
@@ -39,9 +42,9 @@ interface ProfileScreenProps {
   onEditAdventure: (adventure: HydratedAdventure) => void;
   onJoinGroupChat: (adventure: HydratedAdventure) => void;
   onViewCompletedByType: (user: User, type: AdventureType) => void;
+  activeTab: ProfileTab;
+  setActiveTab: (tab: ProfileTab) => void;
 }
-
-type ProfileTab = 'adventures' | 'saved' | 'reposts' | 'completed' | 'stats';
 
 const ProfileScreen: React.FC<ProfileScreenProps> = ({ 
   user, 
@@ -62,8 +65,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   onEditAdventure,
   onJoinGroupChat,
   onViewCompletedByType,
+  activeTab,
+  setActiveTab,
 }) => {
-  const [activeTab, setActiveTab] = useState<ProfileTab>('adventures');
   const { t } = useTranslation();
 
   const headerActions = (
@@ -146,7 +150,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
   return (
     <>
-      <Header title="" rightAction={headerActions} />
+      <Header rightAction={headerActions} />
       <div className="flex-grow">
         <div className="w-full h-32 bg-gray-200 dark:bg-neutral-800">
             {user.coverUrl ? (
