@@ -128,7 +128,7 @@ const EditAdventureModal: React.FC<EditAdventureModalProps> = ({ adventure, onCl
       title,
       description,
       location,
-      coordinates,
+      coordinates: coordinates || undefined,
       startDate,
       budget: parseInt(budget, 10) || 0,
       endDate: endDate || undefined,
@@ -136,7 +136,7 @@ const EditAdventureModal: React.FC<EditAdventureModalProps> = ({ adventure, onCl
       destinations: adventureType === AdventureType.Travel ? destinations.filter(d => d.location) : undefined,
       eventCategory: adventureType === AdventureType.Event ? (eventCategory === 'Other' ? otherEventCategory : eventCategory) : undefined,
       endLocation: (adventureType === AdventureType.Hiking || adventureType === AdventureType.Cycling) ? endLocation : undefined,
-      endCoordinates: (adventureType === AdventureType.Hiking || adventureType === AdventureType.Cycling) ? endCoordinates : undefined,
+      endCoordinates: (adventureType === AdventureType.Hiking || adventureType === AdventureType.Cycling) ? (endCoordinates || undefined) : undefined,
     };
     onUpdateAdventure(adventure.id, updatedData);
   };
