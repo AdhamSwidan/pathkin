@@ -174,9 +174,23 @@ const App: React.FC = () => {
     return () => { unsubUsers(); unsubAdventures(); unsubStories(); };
   }, []);
 
-  // User-specific Firestore Listeners (Notifications, Conversations)
+  // User-specific Firestore Listeners (User Doc, Notifications, Conversations)
   useEffect(() => {
-    if (!currentUser) { setNotifications([]); setConversations([]); return; }
+    if (!currentUser?.id) { 
+      setNotifications([]); 
+      setConversations([]); 
+      return; 
+    }
+
+    // Real-time listener for the current user's document.
+    // This is crucial for reflecting updates made by other users (e.g., attendance confirmation)
+    // without requiring a page refresh.
+    const userDocRef = doc(db, 'users', currentUser.id);
+    const unsubUser = onSnapshot(userDocRef, (docSnap) => {
+      if (docSnap.exists()) {
+        setCurrentUser({ id: docSnap.id, ...docSnap.data() } as User);
+      }
+    });
 
     const notificationsQuery = query(collection(db, "notifications"), where("recipientId", "==", currentUser.id), orderBy("createdAt", "desc"));
     const unsubNotifications = onSnapshot(notificationsQuery, (snapshot) => {
@@ -194,8 +208,13 @@ const App: React.FC = () => {
         }));
     });
 
-    return () => { unsubNotifications(); unsubConversations(); };
-  }, [currentUser]);
+    return () => { 
+      unsubUser();
+      unsubNotifications(); 
+      unsubConversations(); 
+    };
+    // Dependency is changed to currentUser.id to prevent infinite loops.
+  }, [currentUser?.id]);
 
   // Comments listener
   useEffect(() => {
@@ -427,16 +446,44 @@ const App: React.FC = () => {
       if (!currentUser) return;
       const adventure = adventures.find(p => p.id === adventureId);
       if (!adventure || new Date(adventure.startDate) > new Date()) { handleShowToast(t('adventureNotEnded')); return; }
-      const userRef = doc(db, 'users', currentUser.id);
-      const activityLog = currentUser.activityLog || [];
-      const existingEntry = activityLog.find(a => a.adventureId === adventureId);
 
-      if (existingEntry) { handleShowToast(t('alreadyMarkedDone')); return; }
+      const originalActivityLog = currentUser.activityLog || [];
+      const existingEntry = originalActivityLog.find(a => a.adventureId === adventureId);
 
-      const newLog = [...activityLog, { adventureId, status: ActivityStatus.Pending }];
-      await updateDoc(userRef, { activityLog: newLog });
-      await addDoc(collection(db, 'notifications'), { recipientId: adventure.authorId, userId: currentUser.id, adventureId, attendeeId: currentUser.id, attendeeName: currentUser.name, text: t('attendanceRequestNotification', { title: adventure.title }), type: 'attendanceRequest', read: false, createdAt: serverTimestamp() });
+      if (existingEntry) { 
+        handleShowToast(t('alreadyMarkedDone')); 
+        return; 
+      }
+
+      const newLogEntry: ActivityLogEntry = { adventureId, status: ActivityStatus.Pending };
+      
+      // Optimistic UI update: show the pending state immediately.
+      setCurrentUser(prev => prev ? { ...prev, activityLog: [...originalActivityLog, newLogEntry] } : null);
       handleShowToast(t('confirmationRequested'));
+
+      try {
+        const userRef = doc(db, 'users', currentUser.id);
+        // Use arrayUnion for a safer, idempotent update on the backend.
+        await updateDoc(userRef, { activityLog: arrayUnion(newLogEntry) });
+        
+        // Notify the adventure author.
+        await addDoc(collection(db, 'notifications'), { 
+          recipientId: adventure.authorId, 
+          userId: currentUser.id, 
+          adventureId, 
+          attendeeId: currentUser.id, 
+          attendeeName: currentUser.name, 
+          text: t('attendanceRequestNotification', { title: adventure.title }), 
+          type: 'attendanceRequest', 
+          read: false, 
+          createdAt: serverTimestamp() 
+        });
+      } catch (error) {
+        console.error("Error marking adventure as completed:", error);
+        // If the backend update fails, revert the optimistic UI change.
+        setCurrentUser(prev => prev ? { ...prev, activityLog: originalActivityLog } : null);
+        handleShowToast("Failed to mark as completed. Please try again.");
+      }
   };
 
   // --- Story Handlers ---
