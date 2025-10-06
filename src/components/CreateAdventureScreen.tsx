@@ -2,7 +2,6 @@
 import React, { useState, useRef } from 'react';
 import Header from './Header';
 import { AdventureType, Media, AdventurePrivacy, Adventure, User } from '../types';
-import { generateDescription } from '../services/geminiService';
 import { useTranslation } from '../contexts/LanguageContext';
 import LocationPickerModal from './LocationPickerModal';
 import TitleIcon from './icons/TitleIcon';
@@ -47,7 +46,6 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ onCreateA
   const [description, setDescription] = useState('');
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [mediaPreview, setMediaPreview] = useState<Media | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
 
   // Dynamic State
@@ -62,14 +60,6 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ onCreateA
   const { t } = useTranslation();
 
   const inputClasses = "w-full px-4 py-3 rounded-2xl bg-slate-100 dark:bg-zinc-800 border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-brand-orange focus:bg-white dark:focus:bg-zinc-900 text-gray-800 dark:text-gray-200 transition-colors placeholder:text-gray-400 dark:placeholder:text-gray-500";
-
-  const handleGenerateDescription = async () => {
-    if (!title) return;
-    setIsGenerating(true);
-    const generated = await generateDescription(title, '', adventureType); // Keywords not needed with modern models
-    setDescription(generated);
-    setIsGenerating(false);
-  };
   
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -141,6 +131,22 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ onCreateA
           <input type="text" id="title" placeholder="Adventure on the mountain" value={title} onChange={e => setTitle(e.target.value)} className={inputClasses}/>
         </FormCard>
 
+        <FormCard icon={<PencilIcon />} title="Description*">
+          <textarea id="description" value={description} onChange={e => setDescription(e.target.value)} rows={5} className={inputClasses} placeholder="We are going on a full day excursion..."></textarea>
+        </FormCard>
+        
+        <FormCard icon={<ImageIcon />} title="Media*" subtitle="Select an image or video. More quality, more visibility!">
+          <div className="flex flex-wrap gap-2">
+            <Chip onClick={() => fileInputRef.current?.click()} isSelected={!!mediaFile}>Gallery</Chip>
+          </div>
+          <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*,video/*" className="hidden"/>
+          {mediaPreview && (
+            <div className="mt-4 p-2 border-2 border-dashed dark:border-zinc-700 rounded-2xl relative">
+              <img src={mediaPreview.url} className="rounded-xl w-full" alt="Preview"/>
+            </div>
+          )}
+        </FormCard>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <FormCard icon={<CalendarIcon />} title={t('startDate')}>
                 <input type="datetime-local" value={startDate} onChange={e => setStartDate(e.target.value)} className={`${inputClasses} text-gray-500`} />
@@ -171,29 +177,6 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ onCreateA
                 </select>
             </FormCard>
         )}
-
-        <FormCard icon={<PencilIcon />} title="Description*">
-          <textarea id="description" value={description} onChange={e => setDescription(e.target.value)} rows={5} className={inputClasses} placeholder="We are going on a full day excursion..."></textarea>
-        </FormCard>
-        
-        <FormCard icon={<ImageIcon />} title="Media*" subtitle="Select an image or video. More quality, more visibility!">
-          <div className="flex flex-wrap gap-2">
-            <Chip onClick={() => fileInputRef.current?.click()} isSelected={!!mediaFile}>Gallery</Chip>
-          </div>
-          <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*,video/*" className="hidden"/>
-          {mediaPreview && (
-            <div className="mt-4 p-2 border-2 border-dashed dark:border-zinc-700 rounded-2xl relative">
-              <img src={mediaPreview.url} className="rounded-xl w-full" alt="Preview"/>
-            </div>
-          )}
-          <div className="relative my-4">
-              <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-300/50 dark:border-zinc-700/50" /></div>
-              <div className="relative flex justify-center text-sm"><span className="px-2 bg-light-bg-secondary dark:bg-dark-bg-secondary text-gray-500 dark:text-gray-400">Soon</span></div>
-          </div>
-          <button onClick={handleGenerateDescription} disabled={isGenerating || !title} className="w-full text-center py-3 rounded-2xl font-semibold bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-lg animate-glow disabled:opacity-50 disabled:animate-none">
-            ✨ {isGenerating ? t('generating') : t('generateWithAI')}
-          </button>
-        </FormCard>
 
         <FormCard icon={<DollarSignIcon />} title={t('budget')}>
             <input type="number" value={budget} onChange={e => setBudget(e.target.value)} className={inputClasses} placeholder="0"/>
