@@ -1,17 +1,81 @@
 
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { AdventureType, Media, AdventurePrivacy, Adventure, User } from '../types';
 import { useTranslation } from '../contexts/LanguageContext';
 import LocationPickerModal from './LocationPickerModal';
 import { generateDescription } from '../services/geminiService';
 import ImageIcon from './icons/ImageIcon';
+import { StandaloneSearchBox } from '@react-google-maps/api';
+import MapPinIcon from './icons/MapPinIcon';
 
 interface CreateAdventureScreenProps {
   currentUser: User;
   onCreateAdventure: (adventure: Omit<Adventure, 'id' | 'authorId' | 'interestedUsers' | 'commentCount' | 'createdAt'>, mediaFile: File | null) => void;
   isLoaded: boolean;
 }
+
+// Reusable Location Input with Autocomplete
+const LocationInputWithAutocomplete: React.FC<{
+    label: string;
+    value: string;
+    onValueChange: (value: string) => void;
+    onCoordsChange: (coords: { lat: number, lng: number } | null) => void;
+    onOpenMap: () => void;
+    isLoaded: boolean;
+}> = ({ label, value, onValueChange, onCoordsChange, onOpenMap, isLoaded }) => {
+    const { t } = useTranslation();
+    const searchBoxRef = useRef<google.maps.places.SearchBox | null>(null);
+
+    const onSearchBoxLoad = useCallback((ref: google.maps.places.SearchBox) => {
+        searchBoxRef.current = ref;
+    }, []);
+
+    const onPlacesChanged = () => {
+        const places = searchBoxRef.current?.getPlaces();
+        if (places && places.length > 0) {
+            const place = places[0];
+            onValueChange(place.formatted_address || place.name || '');
+            if (place.geometry?.location) {
+                onCoordsChange({ lat: place.geometry.location.lat(), lng: place.geometry.location.lng() });
+            }
+        }
+    };
+
+    return (
+        <div>
+            <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">{label}</label>
+            <div className="flex items-center space-x-2 mt-2">
+                <div className="relative flex-grow">
+                    {isLoaded ? (
+                        <StandaloneSearchBox
+                            onLoad={onSearchBoxLoad}
+                            onPlacesChanged={onPlacesChanged}
+                        >
+                            <input
+                                type="text"
+                                placeholder={t('searchForLocation')}
+                                defaultValue={value}
+                                onChange={e => onValueChange(e.target.value)}
+                                className="w-full text-left p-2 border border-gray-200 dark:border-zinc-700 rounded-lg bg-slate-50 dark:bg-zinc-800"
+                            />
+                        </StandaloneSearchBox>
+                    ) : (
+                        <input type="text" value={t('loading')} className="w-full p-2 border rounded-lg bg-slate-200" disabled />
+                    )}
+                </div>
+                <button
+                    onClick={onOpenMap}
+                    className="p-2.5 bg-gray-200 dark:bg-zinc-700 rounded-lg"
+                    aria-label={t('selectOnMap')}
+                >
+                    <MapPinIcon className="w-5 h-5" />
+                </button>
+            </div>
+        </div>
+    );
+};
+
 
 const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ currentUser, onCreateAdventure, isLoaded }) => {
   // Common State
@@ -25,6 +89,7 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ currentUs
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [keywords, setKeywords] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [pickerMode, setPickerMode] = useState<'point' | 'route'>('point');
 
   // Dynamic State
   const [location, setLocation] = useState('');
@@ -60,8 +125,9 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ currentUs
     }
   };
   
-  const openLocationPicker = (fieldIdentifier: string) => {
+  const openLocationPicker = (fieldIdentifier: string, mode: 'point' | 'route' = 'point') => {
     setEditingLocationFor(fieldIdentifier);
+    setPickerMode(mode);
     setIsPickerOpen(true);
   };
 
@@ -69,18 +135,23 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ currentUs
     if (editingLocationFor === 'location') { // For Event, Camping, Volunteering
       setLocation(address);
       setCoordinates(coords);
-    } else if (editingLocationFor === 'startPoint') { // For Travel, Hiking, Cycling
+    } else if (editingLocationFor === 'startPoint') { // For Travel
       setLocation(address);
       setCoordinates(coords);
-    } else if (editingLocationFor === 'endPoint') { // For Hiking, Cycling
-      setEndLocation(address);
-      setEndCoordinates(coords);
     } else if (editingLocationFor.startsWith('destination_')) {
       const index = parseInt(editingLocationFor.split('_')[1], 10);
       const newDestinations = [...destinations];
       newDestinations[index] = { location: address, coordinates: coords };
       setDestinations(newDestinations);
     }
+    setIsPickerOpen(false);
+  };
+  
+   const handleRouteSelect = (start: { address: string; coords: { lat: number; lng: number; } }, end: { address: string; coords: { lat: number; lng: number; } }) => {
+    setLocation(start.address);
+    setCoordinates(start.coords);
+    setEndLocation(end.address);
+    setEndCoordinates(end.coords);
     setIsPickerOpen(false);
   };
   
@@ -102,7 +173,6 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ currentUs
   };
 
   const handleSubmit = () => {
-    // Validation based on type might be needed here
     if (!title || !description || !startDate) {
         alert("Please fill in all required fields: title, description, and start date.");
         return;
@@ -120,16 +190,15 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ currentUs
     if (privacy === AdventurePrivacy.Twins) adventureData.subPrivacy = subPrivacy;
     if (endDate) adventureData.endDate = endDate;
     
-    // Add type-specific data
     switch(adventureType) {
         case AdventureType.Travel:
-            adventureData.location = location; // "From" location
+            adventureData.location = location;
             adventureData.coordinates = coordinates;
             adventureData.destinations = destinations.filter(d => d.location && d.coordinates);
             break;
         case AdventureType.Hiking:
         case AdventureType.Cycling:
-            adventureData.location = location; // "Start Point"
+            adventureData.location = location;
             adventureData.coordinates = coordinates;
             adventureData.endLocation = endLocation;
             adventureData.endCoordinates = endCoordinates;
@@ -157,26 +226,29 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ currentUs
   const tagButtonClasses = "px-2 py-1 rounded-full text-xs font-semibold";
   
   const renderLocationFields = () => {
-    const locationButton = (label: string, value: string, fieldId: string) => (
-      <div>
-          <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">{label}</label>
-          <button onClick={() => openLocationPicker(fieldId)} className="w-full mt-2 text-left p-2 border border-gray-200 dark:border-zinc-700 rounded-lg bg-slate-50 dark:bg-zinc-800">
-            {value || t('selectOnMap')}
-          </button>
-      </div>
-    );
-
     switch(adventureType) {
         case AdventureType.Travel:
             return (
               <div className="space-y-4">
-                {locationButton(t('fromLocation'), location, 'startPoint')}
+                <LocationInputWithAutocomplete label={t('fromLocation')} value={location} onValueChange={setLocation} onCoordsChange={setCoordinates} onOpenMap={() => openLocationPicker('startPoint')} isLoaded={isLoaded} />
                 {destinations.map((dest, index) => (
                   <div key={index}>
-                      <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">{`${t('yourDestination')} #${index + 1}`}</label>
-                      <button onClick={() => openLocationPicker(`destination_${index}`)} className="w-full mt-2 text-left p-2 border border-gray-200 dark:border-zinc-700 rounded-lg bg-slate-50 dark:bg-zinc-800">
-                        {dest.location || t('selectOnMap')}
-                      </button>
+                    <LocationInputWithAutocomplete 
+                      label={`${t('yourDestination')} #${index + 1}`} 
+                      value={dest.location}
+                      onValueChange={(val) => {
+                        const newDests = [...destinations];
+                        newDests[index].location = val;
+                        setDestinations(newDests);
+                      }}
+                      onCoordsChange={(coords) => {
+                        const newDests = [...destinations];
+                        newDests[index].coordinates = coords;
+                        setDestinations(newDests);
+                      }}
+                      onOpenMap={() => openLocationPicker(`destination_${index}`)}
+                      isLoaded={isLoaded}
+                    />
                   </div>
                 ))}
                 <button onClick={handleAddDestination} className="text-sm font-semibold text-brand-orange hover:text-brand-orange-light">{t('addDestination')}</button>
@@ -186,14 +258,19 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ currentUs
         case AdventureType.Cycling:
             return (
                 <div className="space-y-4">
-                    {locationButton(t('startPoint'), location, 'startPoint')}
-                    {locationButton(t('endPoint'), endLocation, 'endPoint')}
+                    <div className="p-4 bg-slate-50 dark:bg-zinc-800 rounded-lg">
+                        <p className="font-semibold">{t('startPoint')}: <span className="font-normal text-gray-600 dark:text-gray-300">{location || 'Not set'}</span></p>
+                        <p className="font-semibold">{t('endPoint')}: <span className="font-normal text-gray-600 dark:text-gray-300">{endLocation || 'Not set'}</span></p>
+                    </div>
+                    <button onClick={() => openLocationPicker('route', 'route')} className="w-full text-center p-2 border border-dashed border-gray-400 dark:border-zinc-600 rounded-lg bg-transparent hover:bg-slate-50 dark:hover:bg-zinc-800">
+                      {t('drawRouteOnMap')}
+                    </button>
                 </div>
             );
         case AdventureType.Event:
             return (
                 <div className="space-y-4">
-                    {locationButton(t('location'), location, 'location')}
+                    <LocationInputWithAutocomplete label={t('location')} value={location} onValueChange={setLocation} onCoordsChange={setCoordinates} onOpenMap={() => openLocationPicker('location')} isLoaded={isLoaded} />
                     <div>
                         <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">{t('eventCategory')}</label>
                         <select value={eventCategory} onChange={e => setEventCategory(e.target.value)} className={`${inputBaseClasses} mt-2`}>
@@ -216,7 +293,7 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ currentUs
                 </div>
             );
         default: // Camping, Volunteering
-            return locationButton(t('location'), location, 'location');
+            return <LocationInputWithAutocomplete label={t('location')} value={location} onValueChange={setLocation} onCoordsChange={setCoordinates} onOpenMap={() => openLocationPicker('location')} isLoaded={isLoaded} />;
     }
   }
 
@@ -316,7 +393,13 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ currentUs
           {t('publishAdventure')}
         </button>
       </div>
-      {isLoaded && <LocationPickerModal isOpen={isPickerOpen} onClose={() => setIsPickerOpen(false)} onLocationSelect={handleLocationSelect} />}
+      {isLoaded && <LocationPickerModal 
+        isOpen={isPickerOpen} 
+        onClose={() => setIsPickerOpen(false)} 
+        onLocationSelect={handleLocationSelect}
+        onRouteSelect={handleRouteSelect}
+        mode={pickerMode}
+        />}
     </>
   );
 };

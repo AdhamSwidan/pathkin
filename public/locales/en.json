@@ -1,3 +1,4 @@
+
 {
   "appName": "Pathkin",
   "feed": "Feed",
@@ -203,5 +204,10 @@
   "startPoint": "Start Point",
   "endPoint": "End Point",
   "ok": "OK",
-  "mapLoadError": "Failed to load map. Please check your API key and Google Cloud settings."
+  "mapLoadError": "Failed to load map. Please check your API key and Google Cloud settings.",
+  "drawRouteOnMap": "Draw Route on Map",
+  "selectStartPoint": "Select start point",
+  "selectEndPoint": "Select end point",
+  "routeSelected": "Route selected",
+  "loading": "Loading..."
 }

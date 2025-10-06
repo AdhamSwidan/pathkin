@@ -1,3 +1,4 @@
+
 {
   "appName": "باثكين",
   "feed": "الرئيسية",
@@ -203,5 +204,10 @@
   "startPoint": "نقطة البداية",
   "endPoint": "نقطة النهاية",
   "ok": "موافق",
-  "mapLoadError": "فشل تحميل الخريطة. يرجى التحقق من مفتاح API وإعدادات Google Cloud."
+  "mapLoadError": "فشل تحميل الخريطة. يرجى التحقق من مفتاح API وإعدادات Google Cloud.",
+  "drawRouteOnMap": "ارسم المسار على الخريطة",
+  "selectStartPoint": "اختر نقطة البداية",
+  "selectEndPoint": "اختر نقطة النهاية",
+  "routeSelected": "تم تحديد المسار",
+  "loading": "جار التحميل..."
 }

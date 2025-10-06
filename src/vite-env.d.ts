@@ -151,6 +151,9 @@ declare namespace google.maps {
     }
     
     interface PlaceResult {
+        // Fix: Add 'formatted_address' and 'name' to resolve type errors in CreateAdventureScreen.tsx.
+        formatted_address?: string;
+        name?: string;
         geometry?: {
             location: {
                 lat: () => number;
