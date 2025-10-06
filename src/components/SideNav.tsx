@@ -49,7 +49,7 @@ const SideNav: React.FC<SideNavProps> = ({ activeScreen, setActiveScreen, hasUnr
   };
 
   const mainNavItems = [
-    { screen: 'feed' as Screen, label: t('feed'), icon: <HomeIcon /> },
+    { screen: 'adventures' as Screen, label: t('adventure'), icon: <HomeIcon /> },
     { screen: 'map' as Screen, label: t('map'), icon: <MapIcon /> },
     { screen: 'search' as Screen, label: t('search'), icon: <SearchIcon /> },
     { screen: 'create' as Screen, label: t('adventure'), icon: <PlusCircleIcon />, requiresAuth: true },

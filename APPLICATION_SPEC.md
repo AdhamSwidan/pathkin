@@ -20,7 +20,7 @@ Pathkin هو تطبيق ويب اجتماعي مصمم ليكون المنصة �
 - **إعادة تعيين كلمة المرور:** عبر البريد الإلكتروني.
 - **وضع الضيف (Guest Mode):** تصفح محدود الصلاحيات.
 
-### 2.2. الصفحة الرئيسية (الخلاصة - Feed)
+### 2.2. الصفحة الرئيسية (المغامرات - Adventures)
 - عرض المغامرات من المستخدمين المتابعين.
 - شريط القصص (Story Reel) في الأعلى.
 
@@ -94,77 +94,4 @@ interface Adventure {
   title: string;
   description: string;
   location: string; // تمثل "نقطة البداية" للرحلات والمسارات
-  coordinates?: { lat: number; lng: number };
-  startDate: string;
-  endDate?: string;
-  budget: number; // تمثل "السعر" للسكن
-  interestedUsers: string[];
-  commentCount: number;
-  createdAt: string;
-  media?: { url: string; type: 'image' | 'video'; }[];
-  privacy: AdventurePrivacy;
-  
-  // حقل جديد للخصوصية المتقدمة
-  subPrivacy?: AdventurePrivacy.Public | AdventurePrivacy.Followers;
-
-  // حقول ديناميكية حسب النوع
-  // للسفر (Travel)
-  destinations?: { location: string; coordinates: { lat: number; lng: number } }[];
-
-  // للسكن (Housing)
-  roomCount?: number;
-
-  // للفعاليات (Event)
-  eventCategory?: string;
-
-  // للهايكنج وركوب الدراجات
-  endLocation?: string;
-  endCoordinates?: { lat: number; lng: number };
-}
-```
-
-### 3.3. `Conversation` (محادثة)
-```typescript
-interface Conversation {
-  id: string;
-  participants: string[];
-  lastMessage?: Message;
-  updatedAt: string;
-  unreadCount?: { [key: string]: number; };
-}
-```
-
----
-
-## 4. تصميم واجهة المستخدم وتجربة المستخدم (UI/UX)
-- **تصميم مركزي ومريح:** عرض محدد ومركزي على الشاشات الكبيرة مع قائمة جانبية في أقصى اليسار.
-- **تصميم متجاوب:** يتكيف بسلاسة مع أحجام الشاشات المختلفة.
-- **هوية بصرية:** استخدام متسق للون البرتقالي كعلامة تجارية، مع دعم الوضعين الفاتح والداكن.
-
----
-
-## 5. الحزمة التقنية (Technical Stack)
-- **الواجهة الأمامية (Frontend):** React, TypeScript, Vite, Tailwind CSS
-- **الخلفية وقاعدة البيانات (Backend & Database):** Firebase (Authentication, Firestore, Storage)
-- **واجهات برمجة التطبيقات (APIs):**
-    - **Google Maps Platform:** for Places Autocomplete, Geocoding, Map display, and **Directions API**.
-    - **Google Gemini API:** for AI-powered description generation.
-- **النشر (Deployment):** GitHub Pages
-
----
-
-## 6. هيكل المشروع (Project Structure)
-
-```
-/src
-├── components/     # مكونات React (شاشات، بطاقات، أزرار)
-│   ├── icons/      # أيقونات SVG
-│   └── settings/   # مكونات شاشات الإعدادات
-├── contexts/       # React Contexts لإدارة الحالة (مثل اللغة)
-├── data/           # بيانات ثابتة (مثل قائمة الدول)
-├── services/       # وحدات للتفاعل مع APIs الخارجية (Firebase, Gemini)
-├── utils/          # دوال مساعدة عامة
-├── App.tsx         # المكون الجذري للتطبيق
-├── types.ts        # تعريفات TypeScript لأنواع البيانات
-└── index.css       # الأنماط الأساسية لـ Tailwind
-```
+  coordinates?: { lat: number;

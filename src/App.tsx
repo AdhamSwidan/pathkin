@@ -75,8 +75,8 @@ const App: React.FC = () => {
   const [authChecked, setAuthChecked] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isGuest, setIsGuest] = useState(false);
-  const [activeScreen, setActiveScreen] = useState<Screen>('feed');
-  const [screenStack, setScreenStack] = useState<Screen[]>(['feed']);
+  const [activeScreen, setActiveScreen] = useState<Screen>('adventures');
+  const [screenStack, setScreenStack] = useState<Screen[]>(['adventures']);
 
   const [adventures, setAdventures] = useState<Adventure[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -304,7 +304,7 @@ const App: React.FC = () => {
 
   // --- Auth Handlers ---
   const handleLogin = async (email: string, pass: string) => {
-    try { await signInWithEmailAndPassword(auth, email, pass); resetToScreen('feed'); } 
+    try { await signInWithEmailAndPassword(auth, email, pass); resetToScreen('adventures'); } 
     catch (error) { console.error(error); handleShowToast(t('invalidCredentials')); }
   };
   const handleSignUp = async (name: string, username: string, email: string, pass: string, birthday: string, gender: string, country: string) => {
@@ -317,7 +317,7 @@ const App: React.FC = () => {
         // Fix: Cast `gender` to the correct type to resolve the TypeScript error.
         const newUser: User = { id: userCredential.user.uid, name, username, email, followers: [], following: [], repostedAdventures: [], savedAdventures: [], activityLog: [], bio: '', interests: [], avatarUrl: `https://picsum.photos/seed/${userCredential.user.uid}/200`, coverUrl: `https://picsum.photos/seed/${userCredential.user.uid}-cover/800/200`, birthday, gender: gender as User['gender'], country, isPrivate: false, privacySettings: { showFollowLists: true, showStats: true, showCompletedActivities: true, allowTwinSearch: true } };
         await setDoc(doc(db, 'users', userCredential.user.uid), newUser);
-        resetToScreen('feed');
+        resetToScreen('adventures');
     } catch (error: any) { console.error(error); if (error.code === 'auth/email-already-in-use') { handleShowToast(t('emailExistsError')); } }
   };
   const handleSocialLogin = async (providerName: 'google' | 'facebook') => {
@@ -332,12 +332,12 @@ const App: React.FC = () => {
             const newUser: User = { id: user.uid, name: user.displayName || 'New User', username: user.email?.split('@')[0] || `user${Date.now()}`, email: user.email || '', followers: [], following: [], repostedAdventures: [], savedAdventures: [], activityLog: [], bio: '', interests: [], avatarUrl: user.photoURL || `https://picsum.photos/seed/${user.uid}/200`, isPrivate: false, privacySettings: { showFollowLists: true, showStats: true, showCompletedActivities: true, allowTwinSearch: true } };
             await setDoc(userDocRef, newUser);
           }
-          resetToScreen('feed');
+          resetToScreen('adventures');
         } catch (error) { console.error("Social login error:", error); }
     }
   };
-  const handleGuestLogin = () => { setIsGuest(true); resetToScreen('feed'); };
-  const handleLogout = async () => { await signOut(auth); resetToScreen('feed'); };
+  const handleGuestLogin = () => { setIsGuest(true); resetToScreen('adventures'); };
+  const handleLogout = async () => { await signOut(auth); resetToScreen('adventures'); };
   const handleForgotPassword = async (email: string) => { try { await sendPasswordResetEmail(auth, email); } catch (error) { console.error(error); } };
 
   // --- Adventure Handlers ---
@@ -365,7 +365,7 @@ const App: React.FC = () => {
         });
 
         handleShowToast(t('adventurePublished'));
-        resetToScreen('feed');
+        resetToScreen('adventures');
     } catch (error) { console.error("Error creating adventure:", error); }
   };
    const handleUpdateAdventure = async (adventureId: string, updatedData: Partial<Adventure>) => {
@@ -693,7 +693,7 @@ const App: React.FC = () => {
   // Fix: Create a new handler for SideNav clicks to use `pushScreen` for secondary pages,
   // fixing the broken back button behavior for Chat and Notifications.
   const handleSideNavClick = (screen: Screen) => {
-    const mainScreens: Screen[] = ['feed', 'map', 'search', 'create', 'profile'];
+    const mainScreens: Screen[] = ['adventures', 'map', 'search', 'create', 'profile'];
     if (mainScreens.includes(screen)) {
       resetToScreen(screen);
     } else {
@@ -706,19 +706,24 @@ const App: React.FC = () => {
   const renderScreen = () => {
     
     switch (activeScreen) {
-      case 'feed': return <FeedScreen adventures={hydratedAdventures.filter(p => !p.author.isPrivate || (currentUser?.following?.includes(p.author.id)) || p.author.id === currentUser?.id)} stories={hydratedStories} currentUser={currentUser || guestUser} onSelectAdventure={setSelectedAdventure} onSendMessage={handleStartPrivateConversation} onToggleInterest={handleToggleInterest} onSelectStories={(stories) => { setViewingStories(stories); const firstStory = stories[0]; if(firstStory){ const newTimestamps = {...viewedStoryTimestamps, [firstStory.author.id]: new Date().toISOString()}; setViewedStoryTimestamps(newTimestamps); localStorage.setItem('viewedStoryTimestamps', JSON.stringify(newTimestamps)); } }} onAddStory={() => setIsAddStoryModalOpen(true)} onNavigateToNotifications={() => pushScreen('notifications')} hasUnreadNotifications={hasUnreadNotifications} onNavigateToChat={() => pushScreen('chat')} onViewProfile={(user) => { setViewingUser(user); pushScreen('userProfile'); }} onRepostToggle={handleToggleRepost} onSaveToggle={handleToggleSave} onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted} isGuest={isGuest} onGuestAction={handleGuestAction} onNavigateToSearch={() => resetToScreen('search')} onNavigateToProfile={() => resetToScreen('profile')} onViewLocationOnMap={(adv) => { setMapAdventuresToShow([adv]); resetToScreen('map'); }} onDeleteAdventure={handleDeleteAdventure} onEditAdventure={setEditingAdventure} viewedStoryTimestamps={viewedStoryTimestamps} onJoinGroupChat={handleJoinAdventureChat} />;
+      // Fix: Corrected handler name from `handleJoinGroupChat` to `handleJoinAdventureChat`.
+      case 'adventures': return <FeedScreen adventures={hydratedAdventures.filter(p => !p.author.isPrivate || (currentUser?.following?.includes(p.author.id)) || p.author.id === currentUser?.id)} stories={hydratedStories} currentUser={currentUser || guestUser} onSelectAdventure={setSelectedAdventure} onSendMessage={handleStartPrivateConversation} onToggleInterest={handleToggleInterest} onSelectStories={(stories) => { setViewingStories(stories); const firstStory = stories[0]; if(firstStory){ const newTimestamps = {...viewedStoryTimestamps, [firstStory.author.id]: new Date().toISOString()}; setViewedStoryTimestamps(newTimestamps); localStorage.setItem('viewedStoryTimestamps', JSON.stringify(newTimestamps)); } }} onAddStory={() => setIsAddStoryModalOpen(true)} onNavigateToNotifications={() => pushScreen('notifications')} hasUnreadNotifications={hasUnreadNotifications} onNavigateToChat={() => pushScreen('chat')} onViewProfile={(user) => { setViewingUser(user); pushScreen('userProfile'); }} onRepostToggle={handleToggleRepost} onSaveToggle={handleToggleSave} onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted} isGuest={isGuest} onGuestAction={handleGuestAction} onNavigateToSearch={() => resetToScreen('search')} onNavigateToProfile={() => resetToScreen('profile')} onViewLocationOnMap={(adv) => { setMapAdventuresToShow([adv]); resetToScreen('map'); }} onDeleteAdventure={handleDeleteAdventure} onEditAdventure={setEditingAdventure} viewedStoryTimestamps={viewedStoryTimestamps} onJoinGroupChat={handleJoinAdventureChat} />;
       case 'map': return <MapScreen adventuresToShow={mapAdventuresToShow || adventures} isLoaded={isLoaded} onShowToast={handleShowToast} />;
       case 'create': return <CreateAdventureScreen currentUser={currentUser!} onCreateAdventure={handleCreateAdventure} isLoaded={isLoaded} />;
+      // Fix: Corrected handler name from `handleJoinGroupChat` to `handleJoinAdventureChat`.
       case 'search': return <SearchScreen adventures={hydratedAdventures} allUsers={users} currentUser={currentUser || guestUser} isGuest={isGuest} isLoaded={isLoaded} onSelectAdventure={setSelectedAdventure} onSendMessage={handleStartPrivateConversation} onToggleInterest={handleToggleInterest} onNavigateToFindTwins={() => pushScreen('findTwins')} onViewProfile={(user) => { setViewingUser(user); pushScreen('userProfile'); }} onShowResultsOnMap={(advs) => { setMapAdventuresToShow(advs); resetToScreen('map'); }} onRepostToggle={handleToggleRepost} onSaveToggle={handleToggleSave} onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted} onViewLocationOnMap={(adv) => { setMapAdventuresToShow([adv]); resetToScreen('map'); }} onDeleteAdventure={handleDeleteAdventure} onEditAdventure={setEditingAdventure} onFollowToggle={handleFollowToggle} onJoinGroupChat={handleJoinAdventureChat}/>;
       case 'chat': return <ChatScreen conversations={hydratedConversations} onSelectConversation={(convo) => { setSelectedConversation(convo); pushScreen('chatDetail'); }} onBack={popScreen} currentUser={currentUser!} onViewProfile={(user) => { setViewingUser(user); pushScreen('userProfile'); }} />;
+      // Fix: Corrected handler name from `handleJoinGroupChat` to `handleJoinAdventureChat`.
       case 'profile': return <ProfileScreen user={currentUser || guestUser} allAdventures={hydratedAdventures} onSelectAdventure={setSelectedAdventure} onSendMessage={handleStartPrivateConversation} onToggleInterest={handleToggleInterest} onViewProfile={(user) => { setViewingUser(user); pushScreen('userProfile'); }} onRepostToggle={handleToggleRepost} onSaveToggle={handleToggleSave} onShareProfile={handleShareProfile} onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted} onOpenFollowList={(user, listType) => setFollowListModal({ isOpen: true, user, listType })} onNavigateToSettings={() => pushScreen('settings')} onViewLocationOnMap={(adv) => { setMapAdventuresToShow([adv]); resetToScreen('map'); }} onDeleteAdventure={handleDeleteAdventure} onEditAdventure={setEditingAdventure} onJoinGroupChat={handleJoinAdventureChat}/>;
       case 'chatDetail': return <ChatDetailScreen conversation={selectedConversation!} currentUser={currentUser!} allUsers={users} onBack={popScreen} onSendMessage={handleSendMessage} onViewProfile={(user) => { setViewingUser(user); pushScreen('userProfile'); }} />;
       case 'findTwins': return <FindTwinsScreen currentUser={currentUser!} allUsers={users} onSendMessage={handleStartPrivateConversation} onBack={popScreen} onFollowToggle={handleFollowToggle} onViewProfile={(user) => { setViewingUser(user); pushScreen('userProfile'); }} />;
+      // Fix: Corrected handler name from `handleJoinGroupChat` to `handleJoinAdventureChat`.
       case 'userProfile': return <UserProfileScreen user={viewingUser!} currentUser={currentUser || guestUser} allAdventures={hydratedAdventures} onBack={popScreen} onSelectAdventure={setSelectedAdventure} onSendMessage={handleStartPrivateConversation} onToggleInterest={handleToggleInterest} onFollowToggle={handleFollowToggle} onViewProfile={(user) => { setViewingUser(user); pushScreen('userProfile'); }} onRepostToggle={handleToggleRepost} onSaveToggle={handleToggleSave} onShareProfile={handleShareProfile} onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted} onOpenFollowList={(user, listType) => setFollowListModal({ isOpen: true, user, listType })} isGuest={isGuest} onViewLocationOnMap={(adv) => { setMapAdventuresToShow([adv]); resetToScreen('map'); }} onDeleteAdventure={handleDeleteAdventure} onEditAdventure={setEditingAdventure} onJoinGroupChat={handleJoinAdventureChat} />;
       case 'settings': return <SettingsScreen onBack={popScreen} onNavigate={pushScreen} onLogout={handleLogout} />;
       case 'editProfile': return <EditProfileScreen onBack={popScreen} currentUser={currentUser!} onUpdateProfile={handleUpdateProfile} />;
       case 'privacySecurity': return <PrivacySecurityScreen onBack={popScreen} currentUser={currentUser!} onUpdateProfile={handleUpdateProfile} />;
       case 'language': return <LanguageScreen onBack={popScreen} />;
+      // Fix: Corrected handler name from `handleJoinGroupChat` to `handleJoinAdventureChat`.
       case 'savedAdventures': return <SavedAdventuresScreen onBack={popScreen} adventures={hydratedAdventures.filter(p => currentUser?.savedAdventures?.includes(p.id))} currentUser={currentUser!} onSelectAdventure={setSelectedAdventure} onSendMessage={handleStartPrivateConversation} onToggleInterest={handleToggleInterest} onViewProfile={(user) => { setViewingUser(user); pushScreen('userProfile'); }} onRepostToggle={handleToggleRepost} onSaveToggle={handleToggleSave} onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted} onViewLocationOnMap={(adv) => { setMapAdventuresToShow([adv]); resetToScreen('map'); }} onDeleteAdventure={handleDeleteAdventure} onEditAdventure={setEditingAdventure} onJoinGroupChat={handleJoinAdventureChat} />;
       case 'notifications': return <NotificationsScreen notifications={hydratedNotifications} onBack={popScreen} onConfirmAttendance={handleConfirmAttendance} onNotificationClick={handleNotificationClick} onMarkAllAsRead={handleMarkAllNotificationsAsRead} />;
       default: return <div>Not implemented</div>;

@@ -175,7 +175,7 @@ export type HydratedNotification = Notification & {
 }
 
 export type Screen = 
-  | 'feed' 
+  | 'adventures' 
   | 'map' 
   | 'create' 
   | 'search'
@@ -189,4 +189,5 @@ export type Screen =
   | 'privacySecurity'
   | 'language'
   | 'savedAdventures'
-  | 'notifications';
+  | 'notifications'
+  | 'editAdventure';

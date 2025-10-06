@@ -15,8 +15,6 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversations, onSelectConversa
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'adventurers' | 'adventures'>('adventurers');
 
-  // Fix: Removed `&& c.participant` to prevent conversations from disappearing when participant
-  // data is still loading. The component now handles potentially undefined participant data gracefully.
   const privateConversations = conversations.filter(c => c.type === 'private');
   const groupConversations = conversations.filter(c => c.type === 'group');
   
@@ -44,9 +42,14 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversations, onSelectConversa
         <div className="p-2 space-y-2">
             {list.map(convo => {
                 const unreadCount = convo.unreadCount?.[currentUser.id] || 0;
-                const name = convo.type === 'private' ? convo.participant?.name : convo.name;
-                const imageUrl = convo.type === 'private' ? convo.participant?.avatarUrl : convo.imageUrl;
                 const participant = convo.participant;
+
+                const name = convo.type === 'private' 
+                    ? participant?.name || t('loading')
+                    : convo.name;
+                const imageUrl = convo.type === 'private' 
+                    ? participant?.avatarUrl || `https://picsum.photos/seed/${convo.id}/200`
+                    : convo.imageUrl;
 
                 return (
                     <div key={convo.id} onClick={() => onSelectConversation(convo)} className="p-4 rounded-2xl bg-light-bg-secondary/70 dark:bg-dark-bg-secondary/70 backdrop-blur-sm flex items-center space-x-4 hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary cursor-pointer transition-colors">
