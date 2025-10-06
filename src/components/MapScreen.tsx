@@ -1,7 +1,6 @@
 import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { GoogleMap, MarkerF, InfoWindowF, DirectionsRenderer } from '@react-google-maps/api';
 import { Adventure, AdventureType } from '../types';
-import Header from './Header';
 import { useTranslation } from '../contexts/LanguageContext';
 import MyLocationIcon from './icons/MyLocationIcon';
 import { getAdventureIconDataUrl } from '../utils/mapIconUtils';
@@ -136,7 +135,6 @@ const MapScreen: React.FC<MapScreenProps> = ({ adventuresToShow, isLoaded, onSho
 
   return (
     <div className="w-full h-full flex flex-col">
-      <Header title={t('mapView')} />
       <div className="bg-light-bg dark:bg-dark-bg border-b dark:border-zinc-800 p-2 overflow-x-auto">
           <div className="flex space-x-2">
               {filterOptions.map(option => (

@@ -1,7 +1,7 @@
 
+
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { User, AdventureType, HydratedAdventure } from '../types';
-import Header from './Header';
 import AdventureCard from './AdventureCard';
 import SearchIcon from './icons/SearchIcon';
 import CakeIcon from './icons/CakeIcon';
@@ -194,9 +194,7 @@ const SearchScreen: React.FC<SearchScreenProps> = ({
 
   return (
     <div className="flex flex-col h-full">
-      <Header title={t('search')} />
-
-      <div className="border-b dark:border-neutral-800/50 flex bg-light-bg-secondary/70 dark:bg-dark-bg-secondary/70 backdrop-blur-sm">
+      <div className="border-b dark:border-neutral-800/50 flex bg-light-bg-secondary/70 dark:bg-dark-bg-secondary/70 backdrop-blur-sm sticky top-0 z-30">
         <TabButton id="adventures" label={t('adventures')} icon={<SearchIcon />} active={searchMode === 'adventures'} onClick={() => setSearchMode('adventures')} />
         <TabButton id="people" label={t('people')} icon={<UsersIcon />} active={searchMode === 'people'} onClick={() => setSearchMode('people')} />
       </div>
