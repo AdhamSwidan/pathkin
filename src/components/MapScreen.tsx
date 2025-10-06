@@ -17,6 +17,7 @@ interface MapScreenProps {
   adventuresToShow: Adventure[];
   isLoaded: boolean;
   onShowToast: (message: string) => void;
+  onSelectAdventure: (adventure: Adventure) => void;
 }
 
 const containerStyle = {
@@ -44,8 +45,8 @@ const FilterButton: React.FC<{ icon: React.ReactNode; label: string; isActive: b
 );
 
 
-const MapScreen: React.FC<MapScreenProps> = ({ adventuresToShow, isLoaded, onShowToast }) => {
-  const { t } = useTranslation();
+const MapScreen: React.FC<MapScreenProps> = ({ adventuresToShow, isLoaded, onShowToast, onSelectAdventure }) => {
+  const { t, language } = useTranslation();
   const [selectedAdventure, setSelectedAdventure] = useState<Adventure | null>(null);
   const [myPosition, setMyPosition] = useState<google.maps.LatLngLiteral | null>(null);
   const [filterType, setFilterType] = useState<AdventureType | 'all'>('all');
@@ -57,10 +58,14 @@ const MapScreen: React.FC<MapScreenProps> = ({ adventuresToShow, isLoaded, onSho
   }, []);
 
   const filteredAdventures = useMemo(() => {
+    const now = new Date();
+    // Filter for adventures that have not started yet
+    const futureAdventures = adventuresToShow.filter(adv => new Date(adv.startDate) > now);
+
     if (filterType === 'all') {
-      return adventuresToShow;
+      return futureAdventures;
     }
-    return adventuresToShow.filter(adventure => adventure.type === filterType);
+    return futureAdventures.filter(adventure => adventure.type === filterType);
   }, [adventuresToShow, filterType]);
 
   const firstAdventureWithCoords = filteredAdventures.find(p => p.coordinates);
@@ -122,6 +127,10 @@ const MapScreen: React.FC<MapScreenProps> = ({ adventuresToShow, isLoaded, onSho
     setSelectedAdventure(null);
     setDirections(null);
   }, [filterType]);
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString(language, { month: 'short', day: 'numeric' });
+  };
 
   const filterOptions = [
     { type: 'all' as const, icon: <GridIcon />, labelKey: 'allTypes' },
@@ -195,9 +204,19 @@ const MapScreen: React.FC<MapScreenProps> = ({ adventuresToShow, isLoaded, onSho
                   position={selectedAdventure.coordinates}
                   onCloseClick={onInfoWindowClose}
                 >
-                  <div className="p-1">
-                    <h3 className="font-bold text-gray-800">{selectedAdventure.title}</h3>
-                    <p className="text-sm text-gray-600">{selectedAdventure.location}</p>
+                  <div className="p-1 w-48 text-gray-800">
+                    <p className="text-xs font-semibold text-brand-orange">{t(`AdventureType_${selectedAdventure.type}`)}</p>
+                    <h3 className="font-bold text-base mb-1">{selectedAdventure.title}</h3>
+                    <p className="text-xs text-gray-600">
+                        🗓️ {formatDate(selectedAdventure.startDate)}
+                        {selectedAdventure.endDate && ` - ${formatDate(selectedAdventure.endDate)}`}
+                    </p>
+                    <button
+                      onClick={() => onSelectAdventure(selectedAdventure)}
+                      className="mt-2 w-full bg-brand-orange text-white text-xs font-bold py-1 px-2 rounded-md hover:bg-brand-orange-light transition-colors"
+                    >
+                      {t('viewAdventure')}
+                    </button>
                   </div>
                 </InfoWindowF>
               )}

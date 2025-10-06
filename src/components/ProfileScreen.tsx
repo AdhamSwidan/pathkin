@@ -1,6 +1,7 @@
 
 
 
+
 import React, { useState, useMemo } from 'react';
 import { User, HydratedAdventure, ActivityStatus, AdventureType } from '../types';
 import Header from './Header';
@@ -145,7 +146,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
   return (
     <>
-      <Header title={user.name} rightAction={headerActions} />
+      <Header title="" rightAction={headerActions} />
       <div className="flex-grow">
         <div className="w-full h-32 bg-gray-200 dark:bg-neutral-800">
             {user.coverUrl ? (

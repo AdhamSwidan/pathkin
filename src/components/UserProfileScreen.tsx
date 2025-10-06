@@ -1,6 +1,7 @@
 
 
 
+
 import React, { useState, useMemo } from 'react';
 import { User, ActivityStatus, HydratedAdventure, AdventureType } from '../types';
 import Header from './Header';
@@ -174,7 +175,7 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
 
   return (
     <>
-      <Header title={user.name} onBack={onBack} rightAction={headerActions} />
+      <Header title="" onBack={onBack} rightAction={headerActions} />
       <div className="flex-grow">
         {/* Cover Photo */}
         <div className="w-full h-32 bg-gray-200 dark:bg-neutral-800">

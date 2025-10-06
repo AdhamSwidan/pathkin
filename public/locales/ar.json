@@ -214,5 +214,6 @@
   "groupChat": "محادثة جماعية",
   "joinGroupChatConfirmationTitle": "الانضمام لمحادثة المغامرة؟",
   "joinGroupChatConfirmationMessage": "بالانضمام، أنت تؤكد نيتك بالمشاركة في هذه المغامرة. هل تريد المتابعة؟",
-  "completedAdventuresTitle": "المغامرات المكتملة: {{type}}"
+  "completedAdventuresTitle": "المغامرات المكتملة: {{type}}",
+  "viewAdventure": "عرض المغامرة"
 }

@@ -214,5 +214,6 @@
   "groupChat": "Group Chat",
   "joinGroupChatConfirmationTitle": "Join Adventure Chat?",
   "joinGroupChatConfirmationMessage": "By joining, you confirm that you will participate in this adventure. Proceed?",
-  "completedAdventuresTitle": "Completed {{type}} Adventures"
+  "completedAdventuresTitle": "Completed {{type}} Adventures",
+  "viewAdventure": "View Adventure"
 }
