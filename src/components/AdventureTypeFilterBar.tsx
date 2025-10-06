@@ -29,23 +29,23 @@ const AdventureTypeFilterBar: React.FC<AdventureTypeFilterBarProps> = ({ selecte
 
     return (
         <div className="px-2">
-            <div className="flex space-x-2 overflow-x-auto pb-2 -mb-2">
+            <div className="grid grid-cols-4 gap-2">
                 {filterOptions.map(option => {
                     const isActive = selectedType === option.type;
                     return (
                         <button
                             key={option.type}
                             onClick={() => onSelectType(option.type)}
-                            className={`flex-shrink-0 flex flex-col items-center justify-center w-24 h-[72px] rounded-2xl transition-colors duration-200 ${
+                            className={`flex flex-col items-center justify-center p-2 h-20 rounded-2xl transition-colors duration-200 ${
                                 isActive 
                                 ? 'bg-brand-orange/10 dark:bg-brand-orange/20' 
                                 : 'bg-slate-100 dark:bg-dark-bg-secondary hover:bg-slate-200 dark:hover:bg-zinc-700/50'
                             }`}
                         >
-                            <div className={`w-7 h-7 flex items-center justify-center ${isActive ? 'text-brand-orange' : 'text-gray-500 dark:text-gray-400'}`}>
+                            <div className={`w-6 h-6 flex items-center justify-center ${isActive ? 'text-brand-orange' : 'text-gray-500 dark:text-gray-400'}`}>
                                 {option.icon}
                             </div>
-                            <span className={`text-xs mt-1.5 text-center ${isActive ? 'font-semibold text-brand-orange dark:text-brand-orange-light' : 'text-gray-600 dark:text-gray-300'}`}>
+                            <span className={`text-[11px] mt-1.5 text-center font-medium ${isActive ? 'text-brand-orange dark:text-brand-orange-light' : 'text-gray-600 dark:text-gray-300'}`}>
                                 {t(option.labelKey)}
                             </span>
                         </button>
