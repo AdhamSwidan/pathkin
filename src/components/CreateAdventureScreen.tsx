@@ -32,8 +32,21 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ currentUs
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [budget, setBudget] = useState('');
-  const [eventCategory, setEventCategory] = useState('');
   
+  // Event-specific state
+  const [eventCategory, setEventCategory] = useState('');
+  const [otherEventCategory, setOtherEventCategory] = useState('');
+
+  // Travel-specific state
+  const [destinations, setDestinations] = useState<{ location: string; coordinates: { lat: number; lng: number } | null }[]>([{ location: '', coordinates: null }]);
+
+  // Hiking/Cycling-specific state
+  const [endLocation, setEndLocation] = useState('');
+  const [endCoordinates, setEndCoordinates] = useState<{ lat: number; lng: number } | null>(null);
+  
+  // State to track which location input is being edited
+  const [editingLocationFor, setEditingLocationFor] = useState<string>('location');
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { t } = useTranslation();
 
@@ -46,10 +59,28 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ currentUs
       setMediaPreview({ url, type });
     }
   };
+  
+  const openLocationPicker = (fieldIdentifier: string) => {
+    setEditingLocationFor(fieldIdentifier);
+    setIsPickerOpen(true);
+  };
 
   const handleLocationSelect = (address: string, coords: { lat: number; lng: number; }) => {
-    setLocation(address);
-    setCoordinates(coords);
+    if (editingLocationFor === 'location') { // For Event, Camping, Volunteering
+      setLocation(address);
+      setCoordinates(coords);
+    } else if (editingLocationFor === 'startPoint') { // For Travel, Hiking, Cycling
+      setLocation(address);
+      setCoordinates(coords);
+    } else if (editingLocationFor === 'endPoint') { // For Hiking, Cycling
+      setEndLocation(address);
+      setEndCoordinates(coords);
+    } else if (editingLocationFor.startsWith('destination_')) {
+      const index = parseInt(editingLocationFor.split('_')[1], 10);
+      const newDestinations = [...destinations];
+      newDestinations[index] = { location: address, coordinates: coords };
+      setDestinations(newDestinations);
+    }
     setIsPickerOpen(false);
   };
   
@@ -71,32 +102,135 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ currentUs
   };
 
   const handleSubmit = () => {
-    if (!title || !description || !location || !startDate) {
-        alert("Please fill in all required fields: title, description, location, and start date.");
+    // Validation based on type might be needed here
+    if (!title || !description || !startDate) {
+        alert("Please fill in all required fields: title, description, and start date.");
         return;
     }
     
-    const adventureData: any = { type: adventureType, privacy, title, description, location, startDate, budget: parseInt(budget, 10) || 0, };
+    const adventureData: any = {
+      type: adventureType,
+      privacy,
+      title,
+      description,
+      startDate,
+      budget: parseInt(budget, 10) || 0,
+    };
     
     if (privacy === AdventurePrivacy.Twins) adventureData.subPrivacy = subPrivacy;
-    if (coordinates) adventureData.coordinates = coordinates;
     if (endDate) adventureData.endDate = endDate;
-    if (eventCategory) adventureData.eventCategory = eventCategory;
+    
+    // Add type-specific data
+    switch(adventureType) {
+        case AdventureType.Travel:
+            adventureData.location = location; // "From" location
+            adventureData.coordinates = coordinates;
+            adventureData.destinations = destinations.filter(d => d.location && d.coordinates);
+            break;
+        case AdventureType.Hiking:
+        case AdventureType.Cycling:
+            adventureData.location = location; // "Start Point"
+            adventureData.coordinates = coordinates;
+            adventureData.endLocation = endLocation;
+            adventureData.endCoordinates = endCoordinates;
+            break;
+        case AdventureType.Event:
+            adventureData.location = location;
+            adventureData.coordinates = coordinates;
+            adventureData.eventCategory = eventCategory === 'Other' ? otherEventCategory : eventCategory;
+            break;
+        default: // Camping, Volunteering
+            adventureData.location = location;
+            adventureData.coordinates = coordinates;
+            break;
+    }
     
     onCreateAdventure(adventureData, mediaFile);
+  };
+  
+  const handleAddDestination = () => {
+    setDestinations([...destinations, { location: '', coordinates: null }]);
+  };
+  
+  const handleDestinationLocationChange = (index: number, newLocation: string) => {
+    const newDestinations = [...destinations];
+    newDestinations[index] = { ...newDestinations[index], location: newLocation };
+    setDestinations(newDestinations);
   };
 
   const adventureTypes = Object.values(AdventureType);
   const inputBaseClasses = "w-full p-2 border border-gray-200 dark:border-zinc-700 rounded-lg bg-slate-50 dark:bg-zinc-800 focus:ring-brand-orange focus:border-brand-orange";
   const tagButtonClasses = "px-2 py-1 rounded-full text-xs font-semibold";
+  
+  const renderLocationFields = () => {
+    const locationButton = (label: string, value: string, fieldId: string) => (
+      <div>
+          <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">{label}</label>
+          <button onClick={() => openLocationPicker(fieldId)} className="w-full mt-2 text-left p-2 border border-gray-200 dark:border-zinc-700 rounded-lg bg-slate-50 dark:bg-zinc-800">
+            {value || t('selectOnMap')}
+          </button>
+      </div>
+    );
+
+    switch(adventureType) {
+        case AdventureType.Travel:
+            return (
+              <div className="space-y-4">
+                {locationButton(t('fromLocation'), location, 'startPoint')}
+                {destinations.map((dest, index) => (
+                  <div key={index}>
+                      <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">{`${t('yourDestination')} #${index + 1}`}</label>
+                      <button onClick={() => openLocationPicker(`destination_${index}`)} className="w-full mt-2 text-left p-2 border border-gray-200 dark:border-zinc-700 rounded-lg bg-slate-50 dark:bg-zinc-800">
+                        {dest.location || t('selectOnMap')}
+                      </button>
+                  </div>
+                ))}
+                <button onClick={handleAddDestination} className="text-sm font-semibold text-brand-orange hover:text-brand-orange-light">{t('addDestination')}</button>
+              </div>
+            );
+        case AdventureType.Hiking:
+        case AdventureType.Cycling:
+            return (
+                <div className="space-y-4">
+                    {locationButton(t('startPoint'), location, 'startPoint')}
+                    {locationButton(t('endPoint'), endLocation, 'endPoint')}
+                </div>
+            );
+        case AdventureType.Event:
+            return (
+                <div className="space-y-4">
+                    {locationButton(t('location'), location, 'location')}
+                    <div>
+                        <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">{t('eventCategory')}</label>
+                        <select value={eventCategory} onChange={e => setEventCategory(e.target.value)} className={`${inputBaseClasses} mt-2`}>
+                            <option value="">{t('selectCategory')}</option>
+                            <option value="Music">{t('categoryMusic')}</option>
+                            <option value="Art">{t('categoryArt')}</option>
+                            <option value="Food">{t('categoryFood')}</option>
+                            <option value="Sports">{t('categorySports')}</option>
+                            <option value="Tech">{t('categoryTech')}</option>
+                            <option value="Community">{t('categoryCommunity')}</option>
+                            <option value="Other">{t('categoryOther')}</option>
+                        </select>
+                    </div>
+                    {eventCategory === 'Other' && (
+                        <div>
+                            <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">{t('otherCategory')}</label>
+                            <input type="text" value={otherEventCategory} onChange={e => setOtherEventCategory(e.target.value)} className={`${inputBaseClasses} mt-2`} />
+                        </div>
+                    )}
+                </div>
+            );
+        default: // Camping, Volunteering
+            return locationButton(t('location'), location, 'location');
+    }
+  }
 
   return (
     <>
       <div className="p-2 sm:p-4 space-y-4">
         <h1 className="text-2xl font-bold px-2 text-gray-800 dark:text-gray-100">{t('createANewAdventure')}</h1>
-        {/* Live Preview Card */}
         <div className="bg-light-bg-secondary/70 dark:bg-dark-bg-secondary/70 backdrop-blur-sm rounded-3xl shadow-lg shadow-black/[.02] dark:shadow-black/[.05]">
-          {/* Header */}
           <div className="p-4 flex items-center space-x-3">
             <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-10 h-10 rounded-full flex-shrink-0" />
             <div className="flex-grow">
@@ -119,11 +253,9 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ currentUs
               </div>
             </div>
           </div>
-          {/* Content Inputs */}
           <div className="px-4 space-y-2">
             <input type="text" placeholder={t('title')} value={title} onChange={e => setTitle(e.target.value)} className="text-lg font-bold w-full bg-transparent border-none p-0 focus:ring-0 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500" />
             <textarea placeholder={t('description')} value={description} onChange={e => setDescription(e.target.value)} rows={3} className="text-sm w-full bg-transparent border-none p-0 focus:ring-0 text-gray-700 dark:text-gray-300 placeholder:text-gray-400 dark:placeholder:text-gray-500 resize-none"></textarea>
-            {/* AI Helper */}
             <div className="p-2 bg-slate-100 dark:bg-zinc-800 rounded-lg space-y-2">
               <label htmlFor="keywords" className="text-xs font-semibold text-gray-500 dark:text-gray-400">{t('aiDescriptionHelper')}</label>
               <div className="flex space-x-2">
@@ -135,7 +267,6 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ currentUs
             </div>
           </div>
 
-          {/* Media Input */}
           <div className="p-4">
             <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*,video/*" className="hidden"/>
             <button onClick={() => fileInputRef.current?.click()} className="w-full aspect-video bg-slate-100 dark:bg-zinc-800 rounded-2xl flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 border-2 border-dashed border-gray-300 dark:border-zinc-700 hover:border-brand-orange transition-colors">
@@ -156,7 +287,6 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ currentUs
             </button>
           </div>
 
-          {/* Details Footer */}
           <div className="p-4 space-y-4">
             <div>
               <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">{t('adventureType')}</label>
@@ -169,26 +299,8 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ currentUs
               </div>
             </div>
 
-            {adventureType === AdventureType.Event && (
-              <div>
-                <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">{t('eventCategory')}</label>
-                <select value={eventCategory} onChange={e => setEventCategory(e.target.value)} className={`${inputBaseClasses} mt-2`}>
-                    <option value="">{t('selectCategory')}</option>
-                    <option value="Music">{t('categoryMusic')}</option>
-                    <option value="Art">{t('categoryArt')}</option>
-                    <option value="Food">{t('categoryFood')}</option>
-                    <option value="Sports">{t('categorySports')}</option>
-                    <option value="Other">{t('categoryOther')}</option>
-                </select>
-              </div>
-            )}
+            {renderLocationFields()}
 
-            <div>
-                <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">{t('location')}</label>
-                <button onClick={() => setIsPickerOpen(true)} className="w-full mt-2 text-left p-2 border border-gray-200 dark:border-zinc-700 rounded-lg bg-slate-50 dark:bg-zinc-800">
-                  {location || t('selectOnMap')}
-                </button>
-            </div>
              <div className="grid grid-cols-2 gap-4">
                 <div>
                     <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">{t('startDate')}</label>
