@@ -1,6 +1,8 @@
+
 import React, { useState, useRef, useCallback } from 'react';
 import { GoogleMap, MarkerF, StandaloneSearchBox } from '@react-google-maps/api';
 import { useTranslation } from '../contexts/LanguageContext';
+import MyLocationIcon from './icons/MyLocationIcon';
 
 interface LocationPickerModalProps {
   isOpen: boolean;
@@ -66,6 +68,27 @@ const LocationPickerModal: React.FC<LocationPickerModalProps> = ({ isOpen, onClo
         }
     });
   };
+  
+  const handleShowMyLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const pos = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          };
+          setMarkerPosition(pos);
+          mapRef.current?.panTo(pos);
+          mapRef.current?.setZoom(15);
+        },
+        () => {
+          alert(t('locationPermissionDenied'));
+        }
+      );
+    } else {
+      alert(t('locationUnavailable'));
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -99,6 +122,13 @@ const LocationPickerModal: React.FC<LocationPickerModalProps> = ({ isOpen, onClo
                     />
                 </StandaloneSearchBox>
             </div>
+             <button
+              onClick={handleShowMyLocation}
+              className="absolute bottom-4 end-4 z-10 bg-white dark:bg-zinc-800 p-3 rounded-full shadow-lg"
+              aria-label={t('showMyLocation')}
+            >
+              <MyLocationIcon className="w-6 h-6 text-gray-700 dark:text-gray-200" />
+            </button>
         </div>
         
         <div className="p-4 border-t dark:border-neutral-800">

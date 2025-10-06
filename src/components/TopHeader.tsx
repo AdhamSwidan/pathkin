@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { User } from '../types';
 import { useTranslation } from '../contexts/LanguageContext';
@@ -40,7 +41,6 @@ const TopHeader: React.FC<TopHeaderProps> = ({
     <header className="sticky top-0 z-40 bg-light-bg-secondary/70 dark:bg-dark-bg-secondary/70 backdrop-blur-lg border-b border-slate-200/60 dark:border-zinc-800/60 h-14 flex items-center justify-between px-4">
       {/* Left Group */}
       <div className="flex items-center space-x-2">
-        <img src="/logo.svg" alt="Pathkin Logo" className="w-8 h-8" />
         <button
           onClick={onNavigateToSearch}
           className="hidden sm:flex items-center space-x-2 bg-slate-100 dark:bg-zinc-800/80 hover:bg-slate-200 dark:hover:bg-zinc-700/80 rounded-full py-2 px-3 transition-colors"
