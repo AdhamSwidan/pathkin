@@ -6,7 +6,7 @@ import { useTranslation } from '../contexts/LanguageContext';
 import AdventureTypeFilterBar from './AdventureTypeFilterBar';
 import TopHeader from './TopHeader';
 
-interface AdventuresScreenProps {
+interface FeedScreenProps {
   adventures: HydratedAdventure[];
   stories: HydratedStory[];
   currentUser: User;
@@ -27,14 +27,14 @@ interface AdventuresScreenProps {
   onToggleCompleted: (adventureId: string) => void;
   isGuest: boolean;
   onGuestAction: () => void;
-  onViewLocationOnMap: (adventure: HydratedAdventure) => void;
+  onViewLocationOnMap: (adventure: HydratedAdventure | null) => void;
   onDeleteAdventure: (adventureId: string) => void;
   onEditAdventure: (adventure: HydratedAdventure) => void;
   onJoinGroupChat: (adventure: HydratedAdventure) => void;
   viewedStoryTimestamps: Record<string, string>;
 }
 
-const AdventuresScreen: React.FC<AdventuresScreenProps> = ({ 
+const FeedScreen: React.FC<FeedScreenProps> = ({ 
   adventures, 
   stories, 
   currentUser, 
@@ -130,4 +130,4 @@ const AdventuresScreen: React.FC<AdventuresScreenProps> = ({
   );
 };
 
-export default AdventuresScreen;
+export default FeedScreen;
