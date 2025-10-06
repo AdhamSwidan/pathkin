@@ -122,23 +122,51 @@ const EditAdventureScreen: React.FC<EditAdventureScreenProps> = ({ adventure, on
   }, [adventure.eventCategory]);
 
   const handleSubmit = () => {
-    const updatedData: Partial<Adventure> = {
+    // Build the base update object with common fields.
+    // Use `null` for optional fields that are empty to ensure database compatibility.
+    const updatedData: { [key: string]: any } = {
       type: adventureType,
       privacy,
       title,
       description,
       location,
-      coordinates: coordinates || undefined,
+      coordinates: coordinates || null,
       startDate,
       budget: parseInt(budget, 10) || 0,
-      endDate: endDate || undefined,
-      subPrivacy: privacy === AdventurePrivacy.Twins ? subPrivacy : undefined,
-      destinations: adventureType === AdventureType.Travel ? destinations.filter(d => d.location) : undefined,
-      eventCategory: adventureType === AdventureType.Event ? (eventCategory === 'Other' ? otherEventCategory : eventCategory) : undefined,
-      endLocation: (adventureType === AdventureType.Hiking || adventureType === AdventureType.Cycling) ? endLocation : undefined,
-      endCoordinates: (adventureType === AdventureType.Hiking || adventureType === AdventureType.Cycling) ? (endCoordinates || undefined) : undefined,
+      endDate: endDate || null,
     };
-    onUpdateAdventure(adventure.id, updatedData);
+
+    // Conditionally set subPrivacy or null it out if privacy is not 'Twins'.
+    // This directly fixes the 'undefined' error for 'subPrivacy'.
+    if (privacy === AdventurePrivacy.Twins) {
+      updatedData.subPrivacy = subPrivacy;
+    } else {
+      updatedData.subPrivacy = null;
+    }
+
+    // Clear data from other adventure types to prevent stale data when type is changed.
+    updatedData.destinations = null;
+    updatedData.eventCategory = null;
+    updatedData.endLocation = null;
+    updatedData.endCoordinates = null;
+
+    // Add data specific to the selected adventure type.
+    switch (adventureType) {
+      case AdventureType.Travel:
+        updatedData.destinations = destinations.filter(d => d.location);
+        break;
+      case AdventureType.Event:
+        updatedData.eventCategory = eventCategory === 'Other' ? otherEventCategory : eventCategory;
+        break;
+      case AdventureType.Hiking:
+      case AdventureType.Cycling:
+        updatedData.endLocation = endLocation || null;
+        updatedData.endCoordinates = endCoordinates || null;
+        break;
+      // No special fields for Camping or Volunteering.
+    }
+
+    onUpdateAdventure(adventure.id, updatedData as Partial<Adventure>);
   };
   
   const openLocationPicker = (fieldIdentifier: string, mode: 'point' | 'route' = 'point') => {
