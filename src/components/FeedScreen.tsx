@@ -1,12 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { User, HydratedAdventure, HydratedStory, AdventureType } from '../types';
-import Header from './Header';
 import AdventureCard from './AdventureCard';
 import StoryReel from './StoryReel';
-import BellIcon from './icons/BellIcon';
-import MessageIcon from './icons/MessageIcon';
 import { useTranslation } from '../contexts/LanguageContext';
 import AdventureTypeFilterBar from './AdventureTypeFilterBar';
+import TopHeader from './TopHeader';
 
 interface FeedScreenProps {
   adventures: HydratedAdventure[];
@@ -20,12 +18,15 @@ interface FeedScreenProps {
   onNavigateToNotifications: () => void;
   hasUnreadNotifications: boolean;
   onNavigateToChat: () => void;
+  onNavigateToSearch: () => void;
+  onNavigateToProfile: () => void;
   onViewProfile: (user: User) => void;
   onRepostToggle: (adventureId: string) => void;
   onSaveToggle: (adventureId: string) => void;
   onShareAdventure: (adventure: HydratedAdventure) => void;
   onToggleCompleted: (adventureId: string) => void;
   isGuest: boolean;
+  onGuestAction: () => void;
   onViewLocationOnMap: (adventure: HydratedAdventure) => void;
   onDeleteAdventure: (adventureId: string) => void;
   onEditAdventure: (adventure: HydratedAdventure) => void;
@@ -44,12 +45,15 @@ const FeedScreen: React.FC<FeedScreenProps> = ({
   onNavigateToNotifications,
   hasUnreadNotifications,
   onNavigateToChat,
+  onNavigateToSearch,
+  onNavigateToProfile,
   onViewProfile,
   onRepostToggle,
   onSaveToggle,
   onShareAdventure,
   onToggleCompleted,
   isGuest,
+  onGuestAction,
   onViewLocationOnMap,
   onDeleteAdventure,
   onEditAdventure,
@@ -65,25 +69,17 @@ const FeedScreen: React.FC<FeedScreenProps> = ({
     return adventures.filter(adventure => adventure.type === selectedAdventureType);
   }, [adventures, selectedAdventureType]);
 
-  const headerActions = (
-    <div className="flex items-center space-x-2">
-      <button onClick={onNavigateToChat} className="p-2 text-gray-600 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 relative">
-        <MessageIcon />
-      </button>
-      <button onClick={onNavigateToNotifications} className="p-2 text-gray-600 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 relative">
-        <BellIcon />
-        {hasUnreadNotifications && (
-          <span className="absolute top-1 end-1 block h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white dark:ring-neutral-950" />
-        )}
-      </button>
-    </div>
-  );
-
   return (
     <>
-      <Header 
-        title=""
-        rightAction={headerActions}
+      <TopHeader
+        currentUser={currentUser}
+        isGuest={isGuest}
+        onGuestAction={onGuestAction}
+        hasUnreadNotifications={hasUnreadNotifications}
+        onNavigateToChat={onNavigateToChat}
+        onNavigateToNotifications={onNavigateToNotifications}
+        onNavigateToProfile={onNavigateToProfile}
+        onNavigateToSearch={onNavigateToSearch}
       />
       <div className="space-y-3">
         <StoryReel 
