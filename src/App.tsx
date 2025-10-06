@@ -273,36 +273,38 @@ const App: React.FC = () => {
   const hydratedStories: HydratedStory[] = useMemo(() => stories.map(story => ({ ...story, author: users.find(u => u.id === story.authorId)! })).filter(s => s.author), [stories, users]);
   const hydratedConversations: HydratedConversation[] = useMemo(() => {
     if (!currentUser) return [];
-    
+
     const mapped = conversations.map((convo): HydratedConversation | null => {
-        if (convo.type === 'group') {
-            // Ensure the 'type' property is explicitly set to avoid type widening issues.
+        // Determine the conversation type, using adventureId as a fallback for legacy data.
+        const type = convo.type || (convo.adventureId ? 'group' : 'private');
+
+        if (type === 'group') {
+            // All data needed for group chats (name, imageUrl) is already in the convo object.
             return { ...convo, type: 'group' };
         }
         
-        // Treat 'private' and conversations without a 'type' property as private chats.
-        if (convo.type === 'private' || !convo.type) {
+        if (type === 'private') {
             const participantId = convo.participants.find(p => p !== currentUser.id);
-            if (!participantId) return null; // Should not happen in a valid private chat.
+            if (!participantId) return null; 
 
             const participant = users.find(u => u.id === participantId);
-            // If the other user's data hasn't loaded yet, don't display the conversation.
-            // It will appear automatically once the `users` array is updated.
+            // If the other user's data isn't loaded, we'll temporarily hide the conversation.
+            // It will reappear when the `users` state updates.
             if (!participant) return null;
 
             return { ...convo, type: 'private', participant };
         }
 
-        return null; // Filter out any unknown or malformed conversation types.
+        // Should not be reached if types are only 'group' and 'private'
+        return null;
     });
-    
-    // Filter out null values and ensure TypeScript knows the type is now HydratedConversation.
+
     const filtered = mapped.filter((c): c is HydratedConversation => c !== null);
 
-    // Sort the valid conversations by last update time.
     return filtered.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 
   }, [conversations, users, currentUser]);
+
 
   const hydratedNotifications: HydratedNotification[] = useMemo(() => notifications.map(notif => {
     const user = users.find(u => u.id === notif.userId);
