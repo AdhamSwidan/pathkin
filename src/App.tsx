@@ -690,6 +690,18 @@ const App: React.FC = () => {
     } catch (error) { console.error("Error updating profile:", error); }
   };
   
+  // Fix: Create a new handler for SideNav clicks to use `pushScreen` for secondary pages,
+  // fixing the broken back button behavior for Chat and Notifications.
+  const handleSideNavClick = (screen: Screen) => {
+    const mainScreens: Screen[] = ['feed', 'map', 'search', 'create', 'profile'];
+    if (mainScreens.includes(screen)) {
+      resetToScreen(screen);
+    } else {
+      // For secondary screens like chat and notifications, push them onto the stack.
+      pushScreen(screen);
+    }
+  };
+
   // Render Logic
   const renderScreen = () => {
     
@@ -727,7 +739,7 @@ const App: React.FC = () => {
 
   return (
     <div className="w-screen h-screen flex bg-transparent text-gray-800 dark:text-gray-200">
-      <SideNav activeScreen={activeScreen} setActiveScreen={isGuest ? handleGuestAction : (screen) => resetToScreen(screen)} hasUnreadNotifications={hasUnreadNotifications} isGuest={isGuest} onGuestAction={handleGuestAction} />
+      <SideNav activeScreen={activeScreen} setActiveScreen={isGuest ? handleGuestAction : handleSideNavClick} hasUnreadNotifications={hasUnreadNotifications} isGuest={isGuest} onGuestAction={handleGuestAction} />
       
       <main ref={mainContentRef} className="flex-1 max-w-2xl mx-auto xl:ms-0 xl:me-auto w-full flex flex-col overflow-y-auto pb-16 xl:pb-0">
         {isGuest && <GuestHeader onLoginClick={handleLogout} />}

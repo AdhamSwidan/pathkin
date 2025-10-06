@@ -15,9 +15,9 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversations, onSelectConversa
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'adventurers' | 'adventures'>('adventurers');
 
-  // Fix: Filter private conversations locally to ensure participant data is loaded before rendering.
-  // This prevents items from rendering without a name/avatar and resolves the "disappearing chats" issue.
-  const privateConversations = conversations.filter(c => c.type === 'private' && c.participant);
+  // Fix: Removed `&& c.participant` to prevent conversations from disappearing when participant
+  // data is still loading. The component now handles potentially undefined participant data gracefully.
+  const privateConversations = conversations.filter(c => c.type === 'private');
   const groupConversations = conversations.filter(c => c.type === 'group');
   
   const TabButton: React.FC<{ id: 'adventurers' | 'adventures', label: string }> = ({ id, label }) => {
