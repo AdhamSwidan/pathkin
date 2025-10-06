@@ -6,7 +6,7 @@ import { useTranslation } from '../contexts/LanguageContext';
 import AdventureTypeFilterBar from './AdventureTypeFilterBar';
 import TopHeader from './TopHeader';
 
-interface FeedScreenProps {
+interface AdventuresScreenProps {
   adventures: HydratedAdventure[];
   stories: HydratedStory[];
   currentUser: User;
@@ -30,12 +30,11 @@ interface FeedScreenProps {
   onViewLocationOnMap: (adventure: HydratedAdventure) => void;
   onDeleteAdventure: (adventureId: string) => void;
   onEditAdventure: (adventure: HydratedAdventure) => void;
-  // Fix: Add onJoinGroupChat to the props interface to resolve TypeScript error.
   onJoinGroupChat: (adventure: HydratedAdventure) => void;
   viewedStoryTimestamps: Record<string, string>;
 }
 
-const FeedScreen: React.FC<FeedScreenProps> = ({ 
+const AdventuresScreen: React.FC<AdventuresScreenProps> = ({ 
   adventures, 
   stories, 
   currentUser, 
@@ -117,7 +116,6 @@ const FeedScreen: React.FC<FeedScreenProps> = ({
             onViewLocationOnMap={onViewLocationOnMap}
             onDeleteAdventure={onDeleteAdventure}
             onEditAdventure={onEditAdventure}
-            // Fix: Pass the onJoinGroupChat prop to AdventureCard to fix missing prop error.
             onJoinGroupChat={onJoinGroupChat}
           />
         ))}
@@ -132,4 +130,4 @@ const FeedScreen: React.FC<FeedScreenProps> = ({
   );
 };
 
-export default FeedScreen;
+export default AdventuresScreen;

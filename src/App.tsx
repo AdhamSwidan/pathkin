@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import BottomNav from './components/BottomNav';
-import FeedScreen from './components/FeedScreen';
+import AdventuresScreen from './components/AdventuresScreen';
 import MapScreen from './components/MapScreen';
 import CreateAdventureScreen from './components/CreateAdventureScreen';
 import ChatScreen from './components/ChatScreen';
@@ -23,7 +23,7 @@ import PrivacySecurityScreen from './components/settings/PrivacySecurityScreen';
 import LanguageScreen from './components/settings/LanguageScreen';
 import ForgotPasswordModal from './components/ForgotPasswordModal';
 import AddStoryModal from './components/AddStoryModal';
-import EditAdventureModal from './components/EditAdventureModal';
+import EditAdventureScreen from './components/EditAdventureScreen';
 import SavedAdventuresScreen from './components/settings/SavedAdventuresScreen';
 import NotificationsScreen from './components/NotificationsScreen';
 import { useTranslation } from './contexts/LanguageContext';
@@ -273,15 +273,19 @@ const App: React.FC = () => {
   const hydratedStories: HydratedStory[] = useMemo(() => stories.map(story => ({ ...story, author: users.find(u => u.id === story.authorId)! })).filter(s => s.author), [stories, users]);
   const hydratedConversations: HydratedConversation[] = useMemo(() => {
     if (!currentUser) return [];
-    // Fix: Prevent conversations from disappearing if participant data hasn't loaded yet.
-    // The participant property can be undefined, and the ChatScreen component will handle it.
-    return conversations.map(convo => {
-      if (convo.type === 'private') {
+    // Fix: Explicitly type the return value of the map function to HydratedConversation.
+    // This resolves a TypeScript error where the spread operator on a union type (`convo`)
+    // caused the resulting object's `type` property to be inferred as a generic `string`
+    // instead of the more specific `'private' | 'group'`.
+    return conversations.map((convo): HydratedConversation => {
+      // Treat conversations without a 'type' as private for backward compatibility.
+      if (convo.type === 'private' || !convo.type) {
         const participantId = convo.participants.find(p => p !== currentUser.id);
         const participant = users.find(u => u.id === participantId);
-        return { ...convo, participant };
+        // Ensure the type is set for the component's filtering logic.
+        return { ...convo, type: 'private', participant };
       }
-      return { ...convo }; // For group chats, we don't need a single participant.
+      return { ...convo }; // For group chats
     }).sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
   }, [conversations, users, currentUser]);
   const hydratedNotifications: HydratedNotification[] = useMemo(() => notifications.map(notif => {
@@ -373,7 +377,7 @@ const App: React.FC = () => {
         const adventureRef = doc(db, 'posts', adventureId);
         await updateDoc(adventureRef, updatedData);
         handleShowToast(t('adventureUpdatedSuccessfully'));
-        setEditingAdventure(null);
+        popScreen();
     } catch (error) { console.error("Error updating adventure:", error); }
   };
   const handleDeleteAdventure = async (adventureId: string) => {
@@ -387,6 +391,10 @@ const App: React.FC = () => {
       await deleteDoc(doc(db, 'posts', adventureId));
       handleShowToast(t('adventureDeletedSuccessfully'));
     } catch(e) { console.error("Error deleting adventure:", e); }
+  };
+  const handleStartEditAdventure = (adventure: HydratedAdventure) => {
+    setEditingAdventure(adventure);
+    pushScreen('editAdventure');
   };
   const handleToggleInterest = async (adventureId: string) => {
     if (!currentUser) return;
@@ -706,26 +714,22 @@ const App: React.FC = () => {
   const renderScreen = () => {
     
     switch (activeScreen) {
-      // Fix: Corrected handler name from `handleJoinGroupChat` to `handleJoinAdventureChat`.
-      case 'adventures': return <FeedScreen adventures={hydratedAdventures.filter(p => !p.author.isPrivate || (currentUser?.following?.includes(p.author.id)) || p.author.id === currentUser?.id)} stories={hydratedStories} currentUser={currentUser || guestUser} onSelectAdventure={setSelectedAdventure} onSendMessage={handleStartPrivateConversation} onToggleInterest={handleToggleInterest} onSelectStories={(stories) => { setViewingStories(stories); const firstStory = stories[0]; if(firstStory){ const newTimestamps = {...viewedStoryTimestamps, [firstStory.author.id]: new Date().toISOString()}; setViewedStoryTimestamps(newTimestamps); localStorage.setItem('viewedStoryTimestamps', JSON.stringify(newTimestamps)); } }} onAddStory={() => setIsAddStoryModalOpen(true)} onNavigateToNotifications={() => pushScreen('notifications')} hasUnreadNotifications={hasUnreadNotifications} onNavigateToChat={() => pushScreen('chat')} onViewProfile={(user) => { setViewingUser(user); pushScreen('userProfile'); }} onRepostToggle={handleToggleRepost} onSaveToggle={handleToggleSave} onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted} isGuest={isGuest} onGuestAction={handleGuestAction} onNavigateToSearch={() => resetToScreen('search')} onNavigateToProfile={() => resetToScreen('profile')} onViewLocationOnMap={(adv) => { setMapAdventuresToShow([adv]); resetToScreen('map'); }} onDeleteAdventure={handleDeleteAdventure} onEditAdventure={setEditingAdventure} viewedStoryTimestamps={viewedStoryTimestamps} onJoinGroupChat={handleJoinAdventureChat} />;
+      case 'adventures': return <AdventuresScreen adventures={hydratedAdventures.filter(p => !p.author.isPrivate || (currentUser?.following?.includes(p.author.id)) || p.author.id === currentUser?.id)} stories={hydratedStories} currentUser={currentUser || guestUser} onSelectAdventure={setSelectedAdventure} onSendMessage={handleStartPrivateConversation} onToggleInterest={handleToggleInterest} onSelectStories={(stories) => { setViewingStories(stories); const firstStory = stories[0]; if(firstStory){ const newTimestamps = {...viewedStoryTimestamps, [firstStory.author.id]: new Date().toISOString()}; setViewedStoryTimestamps(newTimestamps); localStorage.setItem('viewedStoryTimestamps', JSON.stringify(newTimestamps)); } }} onAddStory={() => setIsAddStoryModalOpen(true)} onNavigateToNotifications={() => pushScreen('notifications')} hasUnreadNotifications={hasUnreadNotifications} onNavigateToChat={() => pushScreen('chat')} onViewProfile={(user) => { setViewingUser(user); pushScreen('userProfile'); }} onRepostToggle={handleToggleRepost} onSaveToggle={handleToggleSave} onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted} isGuest={isGuest} onGuestAction={handleGuestAction} onNavigateToSearch={() => resetToScreen('search')} onNavigateToProfile={() => resetToScreen('profile')} onViewLocationOnMap={(adv) => { setMapAdventuresToShow([adv]); resetToScreen('map'); }} onDeleteAdventure={handleDeleteAdventure} onEditAdventure={handleStartEditAdventure} viewedStoryTimestamps={viewedStoryTimestamps} onJoinGroupChat={handleJoinAdventureChat} />;
       case 'map': return <MapScreen adventuresToShow={mapAdventuresToShow || adventures} isLoaded={isLoaded} onShowToast={handleShowToast} />;
       case 'create': return <CreateAdventureScreen currentUser={currentUser!} onCreateAdventure={handleCreateAdventure} isLoaded={isLoaded} />;
-      // Fix: Corrected handler name from `handleJoinGroupChat` to `handleJoinAdventureChat`.
-      case 'search': return <SearchScreen adventures={hydratedAdventures} allUsers={users} currentUser={currentUser || guestUser} isGuest={isGuest} isLoaded={isLoaded} onSelectAdventure={setSelectedAdventure} onSendMessage={handleStartPrivateConversation} onToggleInterest={handleToggleInterest} onNavigateToFindTwins={() => pushScreen('findTwins')} onViewProfile={(user) => { setViewingUser(user); pushScreen('userProfile'); }} onShowResultsOnMap={(advs) => { setMapAdventuresToShow(advs); resetToScreen('map'); }} onRepostToggle={handleToggleRepost} onSaveToggle={handleToggleSave} onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted} onViewLocationOnMap={(adv) => { setMapAdventuresToShow([adv]); resetToScreen('map'); }} onDeleteAdventure={handleDeleteAdventure} onEditAdventure={setEditingAdventure} onFollowToggle={handleFollowToggle} onJoinGroupChat={handleJoinAdventureChat}/>;
+      case 'search': return <SearchScreen adventures={hydratedAdventures} allUsers={users} currentUser={currentUser || guestUser} isGuest={isGuest} isLoaded={isLoaded} onSelectAdventure={setSelectedAdventure} onSendMessage={handleStartPrivateConversation} onToggleInterest={handleToggleInterest} onNavigateToFindTwins={() => pushScreen('findTwins')} onViewProfile={(user) => { setViewingUser(user); pushScreen('userProfile'); }} onShowResultsOnMap={(advs) => { setMapAdventuresToShow(advs); resetToScreen('map'); }} onRepostToggle={handleToggleRepost} onSaveToggle={handleToggleSave} onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted} onViewLocationOnMap={(adv) => { setMapAdventuresToShow([adv]); resetToScreen('map'); }} onDeleteAdventure={handleDeleteAdventure} onEditAdventure={handleStartEditAdventure} onFollowToggle={handleFollowToggle} onJoinGroupChat={handleJoinAdventureChat}/>;
       case 'chat': return <ChatScreen conversations={hydratedConversations} onSelectConversation={(convo) => { setSelectedConversation(convo); pushScreen('chatDetail'); }} onBack={popScreen} currentUser={currentUser!} onViewProfile={(user) => { setViewingUser(user); pushScreen('userProfile'); }} />;
-      // Fix: Corrected handler name from `handleJoinGroupChat` to `handleJoinAdventureChat`.
-      case 'profile': return <ProfileScreen user={currentUser || guestUser} allAdventures={hydratedAdventures} onSelectAdventure={setSelectedAdventure} onSendMessage={handleStartPrivateConversation} onToggleInterest={handleToggleInterest} onViewProfile={(user) => { setViewingUser(user); pushScreen('userProfile'); }} onRepostToggle={handleToggleRepost} onSaveToggle={handleToggleSave} onShareProfile={handleShareProfile} onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted} onOpenFollowList={(user, listType) => setFollowListModal({ isOpen: true, user, listType })} onNavigateToSettings={() => pushScreen('settings')} onViewLocationOnMap={(adv) => { setMapAdventuresToShow([adv]); resetToScreen('map'); }} onDeleteAdventure={handleDeleteAdventure} onEditAdventure={setEditingAdventure} onJoinGroupChat={handleJoinAdventureChat}/>;
+      case 'profile': return <ProfileScreen user={currentUser || guestUser} allAdventures={hydratedAdventures} onSelectAdventure={setSelectedAdventure} onSendMessage={handleStartPrivateConversation} onToggleInterest={handleToggleInterest} onViewProfile={(user) => { setViewingUser(user); pushScreen('userProfile'); }} onRepostToggle={handleToggleRepost} onSaveToggle={handleToggleSave} onShareProfile={handleShareProfile} onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted} onOpenFollowList={(user, listType) => setFollowListModal({ isOpen: true, user, listType })} onNavigateToSettings={() => pushScreen('settings')} onViewLocationOnMap={(adv) => { setMapAdventuresToShow([adv]); resetToScreen('map'); }} onDeleteAdventure={handleDeleteAdventure} onEditAdventure={handleStartEditAdventure} onJoinGroupChat={handleJoinAdventureChat}/>;
       case 'chatDetail': return <ChatDetailScreen conversation={selectedConversation!} currentUser={currentUser!} allUsers={users} onBack={popScreen} onSendMessage={handleSendMessage} onViewProfile={(user) => { setViewingUser(user); pushScreen('userProfile'); }} />;
       case 'findTwins': return <FindTwinsScreen currentUser={currentUser!} allUsers={users} onSendMessage={handleStartPrivateConversation} onBack={popScreen} onFollowToggle={handleFollowToggle} onViewProfile={(user) => { setViewingUser(user); pushScreen('userProfile'); }} />;
-      // Fix: Corrected handler name from `handleJoinGroupChat` to `handleJoinAdventureChat`.
-      case 'userProfile': return <UserProfileScreen user={viewingUser!} currentUser={currentUser || guestUser} allAdventures={hydratedAdventures} onBack={popScreen} onSelectAdventure={setSelectedAdventure} onSendMessage={handleStartPrivateConversation} onToggleInterest={handleToggleInterest} onFollowToggle={handleFollowToggle} onViewProfile={(user) => { setViewingUser(user); pushScreen('userProfile'); }} onRepostToggle={handleToggleRepost} onSaveToggle={handleToggleSave} onShareProfile={handleShareProfile} onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted} onOpenFollowList={(user, listType) => setFollowListModal({ isOpen: true, user, listType })} isGuest={isGuest} onViewLocationOnMap={(adv) => { setMapAdventuresToShow([adv]); resetToScreen('map'); }} onDeleteAdventure={handleDeleteAdventure} onEditAdventure={setEditingAdventure} onJoinGroupChat={handleJoinAdventureChat} />;
+      case 'userProfile': return <UserProfileScreen user={viewingUser!} currentUser={currentUser || guestUser} allAdventures={hydratedAdventures} onBack={popScreen} onSelectAdventure={setSelectedAdventure} onSendMessage={handleStartPrivateConversation} onToggleInterest={handleToggleInterest} onFollowToggle={handleFollowToggle} onViewProfile={(user) => { setViewingUser(user); pushScreen('userProfile'); }} onRepostToggle={handleToggleRepost} onSaveToggle={handleToggleSave} onShareProfile={handleShareProfile} onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted} onOpenFollowList={(user, listType) => setFollowListModal({ isOpen: true, user, listType })} isGuest={isGuest} onViewLocationOnMap={(adv) => { setMapAdventuresToShow([adv]); resetToScreen('map'); }} onDeleteAdventure={handleDeleteAdventure} onEditAdventure={handleStartEditAdventure} onJoinGroupChat={handleJoinAdventureChat} />;
       case 'settings': return <SettingsScreen onBack={popScreen} onNavigate={pushScreen} onLogout={handleLogout} />;
       case 'editProfile': return <EditProfileScreen onBack={popScreen} currentUser={currentUser!} onUpdateProfile={handleUpdateProfile} />;
       case 'privacySecurity': return <PrivacySecurityScreen onBack={popScreen} currentUser={currentUser!} onUpdateProfile={handleUpdateProfile} />;
       case 'language': return <LanguageScreen onBack={popScreen} />;
-      // Fix: Corrected handler name from `handleJoinGroupChat` to `handleJoinAdventureChat`.
-      case 'savedAdventures': return <SavedAdventuresScreen onBack={popScreen} adventures={hydratedAdventures.filter(p => currentUser?.savedAdventures?.includes(p.id))} currentUser={currentUser!} onSelectAdventure={setSelectedAdventure} onSendMessage={handleStartPrivateConversation} onToggleInterest={handleToggleInterest} onViewProfile={(user) => { setViewingUser(user); pushScreen('userProfile'); }} onRepostToggle={handleToggleRepost} onSaveToggle={handleToggleSave} onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted} onViewLocationOnMap={(adv) => { setMapAdventuresToShow([adv]); resetToScreen('map'); }} onDeleteAdventure={handleDeleteAdventure} onEditAdventure={setEditingAdventure} onJoinGroupChat={handleJoinAdventureChat} />;
+      case 'savedAdventures': return <SavedAdventuresScreen onBack={popScreen} adventures={hydratedAdventures.filter(p => currentUser?.savedAdventures?.includes(p.id))} currentUser={currentUser!} onSelectAdventure={setSelectedAdventure} onSendMessage={handleStartPrivateConversation} onToggleInterest={handleToggleInterest} onViewProfile={(user) => { setViewingUser(user); pushScreen('userProfile'); }} onRepostToggle={handleToggleRepost} onSaveToggle={handleToggleSave} onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted} onViewLocationOnMap={(adv) => { setMapAdventuresToShow([adv]); resetToScreen('map'); }} onDeleteAdventure={handleDeleteAdventure} onEditAdventure={handleStartEditAdventure} onJoinGroupChat={handleJoinAdventureChat} />;
       case 'notifications': return <NotificationsScreen notifications={hydratedNotifications} onBack={popScreen} onConfirmAttendance={handleConfirmAttendance} onNotificationClick={handleNotificationClick} onMarkAllAsRead={handleMarkAllNotificationsAsRead} />;
+      case 'editAdventure': return <EditAdventureScreen adventure={editingAdventure!} onBack={popScreen} onUpdateAdventure={handleUpdateAdventure} isLoaded={isLoaded} />;
       default: return <div>Not implemented</div>;
     }
   };
@@ -760,7 +764,6 @@ const App: React.FC = () => {
       {followListModal.isOpen && <FollowListModal title={t(followListModal.listType!)} listOwner={followListModal.user!} currentUser={currentUser} users={users.filter(u => followListModal.user?.[followListModal.listType!]?.includes(u.id))} listType={followListModal.listType!} onClose={() => setFollowListModal({ isOpen: false, user: null, listType: null })} onViewProfile={(user) => { setViewingUser(user); setFollowListModal({ isOpen: false, user: null, listType: null }); pushScreen('userProfile'); }} onFollowToggle={handleFollowToggle} onRemoveFollower={handleRemoveFollower} />}
       {isForgotPasswordModalOpen && <ForgotPasswordModal isOpen={isForgotPasswordModalOpen} onClose={() => setIsForgotPasswordModalOpen(false)} onSubmit={handleForgotPassword} />}
       {isAddStoryModalOpen && !isGuest && <AddStoryModal isOpen={isAddStoryModalOpen} onClose={() => setIsAddStoryModalOpen(false)} onStoryCreate={handleCreateStory} />}
-      {editingAdventure && <EditAdventureModal adventure={editingAdventure} onClose={() => setEditingAdventure(null)} onUpdateAdventure={handleUpdateAdventure} isLoaded={isLoaded} />}
       {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage(null)} />}
     </div>
   );

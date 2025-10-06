@@ -1,14 +1,16 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+// Fix: Import `useRef` from React to resolve "Cannot find name 'useRef'" error.
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Adventure, AdventurePrivacy, AdventureType, HydratedAdventure } from '../types';
 import { useTranslation } from '../contexts/LanguageContext';
 import LocationPickerModal from './LocationPickerModal';
 import { StandaloneSearchBox } from '@react-google-maps/api';
 import MapPinIcon from './icons/MapPinIcon';
+import Header from './Header';
 
 
-interface EditAdventureModalProps {
+interface EditAdventureScreenProps {
   adventure: HydratedAdventure;
-  onClose: () => void;
+  onBack: () => void;
   onUpdateAdventure: (adventureId: string, updatedData: Partial<Adventure>) => void;
   isLoaded: boolean;
 }
@@ -40,8 +42,6 @@ const LocationInputWithAutocomplete: React.FC<{
         }
     };
     
-    // This effect ensures that if the value is changed programmatically (e.g. from the map picker),
-    // the input field reflects that change. We use a key on the input for this.
     const [inputValue, setInputValue] = useState(value);
     useEffect(() => {
         setInputValue(value);
@@ -85,7 +85,7 @@ const LocationInputWithAutocomplete: React.FC<{
 };
 
 
-const EditAdventureModal: React.FC<EditAdventureModalProps> = ({ adventure, onClose, onUpdateAdventure, isLoaded }) => {
+const EditAdventureScreen: React.FC<EditAdventureScreenProps> = ({ adventure, onBack, onUpdateAdventure, isLoaded }) => {
   const { t } = useTranslation();
   
   // Common State
@@ -249,67 +249,61 @@ const EditAdventureModal: React.FC<EditAdventureModalProps> = ({ adventure, onCl
 
   return (
     <>
-      <div className="fixed inset-0 bg-black bg-opacity-70 z-[101] flex justify-center items-center p-4 animate-fade-in">
-        <div className="bg-white dark:bg-neutral-900 rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col">
-          <div className="p-4 border-b dark:border-neutral-800 flex justify-between items-center">
-            <h2 className="text-xl font-bold dark:text-white">{t('editAdventure')}</h2>
-            <button onClick={onClose} className="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white text-2xl font-bold">&times;</button>
-          </div>
-          
-          <div className="p-4 overflow-y-auto flex-grow space-y-4">
-              <div>
-                  <label className={labelBaseClasses}>{t('title')}</label>
-                  <input type="text" value={title} onChange={e => setTitle(e.target.value)} className={inputBaseClasses} />
+      <div className="h-full flex flex-col bg-slate-50 dark:bg-neutral-950">
+        <Header title={t('editAdventure')} onBack={onBack} />
+        <div className="flex-grow overflow-y-auto p-4 space-y-4">
+            <div>
+                <label className={labelBaseClasses}>{t('title')}</label>
+                <input type="text" value={title} onChange={e => setTitle(e.target.value)} className={inputBaseClasses} />
+            </div>
+            <div>
+                <label className={labelBaseClasses}>{t('description')}</label>
+                <textarea value={description} onChange={e => setDescription(e.target.value)} rows={4} className={inputBaseClasses}></textarea>
+            </div>
+            <div>
+              <label className={labelBaseClasses}>{t('adventureType')}</label>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {adventureTypes.map(type => (
+                  <button key={type} onClick={() => setAdventureType(type)} className={`${tagButtonClasses} ${adventureType === type ? 'bg-brand-orange text-white' : 'bg-slate-200 dark:bg-zinc-700 text-gray-700 dark:text-gray-300'}`}>
+                    {t(`AdventureType_${type}`)}
+                  </button>
+                ))}
               </div>
-              <div>
-                  <label className={labelBaseClasses}>{t('description')}</label>
-                  <textarea value={description} onChange={e => setDescription(e.target.value)} rows={4} className={inputBaseClasses}></textarea>
-              </div>
-              <div>
-                <label className={labelBaseClasses}>{t('adventureType')}</label>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {adventureTypes.map(type => (
-                    <button key={type} onClick={() => setAdventureType(type)} className={`${tagButtonClasses} ${adventureType === type ? 'bg-brand-orange text-white' : 'bg-slate-200 dark:bg-zinc-700 text-gray-700 dark:text-gray-300'}`}>
-                      {t(`AdventureType_${type}`)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              
-              {renderDynamicFields()}
-              
-              <div className="grid grid-cols-2 gap-4">
-                  <div><label className={labelBaseClasses}>{t('startDate')}</label><input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className={`${inputBaseClasses} text-gray-500`}/></div>
-                  <div><label className={labelBaseClasses}>{t('endDate')}</label><input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className={`${inputBaseClasses} text-gray-500`}/></div>
-              </div>
-              <div><label className={labelBaseClasses}>{t('budget')}</label><input type="number" value={budget} onChange={e => setBudget(e.target.value)} className={inputBaseClasses}/></div>
+            </div>
+            
+            {renderDynamicFields()}
+            
+            <div className="grid grid-cols-2 gap-4">
+                <div><label className={labelBaseClasses}>{t('startDate')}</label><input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className={`${inputBaseClasses} text-gray-500`}/></div>
+                <div><label className={labelBaseClasses}>{t('endDate')}</label><input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className={`${inputBaseClasses} text-gray-500`}/></div>
+            </div>
+            <div><label className={labelBaseClasses}>{t('budget')}</label><input type="number" value={budget} onChange={e => setBudget(e.target.value)} className={inputBaseClasses}/></div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className={labelBaseClasses}>{t('privacy')}</label>
+                <select value={privacy} onChange={e => setPrivacy(e.target.value as AdventurePrivacy)} className={inputBaseClasses}>
+                  <option value={AdventurePrivacy.Public}>{t('AdventurePrivacy_Public')}</option>
+                  <option value={AdventurePrivacy.Followers}>{t('AdventurePrivacy_Followers')}</option>
+                  <option value={AdventurePrivacy.Twins}>{t('AdventurePrivacy_Twins')}</option>
+                </select>
+              </div>
+               {privacy === AdventurePrivacy.Twins && (
                 <div>
-                  <label className={labelBaseClasses}>{t('privacy')}</label>
-                  <select value={privacy} onChange={e => setPrivacy(e.target.value as AdventurePrivacy)} className={inputBaseClasses}>
-                    <option value={AdventurePrivacy.Public}>{t('AdventurePrivacy_Public')}</option>
-                    <option value={AdventurePrivacy.Followers}>{t('AdventurePrivacy_Followers')}</option>
-                    <option value={AdventurePrivacy.Twins}>{t('AdventurePrivacy_Twins')}</option>
+                  <label className={labelBaseClasses}>{t('subPrivacyLabel')}</label>
+                  <select value={subPrivacy} onChange={e => setSubPrivacy(e.target.value as AdventurePrivacy.Public | AdventurePrivacy.Followers)} className={inputBaseClasses}>
+                      <option value={AdventurePrivacy.Public}>{t('AdventurePrivacy_Public')}</option>
+                      <option value={AdventurePrivacy.Followers}>{t('AdventurePrivacy_Followers')}</option>
                   </select>
                 </div>
-                 {privacy === AdventurePrivacy.Twins && (
-                  <div>
-                    <label className={labelBaseClasses}>{t('subPrivacyLabel')}</label>
-                    <select value={subPrivacy} onChange={e => setSubPrivacy(e.target.value as AdventurePrivacy.Public | AdventurePrivacy.Followers)} className={inputBaseClasses}>
-                        <option value={AdventurePrivacy.Public}>{t('AdventurePrivacy_Public')}</option>
-                        <option value={AdventurePrivacy.Followers}>{t('AdventurePrivacy_Followers')}</option>
-                    </select>
-                  </div>
-                 )}
-              </div>
-          </div>
-          
-          <div className="p-4 border-t dark:border-neutral-800 bg-slate-50/80 dark:bg-neutral-950/80 backdrop-blur-sm">
-              <button onClick={handleSubmit} className="w-full bg-orange-600 text-white font-bold py-3 rounded-md hover:bg-orange-700 transition-colors">
-              {t('saveChanges')}
-              </button>
-          </div>
+               )}
+            </div>
+        </div>
+        
+        <div className="p-4 border-t dark:border-neutral-800 bg-slate-50/80 dark:bg-neutral-950/80 backdrop-blur-sm">
+            <button onClick={handleSubmit} className="w-full bg-orange-600 text-white font-bold py-3 rounded-md hover:bg-orange-700 transition-colors">
+            {t('saveChanges')}
+            </button>
         </div>
       </div>
       {isLoaded && <LocationPickerModal 
@@ -323,4 +317,4 @@ const EditAdventureModal: React.FC<EditAdventureModalProps> = ({ adventure, onCl
   );
 };
 
-export default EditAdventureModal;
+export default EditAdventureScreen;
