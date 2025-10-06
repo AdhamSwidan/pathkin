@@ -210,5 +210,7 @@
   "selectEndPoint": "Select end point",
   "routeSelected": "Route selected",
   "loading": "Loading...",
-  "reset": "Reset"
+  "reset": "Reset",
+  "adventurers": "Adventurers",
+  "groupChat": "Group Chat"
 }

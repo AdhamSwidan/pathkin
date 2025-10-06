@@ -60,7 +60,7 @@
   "privacySecurity": "الخصوصية والأمان",
   "language": "اللغة",
   "saveChanges": "حفظ التغييرات",
-  "adventures": "مغامرات",
+  "adventures": "المغامرات",
   "followers": "متابعون",
   "following": "يتابع",
   "myStory": "قصتي",
@@ -210,5 +210,7 @@
   "selectEndPoint": "اختر نقطة النهاية",
   "routeSelected": "تم تحديد المسار",
   "loading": "جار التحميل...",
-  "reset": "إعادة ضبط"
+  "reset": "إعادة ضبط",
+  "adventurers": "المغامرون",
+  "groupChat": "محادثة جماعية"
 }

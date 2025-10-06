@@ -137,15 +137,20 @@ export interface Message {
 
 export interface Conversation {
   id: string;
-  participants: string[]; // Array of two user IDs
+  type: 'private' | 'group';
+  participants: string[]; 
   lastMessage?: Message;
   updatedAt: string;
   unreadCount?: { [key: string]: number; };
+  // For group chats
+  adventureId?: string;
+  name?: string;
+  imageUrl?: string;
 }
 
-// Fix: Changed from Omit<Conversation, 'participants'> to Conversation to resolve a type predicate error in App.tsx.
+// A Conversation that has been "hydrated" with its participant's data (for private chats)
 export type HydratedConversation = Conversation & {
-    participant: User; // The other user in the chat
+    participant?: User; // The other user in a private chat
 };
 
 

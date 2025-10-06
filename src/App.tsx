@@ -86,7 +86,7 @@ const App: React.FC = () => {
   const [comments, setComments] = useState<Comment[]>([]);
   
   const [selectedAdventure, setSelectedAdventure] = useState<HydratedAdventure | null>(null);
-  const [selectedConversationUser, setSelectedConversationUser] = useState<User | null>(null);
+  const [selectedConversation, setSelectedConversation] = useState<HydratedConversation | null>(null);
   const [viewingStories, setViewingStories] = useState<HydratedStory[] | null>(null);
   const [viewingUser, setViewingUser] = useState<User | null>(null);
   const [mapAdventuresToShow, setMapAdventuresToShow] = useState<Adventure[] | null>(null);
@@ -274,10 +274,14 @@ const App: React.FC = () => {
   const hydratedConversations: HydratedConversation[] = useMemo(() => {
     if (!currentUser) return [];
     return conversations.map(convo => {
+      if (convo.type === 'private') {
         const participantId = convo.participants.find(p => p !== currentUser.id);
         const participant = users.find(u => u.id === participantId);
         if (!participant) return null;
         return { ...convo, participant };
+      }
+      // For group chats, we don't need to find a single participant.
+      return { ...convo }; 
     }).filter((c): c is HydratedConversation => c !== null).sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
   }, [conversations, users, currentUser]);
   const hydratedNotifications: HydratedNotification[] = useMemo(() => notifications.map(notif => {
@@ -347,7 +351,19 @@ const App: React.FC = () => {
             const url = await getDownloadURL(mediaRef);
             media = { url, type: mediaFile.type.startsWith('video') ? 'video' : 'image' };
         }
-        await addDoc(collection(db, 'posts'), { ...adventureData, authorId: currentUser.id, interestedUsers: [], commentCount: 0, createdAt: serverTimestamp(), ...(media && { media: [media] }) });
+        const newAdventureDoc = await addDoc(collection(db, 'posts'), { ...adventureData, authorId: currentUser.id, interestedUsers: [], commentCount: 0, createdAt: serverTimestamp(), ...(media && { media: [media] }) });
+        
+        // Create a group conversation for the new adventure
+        await addDoc(collection(db, 'conversations'), {
+          type: 'group',
+          adventureId: newAdventureDoc.id,
+          name: adventureData.title,
+          imageUrl: media?.url || `https://picsum.photos/seed/${newAdventureDoc.id}/200`,
+          participants: [currentUser.id],
+          updatedAt: serverTimestamp(),
+          createdAt: serverTimestamp(),
+        });
+
         handleShowToast(t('adventurePublished'));
         resetToScreen('feed');
     } catch (error) { console.error("Error creating adventure:", error); }
@@ -529,21 +545,61 @@ const App: React.FC = () => {
   };
 
   // --- Messaging Handlers ---
-  const handleSendMessage = async (receiverId: string, text: string) => {
+  const handleSendMessage = async (conversation: HydratedConversation, text: string) => {
     if (!currentUser) return;
-    const convoId = [currentUser.id, receiverId].sort().join('_');
-    const convoRef = doc(db, 'conversations', convoId);
+
+    const convoRef = doc(db, 'conversations', conversation.id);
     const message = { id: '', senderId: currentUser.id, text, createdAt: serverTimestamp() };
 
+    const unreadUpdates = conversation.participants
+      .filter(pId => pId !== currentUser.id)
+      .reduce((acc, pId) => {
+        acc[`unreadCount.${pId}`] = increment(1);
+        return acc;
+      }, {} as { [key: string]: any });
+      
+    await updateDoc(convoRef, { ...unreadUpdates, updatedAt: serverTimestamp(), lastMessage: { senderId: currentUser.id, text, createdAt: serverTimestamp() } });
+    await addDoc(collection(convoRef, 'messages'), message);
+  };
+  const handleStartPrivateConversation = async (user: User) => {
+    if (!currentUser) return;
+    const convoId = [currentUser.id, user.id].sort().join('_');
+    const convoRef = doc(db, 'conversations', convoId);
+    
     const docSnap = await getDoc(convoRef);
     if (!docSnap.exists()) {
-        await setDoc(convoRef, { participants: [currentUser.id, receiverId], updatedAt: serverTimestamp(), unreadCount: { [receiverId]: 1 } });
+        const newConvoData: Conversation = {
+            id: convoId,
+            type: 'private',
+            participants: [currentUser.id, user.id],
+            updatedAt: new Date().toISOString(),
+        };
+        await setDoc(convoRef, newConvoData);
+        setSelectedConversation({ ...newConvoData, participant: user });
     } else {
-        await updateDoc(convoRef, { updatedAt: serverTimestamp(), [`unreadCount.${receiverId}`]: increment(1) });
+        setSelectedConversation({ id: docSnap.id, ...docSnap.data(), participant: user } as HydratedConversation);
     }
-    await addDoc(collection(convoRef, 'messages'), message);
-    await updateDoc(convoRef, { lastMessage: { senderId: currentUser.id, text, createdAt: serverTimestamp() } });
+    pushScreen('chatDetail');
   };
+  const handleJoinAdventureChat = async (adventure: HydratedAdventure) => {
+    if (!currentUser) return;
+
+    const q = query(collection(db, "conversations"), where("adventureId", "==", adventure.id));
+    const querySnapshot = await getDocs(q);
+    
+    if (!querySnapshot.empty) {
+        const convoDoc = querySnapshot.docs[0];
+        const convoRef = doc(db, 'conversations', convoDoc.id);
+        
+        // Add user to participants if not already in
+        await updateDoc(convoRef, { participants: arrayUnion(currentUser.id) });
+        
+        setSelectedConversation({ id: convoDoc.id, ...convoDoc.data() } as HydratedConversation);
+        pushScreen('chatDetail');
+    } else {
+        console.error("No group chat found for this adventure.");
+    }
+};
   
   // --- Comment Handler ---
   const handleAddComment = async (adventureId: string, text: string) => {
@@ -638,21 +694,20 @@ const App: React.FC = () => {
   const renderScreen = () => {
     
     switch (activeScreen) {
-      // Fix: Removed the `onGuestAction` prop from FeedScreen as it's not defined in its props.
-      case 'feed': return <FeedScreen adventures={hydratedAdventures.filter(p => !p.author.isPrivate || (currentUser?.following?.includes(p.author.id)) || p.author.id === currentUser?.id)} stories={hydratedStories} currentUser={currentUser || guestUser} onSelectAdventure={setSelectedAdventure} onSendMessage={(user) => { setSelectedConversationUser(user); pushScreen('chatDetail'); }} onToggleInterest={handleToggleInterest} onSelectStories={(stories) => { setViewingStories(stories); const firstStory = stories[0]; if(firstStory){ const newTimestamps = {...viewedStoryTimestamps, [firstStory.author.id]: new Date().toISOString()}; setViewedStoryTimestamps(newTimestamps); localStorage.setItem('viewedStoryTimestamps', JSON.stringify(newTimestamps)); } }} onAddStory={() => setIsAddStoryModalOpen(true)} onNavigateToNotifications={() => pushScreen('notifications')} hasUnreadNotifications={hasUnreadNotifications} onNavigateToChat={() => resetToScreen('chat')} onViewProfile={(user) => { setViewingUser(user); pushScreen('userProfile'); }} onRepostToggle={handleToggleRepost} onSaveToggle={handleToggleSave} onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted} isGuest={isGuest} onGuestAction={handleGuestAction} onNavigateToSearch={() => resetToScreen('search')} onNavigateToProfile={() => resetToScreen('profile')} onViewLocationOnMap={(adv) => { setMapAdventuresToShow([adv]); resetToScreen('map'); }} onDeleteAdventure={handleDeleteAdventure} onEditAdventure={setEditingAdventure} viewedStoryTimestamps={viewedStoryTimestamps} />;
+      case 'feed': return <FeedScreen adventures={hydratedAdventures.filter(p => !p.author.isPrivate || (currentUser?.following?.includes(p.author.id)) || p.author.id === currentUser?.id)} stories={hydratedStories} currentUser={currentUser || guestUser} onSelectAdventure={setSelectedAdventure} onSendMessage={handleStartPrivateConversation} onToggleInterest={handleToggleInterest} onSelectStories={(stories) => { setViewingStories(stories); const firstStory = stories[0]; if(firstStory){ const newTimestamps = {...viewedStoryTimestamps, [firstStory.author.id]: new Date().toISOString()}; setViewedStoryTimestamps(newTimestamps); localStorage.setItem('viewedStoryTimestamps', JSON.stringify(newTimestamps)); } }} onAddStory={() => setIsAddStoryModalOpen(true)} onNavigateToNotifications={() => pushScreen('notifications')} hasUnreadNotifications={hasUnreadNotifications} onNavigateToChat={() => resetToScreen('chat')} onViewProfile={(user) => { setViewingUser(user); pushScreen('userProfile'); }} onRepostToggle={handleToggleRepost} onSaveToggle={handleToggleSave} onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted} isGuest={isGuest} onGuestAction={handleGuestAction} onNavigateToSearch={() => resetToScreen('search')} onNavigateToProfile={() => resetToScreen('profile')} onViewLocationOnMap={(adv) => { setMapAdventuresToShow([adv]); resetToScreen('map'); }} onDeleteAdventure={handleDeleteAdventure} onEditAdventure={setEditingAdventure} viewedStoryTimestamps={viewedStoryTimestamps} onJoinGroupChat={handleJoinAdventureChat} />;
       case 'map': return <MapScreen adventuresToShow={mapAdventuresToShow || adventures} isLoaded={isLoaded} onShowToast={handleShowToast} />;
       case 'create': return <CreateAdventureScreen currentUser={currentUser!} onCreateAdventure={handleCreateAdventure} isLoaded={isLoaded} />;
-      case 'search': return <SearchScreen adventures={hydratedAdventures} allUsers={users} currentUser={currentUser || guestUser} isGuest={isGuest} isLoaded={isLoaded} onSelectAdventure={setSelectedAdventure} onSendMessage={(user) => { setSelectedConversationUser(user); pushScreen('chatDetail'); }} onToggleInterest={handleToggleInterest} onNavigateToFindTwins={() => pushScreen('findTwins')} onViewProfile={(user) => { setViewingUser(user); pushScreen('userProfile'); }} onShowResultsOnMap={(advs) => { setMapAdventuresToShow(advs); resetToScreen('map'); }} onRepostToggle={handleToggleRepost} onSaveToggle={handleToggleSave} onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted} onViewLocationOnMap={(adv) => { setMapAdventuresToShow([adv]); resetToScreen('map'); }} onDeleteAdventure={handleDeleteAdventure} onEditAdventure={setEditingAdventure} onFollowToggle={handleFollowToggle} />;
-      case 'chat': return <ChatScreen conversations={hydratedConversations} onSelectConversation={(user) => { setSelectedConversationUser(user); pushScreen('chatDetail'); }} onBack={popScreen} currentUser={currentUser!} />;
-      case 'profile': return <ProfileScreen user={currentUser || guestUser} allAdventures={hydratedAdventures} onSelectAdventure={setSelectedAdventure} onSendMessage={(user) => { setSelectedConversationUser(user); pushScreen('chatDetail'); }} onToggleInterest={handleToggleInterest} onViewProfile={(user) => { setViewingUser(user); pushScreen('userProfile'); }} onRepostToggle={handleToggleRepost} onSaveToggle={handleToggleSave} onShareProfile={handleShareProfile} onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted} onOpenFollowList={(user, listType) => setFollowListModal({ isOpen: true, user, listType })} onNavigateToSettings={() => pushScreen('settings')} onViewLocationOnMap={(adv) => { setMapAdventuresToShow([adv]); resetToScreen('map'); }} onDeleteAdventure={handleDeleteAdventure} onEditAdventure={setEditingAdventure} />;
-      case 'chatDetail': return <ChatDetailScreen participant={selectedConversationUser!} currentUser={currentUser!} onBack={popScreen} onSendMessage={handleSendMessage} />;
-      case 'findTwins': return <FindTwinsScreen currentUser={currentUser!} allUsers={users} onSendMessage={(user) => { setSelectedConversationUser(user); pushScreen('chatDetail'); }} onBack={popScreen} onFollowToggle={handleFollowToggle} onViewProfile={(user) => { setViewingUser(user); pushScreen('userProfile'); }} />;
-      case 'userProfile': return <UserProfileScreen user={viewingUser!} currentUser={currentUser || guestUser} allAdventures={hydratedAdventures} onBack={popScreen} onSelectAdventure={setSelectedAdventure} onSendMessage={(user) => { setSelectedConversationUser(user); pushScreen('chatDetail'); }} onToggleInterest={handleToggleInterest} onFollowToggle={handleFollowToggle} onViewProfile={(user) => { setViewingUser(user); pushScreen('userProfile'); }} onRepostToggle={handleToggleRepost} onSaveToggle={handleToggleSave} onShareProfile={handleShareProfile} onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted} onOpenFollowList={(user, listType) => setFollowListModal({ isOpen: true, user, listType })} isGuest={isGuest} onViewLocationOnMap={(adv) => { setMapAdventuresToShow([adv]); resetToScreen('map'); }} onDeleteAdventure={handleDeleteAdventure} onEditAdventure={setEditingAdventure} />;
+      case 'search': return <SearchScreen adventures={hydratedAdventures} allUsers={users} currentUser={currentUser || guestUser} isGuest={isGuest} isLoaded={isLoaded} onSelectAdventure={setSelectedAdventure} onSendMessage={handleStartPrivateConversation} onToggleInterest={handleToggleInterest} onNavigateToFindTwins={() => pushScreen('findTwins')} onViewProfile={(user) => { setViewingUser(user); pushScreen('userProfile'); }} onShowResultsOnMap={(advs) => { setMapAdventuresToShow(advs); resetToScreen('map'); }} onRepostToggle={handleToggleRepost} onSaveToggle={handleToggleSave} onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted} onViewLocationOnMap={(adv) => { setMapAdventuresToShow([adv]); resetToScreen('map'); }} onDeleteAdventure={handleDeleteAdventure} onEditAdventure={setEditingAdventure} onFollowToggle={handleFollowToggle} onJoinGroupChat={handleJoinAdventureChat}/>;
+      case 'chat': return <ChatScreen conversations={hydratedConversations} onSelectConversation={(convo) => { setSelectedConversation(convo); pushScreen('chatDetail'); }} onBack={popScreen} currentUser={currentUser!} />;
+      case 'profile': return <ProfileScreen user={currentUser || guestUser} allAdventures={hydratedAdventures} onSelectAdventure={setSelectedAdventure} onSendMessage={handleStartPrivateConversation} onToggleInterest={handleToggleInterest} onViewProfile={(user) => { setViewingUser(user); pushScreen('userProfile'); }} onRepostToggle={handleToggleRepost} onSaveToggle={handleToggleSave} onShareProfile={handleShareProfile} onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted} onOpenFollowList={(user, listType) => setFollowListModal({ isOpen: true, user, listType })} onNavigateToSettings={() => pushScreen('settings')} onViewLocationOnMap={(adv) => { setMapAdventuresToShow([adv]); resetToScreen('map'); }} onDeleteAdventure={handleDeleteAdventure} onEditAdventure={setEditingAdventure} onJoinGroupChat={handleJoinAdventureChat}/>;
+      case 'chatDetail': return <ChatDetailScreen conversation={selectedConversation!} currentUser={currentUser!} allUsers={users} onBack={popScreen} onSendMessage={handleSendMessage} />;
+      case 'findTwins': return <FindTwinsScreen currentUser={currentUser!} allUsers={users} onSendMessage={handleStartPrivateConversation} onBack={popScreen} onFollowToggle={handleFollowToggle} onViewProfile={(user) => { setViewingUser(user); pushScreen('userProfile'); }} />;
+      case 'userProfile': return <UserProfileScreen user={viewingUser!} currentUser={currentUser || guestUser} allAdventures={hydratedAdventures} onBack={popScreen} onSelectAdventure={setSelectedAdventure} onSendMessage={handleStartPrivateConversation} onToggleInterest={handleToggleInterest} onFollowToggle={handleFollowToggle} onViewProfile={(user) => { setViewingUser(user); pushScreen('userProfile'); }} onRepostToggle={handleToggleRepost} onSaveToggle={handleToggleSave} onShareProfile={handleShareProfile} onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted} onOpenFollowList={(user, listType) => setFollowListModal({ isOpen: true, user, listType })} isGuest={isGuest} onViewLocationOnMap={(adv) => { setMapAdventuresToShow([adv]); resetToScreen('map'); }} onDeleteAdventure={handleDeleteAdventure} onEditAdventure={setEditingAdventure} onJoinGroupChat={handleJoinAdventureChat} />;
       case 'settings': return <SettingsScreen onBack={popScreen} onNavigate={pushScreen} onLogout={handleLogout} />;
       case 'editProfile': return <EditProfileScreen onBack={popScreen} currentUser={currentUser!} onUpdateProfile={handleUpdateProfile} />;
       case 'privacySecurity': return <PrivacySecurityScreen onBack={popScreen} currentUser={currentUser!} onUpdateProfile={handleUpdateProfile} />;
       case 'language': return <LanguageScreen onBack={popScreen} />;
-      case 'savedAdventures': return <SavedAdventuresScreen onBack={popScreen} adventures={hydratedAdventures.filter(p => currentUser?.savedAdventures?.includes(p.id))} currentUser={currentUser!} onSelectAdventure={setSelectedAdventure} onSendMessage={(user) => { setSelectedConversationUser(user); pushScreen('chatDetail'); }} onToggleInterest={handleToggleInterest} onViewProfile={(user) => { setViewingUser(user); pushScreen('userProfile'); }} onRepostToggle={handleToggleRepost} onSaveToggle={handleToggleSave} onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted} onViewLocationOnMap={(adv) => { setMapAdventuresToShow([adv]); resetToScreen('map'); }} onDeleteAdventure={handleDeleteAdventure} onEditAdventure={setEditingAdventure} />;
+      case 'savedAdventures': return <SavedAdventuresScreen onBack={popScreen} adventures={hydratedAdventures.filter(p => currentUser?.savedAdventures?.includes(p.id))} currentUser={currentUser!} onSelectAdventure={setSelectedAdventure} onSendMessage={handleStartPrivateConversation} onToggleInterest={handleToggleInterest} onViewProfile={(user) => { setViewingUser(user); pushScreen('userProfile'); }} onRepostToggle={handleToggleRepost} onSaveToggle={handleToggleSave} onShareAdventure={handleShareAdventure} onToggleCompleted={handleToggleCompleted} onViewLocationOnMap={(adv) => { setMapAdventuresToShow([adv]); resetToScreen('map'); }} onDeleteAdventure={handleDeleteAdventure} onEditAdventure={setEditingAdventure} onJoinGroupChat={handleJoinAdventureChat} />;
       case 'notifications': return <NotificationsScreen notifications={hydratedNotifications} onBack={popScreen} onConfirmAttendance={handleConfirmAttendance} onNotificationClick={handleNotificationClick} onMarkAllAsRead={handleMarkAllNotificationsAsRead} />;
       default: return <div>Not implemented</div>;
     }

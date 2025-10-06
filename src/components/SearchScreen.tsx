@@ -35,6 +35,8 @@ interface SearchScreenProps {
   onDeleteAdventure: (adventureId: string) => void;
   onEditAdventure: (adventure: HydratedAdventure) => void;
   onFollowToggle: (userId: string) => void;
+  // Fix: Add onJoinGroupChat to the props interface to resolve TypeScript error.
+  onJoinGroupChat: (adventure: HydratedAdventure) => void;
 }
 
 interface AppliedFilters {
@@ -66,6 +68,7 @@ const SearchScreen: React.FC<SearchScreenProps> = ({
   onDeleteAdventure,
   onEditAdventure,
   onFollowToggle,
+  onJoinGroupChat,
 }) => {
   const [searchMode, setSearchMode] = useState<'adventures' | 'people'>('adventures');
   const [searchQuery, setSearchQuery] = useState('');
@@ -356,6 +359,8 @@ const SearchScreen: React.FC<SearchScreenProps> = ({
                             onViewProfile={onViewProfile} onRepostToggle={onRepostToggle} onSaveToggle={onSaveToggle}
                             onShareAdventure={onShareAdventure} onToggleCompleted={onToggleCompleted} onViewLocationOnMap={onViewLocationOnMap}
                             onDeleteAdventure={onDeleteAdventure} onEditAdventure={onEditAdventure}
+                            // Fix: Pass the onJoinGroupChat prop to AdventureCard to fix missing prop error.
+                            onJoinGroupChat={onJoinGroupChat}
                         />
                     )) : (
                         <div className="text-center py-10 px-4">

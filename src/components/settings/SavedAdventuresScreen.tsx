@@ -19,6 +19,8 @@ interface SavedAdventuresScreenProps {
   onViewLocationOnMap: (adventure: HydratedAdventure) => void;
   onDeleteAdventure: (adventureId: string) => void;
   onEditAdventure: (adventure: HydratedAdventure) => void;
+  // Fix: Add onJoinGroupChat to the props interface to resolve TypeScript error.
+  onJoinGroupChat: (adventure: HydratedAdventure) => void;
 }
 
 const SavedAdventuresScreen: React.FC<SavedAdventuresScreenProps> = ({
@@ -36,6 +38,7 @@ const SavedAdventuresScreen: React.FC<SavedAdventuresScreenProps> = ({
   onViewLocationOnMap,
   onDeleteAdventure,
   onEditAdventure,
+  onJoinGroupChat,
 }) => {
   const { t } = useTranslation();
 
@@ -61,6 +64,8 @@ const SavedAdventuresScreen: React.FC<SavedAdventuresScreenProps> = ({
               onViewLocationOnMap={onViewLocationOnMap}
               onDeleteAdventure={onDeleteAdventure}
               onEditAdventure={onEditAdventure}
+              // Fix: Pass the onJoinGroupChat prop to AdventureCard to fix missing prop error.
+              onJoinGroupChat={onJoinGroupChat}
             />
           ))
         ) : (

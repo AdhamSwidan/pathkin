@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { User, Message } from '../types';
+import { User, Message, HydratedConversation } from '../types';
 import Header from './Header';
 import SendIcon from './icons/SendIcon';
 import { db, collection, query, orderBy, onSnapshot, Timestamp } from '../services/firebase';
 import { useTranslation } from '../contexts/LanguageContext';
 
 interface ChatDetailScreenProps {
-  participant: User;
+  conversation: HydratedConversation;
   currentUser: User;
+  allUsers: User[];
   onBack: () => void;
-  onSendMessage: (receiverId: string, text: string) => void;
+  onSendMessage: (conversation: HydratedConversation, text: string) => void;
 }
 
 const isSameDay = (d1: Date, d2: Date) => {
@@ -18,16 +19,14 @@ const isSameDay = (d1: Date, d2: Date) => {
            d1.getDate() === d2.getDate();
 };
 
-const ChatDetailScreen: React.FC<ChatDetailScreenProps> = ({ participant, currentUser, onBack, onSendMessage }) => {
+const ChatDetailScreen: React.FC<ChatDetailScreenProps> = ({ conversation, currentUser, allUsers, onBack, onSendMessage }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { t, language } = useTranslation();
   
-  const convoId = [currentUser.id, participant.id].sort().join('_');
-
   useEffect(() => {
-    const messagesQuery = query(collection(db, 'conversations', convoId, 'messages'), orderBy('createdAt', 'asc'));
+    const messagesQuery = query(collection(db, 'conversations', conversation.id, 'messages'), orderBy('createdAt', 'asc'));
     
     const unsubscribe = onSnapshot(messagesQuery, (snapshot) => {
       const fetchedMessages = snapshot.docs.map(doc => ({
@@ -39,7 +38,7 @@ const ChatDetailScreen: React.FC<ChatDetailScreenProps> = ({ participant, curren
     });
 
     return () => unsubscribe();
-  }, [convoId]);
+  }, [conversation.id]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -47,7 +46,7 @@ const ChatDetailScreen: React.FC<ChatDetailScreenProps> = ({ participant, curren
 
   const handleSend = () => {
     if (newMessage.trim()) {
-      onSendMessage(participant.id, newMessage.trim());
+      onSendMessage(conversation, newMessage.trim());
       setNewMessage('');
     }
   };
@@ -67,15 +66,18 @@ const ChatDetailScreen: React.FC<ChatDetailScreenProps> = ({ participant, curren
   };
 
   let lastMessageDate: Date | null = null;
+  const headerTitle = conversation.type === 'private' ? conversation.participant?.name : conversation.name;
 
   return (
     <div className="h-full flex flex-col">
-      <Header title={participant.name} onBack={onBack} />
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <Header title={headerTitle || ''} onBack={onBack} />
+      <div className="flex-1 overflow-y-auto p-4 space-y-1">
         {messages.map(message => {
           const messageDate = new Date(message.createdAt);
           const showDateSeparator = lastMessageDate === null || !isSameDay(lastMessageDate, messageDate);
           lastMessageDate = messageDate;
+          const sender = allUsers.find(u => u.id === message.senderId);
+          const isMe = message.senderId === currentUser.id;
 
           return (
             <React.Fragment key={message.id}>
@@ -84,15 +86,20 @@ const ChatDetailScreen: React.FC<ChatDetailScreenProps> = ({ participant, curren
                       {formatDateSeparator(messageDate)}
                   </div>
               )}
-              <div className={`flex items-end gap-2 ${message.senderId === currentUser.id ? 'justify-end' : 'justify-start'}`}>
-                {message.senderId !== currentUser.id && (
-                  <img src={participant.avatarUrl} className="w-6 h-6 rounded-full self-end" alt="avatar" />
+              <div className={`flex items-end gap-2 ${isMe ? 'justify-end' : 'justify-start'}`}>
+                {!isMe && (
+                  <img src={sender?.avatarUrl} className="w-6 h-6 rounded-full self-end" alt="avatar" />
                 )}
-                <div className={`max-w-[75%] sm:max-w-[60%] p-3 rounded-2xl ${message.senderId === currentUser.id ? 'bg-orange-600 text-white rounded-br-lg' : 'bg-light-bg-secondary dark:bg-dark-bg-secondary text-gray-800 dark:text-gray-200 rounded-bl-lg'}`}>
-                  <p className="text-sm" style={{wordBreak: 'break-word'}}>{message.text}</p>
-                   <p className={`text-xs mt-1 text-right ${message.senderId === currentUser.id ? 'text-orange-200' : 'text-gray-500 dark:text-gray-400'}`}>
-                    {messageDate.toLocaleTimeString(language, { hour: '2-digit', minute: '2-digit' })}
-                  </p>
+                <div className="flex flex-col" style={{ maxWidth: '75%'}}>
+                   {!isMe && conversation.type === 'group' && (
+                       <span className="text-xs text-gray-500 dark:text-gray-400 mb-1 ms-2">{sender?.name}</span>
+                   )}
+                    <div className={`p-3 rounded-2xl ${isMe ? 'bg-orange-600 text-white rounded-br-lg' : 'bg-light-bg-secondary dark:bg-dark-bg-secondary text-gray-800 dark:text-gray-200 rounded-bl-lg'}`}>
+                    <p className="text-sm" style={{wordBreak: 'break-word'}}>{message.text}</p>
+                    <p className={`text-xs mt-1 text-right ${isMe ? 'text-orange-200' : 'text-gray-500 dark:text-gray-400'}`}>
+                        {messageDate.toLocaleTimeString(language, { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                    </div>
                 </div>
               </div>
             </React.Fragment>

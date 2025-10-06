@@ -30,6 +30,8 @@ interface FeedScreenProps {
   onViewLocationOnMap: (adventure: HydratedAdventure) => void;
   onDeleteAdventure: (adventureId: string) => void;
   onEditAdventure: (adventure: HydratedAdventure) => void;
+  // Fix: Add onJoinGroupChat to the props interface to resolve TypeScript error.
+  onJoinGroupChat: (adventure: HydratedAdventure) => void;
   viewedStoryTimestamps: Record<string, string>;
 }
 
@@ -57,6 +59,7 @@ const FeedScreen: React.FC<FeedScreenProps> = ({
   onViewLocationOnMap,
   onDeleteAdventure,
   onEditAdventure,
+  onJoinGroupChat,
   viewedStoryTimestamps,
 }) => {
   const { t } = useTranslation();
@@ -114,6 +117,8 @@ const FeedScreen: React.FC<FeedScreenProps> = ({
             onViewLocationOnMap={onViewLocationOnMap}
             onDeleteAdventure={onDeleteAdventure}
             onEditAdventure={onEditAdventure}
+            // Fix: Pass the onJoinGroupChat prop to AdventureCard to fix missing prop error.
+            onJoinGroupChat={onJoinGroupChat}
           />
         ))}
         {filteredAdventures.length === 0 && (

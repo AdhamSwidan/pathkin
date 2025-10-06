@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { AdventureType, User, ActivityStatus, HydratedAdventure, AdventurePrivacy } from '../types';
 import InterestIcon from './icons/InterestIcon';
@@ -15,6 +16,7 @@ import AdventureOptionsMenu from './AdventureOptionsMenu';
 import GlobeIcon from './icons/GlobeIcon';
 import UsersIcon from './icons/UsersIcon';
 import CakeIcon from './icons/CakeIcon';
+import MessageIcon from './icons/MessageIcon';
 
 interface AdventureCardProps {
   adventure: HydratedAdventure;
@@ -31,6 +33,7 @@ interface AdventureCardProps {
   onViewLocationOnMap: (adventure: HydratedAdventure) => void;
   onDeleteAdventure: (adventureId: string) => void;
   onEditAdventure: (adventure: HydratedAdventure) => void;
+  onJoinGroupChat: (adventure: HydratedAdventure) => void;
 }
 
 const AdventureCard: React.FC<AdventureCardProps> = ({ 
@@ -48,6 +51,7 @@ const AdventureCard: React.FC<AdventureCardProps> = ({
   onViewLocationOnMap,
   onDeleteAdventure,
   onEditAdventure,
+  onJoinGroupChat
 }) => {
   const { t, language } = useTranslation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -248,6 +252,14 @@ const AdventureCard: React.FC<AdventureCardProps> = ({
         >
           <CommentIcon />
           <span>{adventure.commentCount || 0}</span>
+        </button>
+        <button
+          onClick={() => onJoinGroupChat(adventure)}
+          disabled={isGuest}
+          className={`${actionButtonClasses} ${isGuest ? disabledClasses : 'hover:text-indigo-500'}`}
+          title={t('groupChat')}
+        >
+            <MessageIcon />
         </button>
         <button
           onClick={() => onToggleCompleted(adventure.id)}

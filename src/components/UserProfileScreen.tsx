@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo } from 'react';
 import { User, ActivityStatus, HydratedAdventure } from '../types';
 import Header from './Header';
@@ -35,6 +36,8 @@ interface UserProfileScreenProps {
   onViewLocationOnMap: (adventure: HydratedAdventure) => void;
   onDeleteAdventure: (adventureId: string) => void;
   onEditAdventure: (adventure: HydratedAdventure) => void;
+  // Fix: Add onJoinGroupChat to the props interface to resolve TypeScript error.
+  onJoinGroupChat: (adventure: HydratedAdventure) => void;
 }
 
 type ProfileTab = 'adventures' | 'reposts' | 'completed' | 'stats';
@@ -59,6 +62,7 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
   onViewLocationOnMap,
   onDeleteAdventure,
   onEditAdventure,
+  onJoinGroupChat,
 }) => {
   const [activeTab, setActiveTab] = useState<ProfileTab>('adventures');
   const { t } = useTranslation();
@@ -150,6 +154,8 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
                 onViewLocationOnMap={onViewLocationOnMap}
                 onDeleteAdventure={onDeleteAdventure}
                 onEditAdventure={onEditAdventure}
+                // Fix: Pass the onJoinGroupChat prop to AdventureCard to fix missing prop error.
+                onJoinGroupChat={onJoinGroupChat}
               />
             ))}
              {renderedAdventures.length === 0 && (
