@@ -1,9 +1,20 @@
 import { GoogleGenAI } from "@google/genai";
 import { AdventureType } from "../types";
 
-// Initialize the GoogleGenAI client with the API key from the environment variable.
-// The value for `process.env.API_KEY` is injected at build time by Vite (see vite.config.ts).
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// This value is injected at build time by the `define` property in `vite.config.ts`.
+const apiKey = import.meta.env.GEMINI_API_KEY_INJECTED;
+
+// Diagnostic log to verify the key value in the browser's console.
+console.log("[DIAGNOSTIC] Attempting to initialize Gemini with API Key:", apiKey);
+
+if (!apiKey) {
+  console.error(
+    "Gemini API Key is missing! Ensure VITE_GEMINI_API_KEY is set in your .env.local file and that the project has been built correctly."
+  );
+}
+
+// Initialize the GoogleGenAI client with the injected API key.
+const ai = new GoogleGenAI({ apiKey: apiKey });
 
 export const generateDescription = async (title: string, keywords: string, adventureType: AdventureType): Promise<string> => {
   const prompt = `
