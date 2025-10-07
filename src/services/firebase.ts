@@ -77,11 +77,11 @@ export {
 
 export type { FirebaseUser };
 
-// Helper function to remove quotes from environment variables
+// Helper function to remove quotes and other artifacts from environment variables
 const stripQuotes = (str: string | undefined): string => {
     if (!str) return '';
-    // This regex removes leading and trailing quotes (single or double)
-    return str.replace(/^["']|["']$/g, '');
+    // This regex removes leading/trailing whitespace, quotes (single or double), and trailing commas.
+    return str.trim().replace(/^["']|["',]+$/g, "");
 };
 
 
