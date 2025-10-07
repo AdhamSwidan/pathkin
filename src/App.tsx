@@ -1,11 +1,3 @@
-
-
-
-
-
-
-
-
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import BottomNav from './components/BottomNav';
 import AdventuresScreen from './components/AdventuresScreen';
@@ -80,6 +72,26 @@ const guestUser: User = {
         allowTwinSearch: false,
     },
 };
+
+/**
+ * Safely converts a Firestore Timestamp or an ISO string to an ISO string.
+ * This prevents crashes if a timestamp field is already a string.
+ * @param timestamp The value to convert.
+ * @returns An ISO date string.
+ */
+const safeTimestampToString = (timestamp: any): string => {
+    if (timestamp && typeof timestamp.toDate === 'function') {
+        // It's a Firestore Timestamp, convert it
+        return timestamp.toDate().toISOString();
+    }
+    if (typeof timestamp === 'string') {
+        // It's already an ISO string
+        return timestamp;
+    }
+    // Fallback for unexpected types or null/undefined
+    return new Date().toISOString();
+};
+
 
 const App: React.FC = () => {
   const [authChecked, setAuthChecked] = useState(false);
@@ -173,7 +185,7 @@ const App: React.FC = () => {
     const unsubAdventures = onSnapshot(adventuresQuery, (snapshot) => {
         const fetchedAdventures = snapshot.docs.map(doc => {
             const data = doc.data();
-            return { ...data, id: doc.id, createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() ?? new Date().toISOString() } as Adventure
+            return { ...data, id: doc.id, createdAt: safeTimestampToString(data.createdAt) } as Adventure
         });
         setAdventures(fetchedAdventures);
     }, (error) => console.error("Error fetching adventures:", error));
@@ -183,7 +195,7 @@ const App: React.FC = () => {
         const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
         const freshStories = snapshot.docs.map(doc => {
             const data = doc.data();
-            return { ...data, id: doc.id, createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() ?? new Date().toISOString() } as Story
+            return { ...data, id: doc.id, createdAt: safeTimestampToString(data.createdAt) } as Story
         }).filter(story => new Date(story.createdAt) > twentyFourHoursAgo);
         setStories(freshStories);
     }, (error) => console.error("Error fetching stories:", error));
@@ -213,7 +225,7 @@ const App: React.FC = () => {
     const unsubNotifications = onSnapshot(notificationsQuery, (snapshot) => {
         setNotifications(snapshot.docs.map(doc => {
              const data = doc.data();
-             return { ...data, id: doc.id, createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() ?? new Date().toISOString() } as Notification
+             return { ...data, id: doc.id, createdAt: safeTimestampToString(data.createdAt) } as Notification
         }));
     });
 
@@ -221,7 +233,16 @@ const App: React.FC = () => {
     const unsubConversations = onSnapshot(conversationsQuery, (snapshot) => {
         setConversations(snapshot.docs.map(doc => {
              const data = doc.data();
-             return { ...data, id: doc.id, updatedAt: (data.updatedAt as Timestamp)?.toDate().toISOString() ?? new Date().toISOString(), lastMessage: data.lastMessage ? { ...data.lastMessage, createdAt: (data.lastMessage.createdAt as Timestamp)?.toDate().toISOString() ?? new Date().toISOString() } : undefined, unreadCount: data.unreadCount || {}, } as Conversation
+             return { 
+                 ...data, 
+                 id: doc.id, 
+                 updatedAt: safeTimestampToString(data.updatedAt), 
+                 lastMessage: data.lastMessage ? { 
+                     ...data.lastMessage, 
+                     createdAt: safeTimestampToString(data.lastMessage.createdAt) 
+                 } : undefined, 
+                 unreadCount: data.unreadCount || {}, 
+             } as Conversation
         }));
     });
 
@@ -240,7 +261,7 @@ const App: React.FC = () => {
 
     const commentsQuery = query(collection(db, "posts", selectedAdventure.id, "comments"), orderBy("createdAt", "asc"));
     commentListenerUnsub.current = onSnapshot(commentsQuery, (snapshot) => {
-        setComments(snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: (doc.data().createdAt as Timestamp)?.toDate().toISOString() ?? new Date().toISOString() } as Comment)));
+        setComments(snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: safeTimestampToString(doc.data().createdAt) } as Comment)));
     });
     return () => { if (commentListenerUnsub.current) { commentListenerUnsub.current(); } };
   }, [selectedAdventure]);
@@ -404,7 +425,19 @@ const App: React.FC = () => {
             await setDoc(userDocRef, newUser);
           }
           resetToScreen('adventures');
-        } catch (error) { console.error("Social login error:", error); }
+        } catch (error: any) { 
+            console.error("Social login error:", error); 
+            if (error.code === 'auth/popup-closed-by-user') {
+                // This can happen if the user closes the popup, or if there's a configuration error
+                // like redirect_uri_mismatch. We can't detect the exact cause here, but we can
+                // provide a generic helpful message.
+                handleShowToast("Login cancelled or failed. Please check your connection and try again.");
+            } else if (error.code === 'auth/account-exists-with-different-credential') {
+                handleShowToast("An account with this email already exists using a different sign-in method.");
+            } else {
+                handleShowToast("An error occurred during Google sign-in.");
+            }
+        }
     }
   };
   const handleGuestLogin = () => { setIsGuest(true); resetToScreen('adventures'); };
