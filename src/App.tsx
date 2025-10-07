@@ -229,7 +229,7 @@ const App: React.FC = () => {
         }));
     });
 
-    const conversationsQuery = query(collection(db, "conversations"), where("participants", "array-contains", currentUser.id));
+    const conversationsQuery = query(collection(db, "conversations"), where("participants", "array-contains", currentUser.id), orderBy("updatedAt", "desc"));
     const unsubConversations = onSnapshot(conversationsQuery, (snapshot) => {
         setConversations(snapshot.docs.map(doc => {
              const data = doc.data();
@@ -345,7 +345,7 @@ const App: React.FC = () => {
 
     const filtered = mapped.filter((c): c is HydratedConversation => c !== null);
 
-    return filtered.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+    return filtered; // Data is already sorted by Firestore
 
   }, [conversations, users, currentUser]);
 
