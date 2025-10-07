@@ -1,8 +1,8 @@
-// @google/genai-api-key
 import { GoogleGenAI } from "@google/genai";
 import { AdventureType } from "../types";
 
 // Initialize the GoogleGenAI client with the API key from the environment variable.
+// The value for `process.env.API_KEY` is injected at build time by Vite (see vite.config.ts).
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const generateDescription = async (title: string, keywords: string, adventureType: AdventureType): Promise<string> => {
