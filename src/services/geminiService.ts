@@ -1,19 +1,24 @@
 import { GoogleGenAI } from "@google/genai";
 import { AdventureType } from "../types";
 
-// This value is injected at build time by the `define` property in `vite.config.ts`.
-const apiKey = import.meta.env.GEMINI_API_KEY_INJECTED;
+// This is the standard Vite way to access environment variables.
+// The value comes from your `.env.local` file (for local development)
+// or from the environment variables set on your hosting provider (e.g., Vercel).
+// For Firebase Hosting, this value is baked in during the `npm run build` step.
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
-// Diagnostic log to verify the key value in the browser's console.
-console.log("[DIAGNOSTIC] Attempting to initialize Gemini with API Key:", apiKey);
+// DIAGNOSTIC LOG: Check your browser's console to see what value is being used.
+// If it's 'undefined', the environment variable is not configured correctly.
+console.log("[DIAGNOSTIC] Attempting to initialize Gemini with VITE_GEMINI_API_KEY:", apiKey);
 
 if (!apiKey) {
+  // This error is the final confirmation. If you see this, the environment variable is not being set correctly.
   console.error(
-    "Gemini API Key is missing! Ensure VITE_GEMINI_API_KEY is set in your .env.local file and that the project has been built correctly."
+    "Gemini API Key is missing! Ensure VITE_GEMINI_API_KEY is set in your .env.local file AND in your hosting provider's environment variable settings before building."
   );
 }
 
-// Initialize the GoogleGenAI client with the injected API key.
+// Initialize the GoogleGenAI client with the API key from the environment.
 const ai = new GoogleGenAI({ apiKey: apiKey });
 
 export const generateDescription = async (title: string, keywords: string, adventureType: AdventureType): Promise<string> => {
