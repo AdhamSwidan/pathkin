@@ -1,19 +1,19 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { AdventureType } from "../types";
 
-// In this specific platform environment, the API key is provided securely
-// via `process.env.API_KEY`. The platform replaces this placeholder at runtime.
-// This is different from the standard Vite `import.meta.env` approach.
-const apiKey = process.env.API_KEY;
+// Vite exposes environment variables on the `import.meta.env` object.
+// VITE_GEMINI_API_KEY is defined in your .env.local file and will be
+// embedded during the build process.
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
-// DIAGNOSTIC LOG: This will help confirm if the platform is injecting the key.
-console.log("[DIAGNOSTIC] Attempting to initialize Gemini with process.env.API_KEY:", apiKey ? "key_found" : "key_not_found");
+// DIAGNOSTIC LOG: This will help confirm if the build process is injecting the key.
+console.log("[DIAGNOSTIC] Attempting to initialize Gemini with import.meta.env.VITE_GEMINI_API_KEY:", apiKey ? "key_found" : "key_not_found");
 
 if (!apiKey) {
-  // If you see this error, it means the API key has not been configured
-  // in the secrets/environment variable settings of your deployment platform.
+  // If you see this error, it means the VITE_GEMINI_API_KEY has not been configured
+  // in the .env.local file or in the environment variable settings of your deployment platform.
   console.error(
-    "Gemini API Key is missing from the environment! Please ensure the API_KEY secret is set in your platform's settings."
+    "Gemini API Key is missing from the environment! Please ensure the VITE_GEMINI_API_KEY is set."
   );
 }
 
@@ -35,13 +35,15 @@ export const generateDescription = async (title: string, keywords: string, adven
   `;
 
   try {
-    const response = await ai.models.generateContent({
+    // Fix: Add GenerateContentResponse type to the response object as per guidelines.
+    const response: GenerateContentResponse = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: prompt,
     });
     
+    // Fix: Use response.text and handle potential empty string case.
     const text = response.text;
-    return text?.trim() ?? "There was an error generating the description. Please try again.";
+    return text.trim() || "There was an error generating the description. Please try again.";
   } catch (error) {
     console.error("Error generating description with Gemini:", error);
     return "There was an error generating the description. Please try again.";

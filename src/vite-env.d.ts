@@ -9,6 +9,8 @@ interface ImportMetaEnv {
   readonly VITE_FIREBASE_STORAGE_BUCKET: string;
   readonly VITE_FIREBASE_MESSAGING_SENDER_ID: string;
   readonly VITE_FIREBASE_APP_ID: string;
+  // Fix: Add Gemini API key to environment variables type definition to resolve error in geminiService.ts.
+  readonly VITE_GEMINI_API_KEY: string;
 }
 
 interface ImportMeta {
