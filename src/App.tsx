@@ -43,7 +43,7 @@ import {
   sendPasswordResetEmail,
   ref, uploadBytes, getDownloadURL,
   updateDoc,
-  addDoc, serverTimestamp, arrayUnion, arrayRemove, Timestamp,
+  addDoc, serverTimestamp, arrayUnion, arrayRemove,
   runTransaction, deleteDoc,
   GoogleAuthProvider, signInWithPopup, increment,
   writeBatch,
