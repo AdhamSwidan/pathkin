@@ -77,16 +77,37 @@ export {
 
 export type { FirebaseUser };
 
+/**
+ * A utility function to safely trim and remove extraneous characters 
+ * (like quotes or trailing commas) from environment variables.
+ * @param variable The environment variable string.
+ * @returns A cleaned string.
+ */
+const cleanEnvVar = (variable: string | undefined): string => {
+    if (!variable) {
+        return '';
+    }
+    let cleaned = variable.trim();
+    // Remove a single trailing comma if it exists
+    if (cleaned.endsWith(',')) {
+        cleaned = cleaned.slice(0, -1);
+    }
+    // Remove quotes if the string is wrapped in them
+    if ((cleaned.startsWith('"') && cleaned.endsWith('"')) || (cleaned.startsWith("'") && cleaned.endsWith("'"))) {
+        cleaned = cleaned.slice(1, -1);
+    }
+    return cleaned;
+};
+
+
 // Standardized on Vite's native `import.meta.env` for all environment variables.
-// The stripQuotes function was removed as it's an unnecessary layer of complexity;
-// Vite handles environment variables correctly.
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  apiKey: cleanEnvVar(import.meta.env.VITE_FIREBASE_API_KEY),
+  authDomain: cleanEnvVar(import.meta.env.VITE_FIREBASE_AUTH_DOMAIN),
+  projectId: cleanEnvVar(import.meta.env.VITE_FIREBASE_PROJECT_ID),
+  storageBucket: cleanEnvVar(import.meta.env.VITE_FIREBASE_STORAGE_BUCKET),
+  messagingSenderId: cleanEnvVar(import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID),
+  appId: cleanEnvVar(import.meta.env.VITE_FIREBASE_APP_ID),
 };
 
 // Initialize Firebase

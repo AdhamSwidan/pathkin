@@ -1,10 +1,32 @@
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { AdventureType } from "../types";
 
+/**
+ * A utility function to safely trim and remove extraneous characters 
+ * (like quotes or trailing commas) from environment variables.
+ * @param variable The environment variable string.
+ * @returns A cleaned string.
+ */
+const cleanEnvVar = (variable: string | undefined): string => {
+    if (!variable) {
+        return '';
+    }
+    let cleaned = variable.trim();
+    // Remove a single trailing comma if it exists
+    if (cleaned.endsWith(',')) {
+        cleaned = cleaned.slice(0, -1);
+    }
+    // Remove quotes if the string is wrapped in them
+    if ((cleaned.startsWith('"') && cleaned.endsWith('"')) || (cleaned.startsWith("'") && cleaned.endsWith("'"))) {
+        cleaned = cleaned.slice(1, -1);
+    }
+    return cleaned;
+};
+
 // Vite exposes environment variables on the `import.meta.env` object.
 // VITE_GEMINI_API_KEY is defined in your .env.local file and will be
 // embedded during the build process.
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+const apiKey = cleanEnvVar(import.meta.env.VITE_GEMINI_API_KEY);
 
 // DIAGNOSTIC LOG: This will help confirm if the build process is injecting the key.
 console.log("[DIAGNOSTIC] Attempting to initialize Gemini with import.meta.env.VITE_GEMINI_API_KEY:", apiKey ? "key_found" : "key_not_found");
