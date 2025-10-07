@@ -41,9 +41,10 @@ export const generateDescription = async (title: string, keywords: string, adven
       contents: prompt,
     });
     
-    // Fix: Use response.text and handle potential empty string case.
-    const text = response.text;
-    return text.trim() || "There was an error generating the description. Please try again.";
+    // Fix: Safely access the .text property using optional chaining (?.) to prevent
+    // the "possibly 'undefined'" TypeScript error during build.
+    const text = response.text?.trim();
+    return text || "There was an error generating the description. Please try again.";
   } catch (error) {
     console.error("Error generating description with Gemini:", error);
     return "There was an error generating the description. Please try again.";
