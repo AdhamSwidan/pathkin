@@ -40,7 +40,6 @@ import {
   deleteObject
 } from "firebase/storage";
 
-
 // Re-export v9 modular functions for convenience throughout the app
 export { 
   onAuthStateChanged, 
@@ -77,15 +76,15 @@ export {
 
 export type { FirebaseUser };
 
-
-// Fix: Standardized on Vite's native `import.meta.env` for all environment variables.
+// 🔥 غير هذا الجزء فقط - استخدم القيم المباشرة من Firebase Console:
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  apiKey: "AIzaSyBYBkGpGSFg8gbTjT06L4x5jxsweD__0pQ",
+  authDomain: "yalla-58ccd.firebaseapp.com",
+  projectId: "yalla-58ccd",
+  storageBucket: "yalla-58ccd.firebasestorage.app",
+  messagingSenderId: "476107263423",
+  appId: "1:476107263423:web:11677d0ffdbe5dab83250a",
+  measurementId: "G-1113KEEG6Y"
 };
 
 // Initialize Firebase
