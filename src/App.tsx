@@ -4,6 +4,8 @@
 
 
 
+
+
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import BottomNav from './components/BottomNav';
 import AdventuresScreen from './components/AdventuresScreen';
@@ -392,7 +394,6 @@ const App: React.FC = () => {
   const handleSocialLogin = async (providerName: 'google' | 'facebook') => {
     if (providerName === 'google') {
         const provider = new GoogleAuthProvider();
-        provider.setCustomParameters({ prompt: 'consent' }); // Force consent screen for debugging
         try {
           const result = await signInWithPopup(auth, provider);
           const user = result.user;
