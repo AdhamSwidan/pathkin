@@ -77,22 +77,16 @@ export {
 
 export type { FirebaseUser };
 
-// Helper function to remove quotes and other artifacts from environment variables
-const stripQuotes = (str: string | undefined): string => {
-    if (!str) return '';
-    // This regex removes leading/trailing whitespace, quotes (single or double), and trailing commas.
-    return str.trim().replace(/^["']|["',]+$/g, "");
-};
-
-
 // Standardized on Vite's native `import.meta.env` for all environment variables.
+// The stripQuotes function was removed as it's an unnecessary layer of complexity;
+// Vite handles environment variables correctly.
 const firebaseConfig = {
-  apiKey: stripQuotes(import.meta.env.VITE_FIREBASE_API_KEY),
-  authDomain: stripQuotes(import.meta.env.VITE_FIREBASE_AUTH_DOMAIN),
-  projectId: stripQuotes(import.meta.env.VITE_FIREBASE_PROJECT_ID),
-  storageBucket: stripQuotes(import.meta.env.VITE_FIREBASE_STORAGE_BUCKET),
-  messagingSenderId: stripQuotes(import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID),
-  appId: stripQuotes(import.meta.env.VITE_FIREBASE_APP_ID),
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
 // Initialize Firebase
