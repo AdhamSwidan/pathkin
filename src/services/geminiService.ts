@@ -1,20 +1,19 @@
 import { GoogleGenAI } from "@google/genai";
 import { AdventureType } from "../types";
 
-// This is the standard Vite way to access environment variables.
-// The value comes from your `.env.local` file (for local development)
-// or from the environment variables set on your hosting provider (e.g., Vercel).
-// For Firebase Hosting, this value is baked in during the `npm run build` step.
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+// In this specific platform environment, the API key is provided securely
+// via `process.env.API_KEY`. The platform replaces this placeholder at runtime.
+// This is different from the standard Vite `import.meta.env` approach.
+const apiKey = process.env.API_KEY;
 
-// DIAGNOSTIC LOG: Check your browser's console to see what value is being used.
-// If it's 'undefined', the environment variable is not configured correctly.
-console.log("[DIAGNOSTIC] Attempting to initialize Gemini with VITE_GEMINI_API_KEY:", apiKey);
+// DIAGNOSTIC LOG: This will help confirm if the platform is injecting the key.
+console.log("[DIAGNOSTIC] Attempting to initialize Gemini with process.env.API_KEY:", apiKey ? "key_found" : "key_not_found");
 
 if (!apiKey) {
-  // This error is the final confirmation. If you see this, the environment variable is not being set correctly.
+  // If you see this error, it means the API key has not been configured
+  // in the secrets/environment variable settings of your deployment platform.
   console.error(
-    "Gemini API Key is missing! Ensure VITE_GEMINI_API_KEY is set in your .env.local file AND in your hosting provider's environment variable settings before building."
+    "Gemini API Key is missing from the environment! Please ensure the API_KEY secret is set in your platform's settings."
   );
 }
 
