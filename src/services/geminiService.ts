@@ -2,8 +2,8 @@
 import { GoogleGenAI } from "@google/genai";
 import { AdventureType } from "../types";
 
-// Fix: Initialize the GoogleGenAI client with the API key from Vite's standard `import.meta.env`.
-const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
+// Initialize the GoogleGenAI client with the API key from the environment variable.
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const generateDescription = async (title: string, keywords: string, adventureType: AdventureType): Promise<string> => {
   const prompt = `
@@ -25,7 +25,6 @@ export const generateDescription = async (title: string, keywords: string, adven
       contents: prompt,
     });
     
-    // Fix: Access the 'text' property directly instead of calling a method.
     const text = response.text;
     return text?.trim() ?? "There was an error generating the description. Please try again.";
   } catch (error) {
