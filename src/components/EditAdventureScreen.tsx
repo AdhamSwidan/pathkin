@@ -137,11 +137,10 @@ const EditAdventureScreen: React.FC<EditAdventureScreenProps> = ({ adventure, on
     };
 
     // Conditionally set subPrivacy or null it out if privacy is not 'Twins'.
-    // This directly fixes the 'undefined' error for 'subPrivacy'.
     if (privacy === AdventurePrivacy.Twins) {
       updatedData.subPrivacy = subPrivacy;
     } else {
-      updatedData.subPrivacy = null;
+      updatedData.subPrivacy = null; // Explicitly clear if not applicable
     }
 
     // Clear data from other adventure types to prevent stale data when type is changed.
