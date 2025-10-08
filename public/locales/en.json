@@ -97,6 +97,8 @@
   "budget": "Budget ($)",
   "startDate": "Start Date",
   "endDate": "End Date (optional)",
+  "startTime": "Start Time",
+  "endTime": "End Time (optional)",
   "publishAdventure": "Publish Adventure",
   "searchForPeople": "Search for people who share:",
   "sameExactBirthday": "The same exact birthday",
@@ -158,6 +160,7 @@
   "country": "Country",
   "editAdventure": "Edit Adventure",
   "deleteAdventure": "Delete Adventure",
+  "deleteStory": "Delete Story",
   "confirmDelete": "Are you sure you want to delete this adventure? This action cannot be undone.",
   "adventureUpdated": "Adventure updated successfully!",
   "adventureDeleted": "Adventure deleted successfully.",
@@ -215,5 +218,11 @@
   "joinGroupChatConfirmationTitle": "Join Adventure Chat?",
   "joinGroupChatConfirmationMessage": "By joining, you confirm that you will participate in this adventure. Proceed?",
   "completedAdventuresTitle": "Completed {{type}} Adventures",
-  "viewAdventure": "View Adventure"
+  "viewAdventure": "View Adventure",
+  "upcoming": "Upcoming",
+  "past": "Past",
+  "all": "All",
+  "storyPrivacy": "Story Privacy",
+  "postStory": "Post Story",
+  "editPrivacy": "Edit Privacy"
 }

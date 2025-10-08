@@ -1,10 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { User, HydratedAdventure, HydratedStory, AdventureType } from '../types';
 import AdventureCard from './AdventureCard';
-import StoryReel from './StoryReel';
 import { useTranslation } from '../contexts/LanguageContext';
 import AdventureTypeFilterBar from './AdventureTypeFilterBar';
 import TopHeader from './TopHeader';
+import CalendarIcon from './icons/CalendarIcon';
+import CheckCircleIcon from './icons/CheckCircleIcon';
 
 interface AdventuresScreenProps {
   adventures: HydratedAdventure[];
@@ -14,7 +15,6 @@ interface AdventuresScreenProps {
   onSendMessage: (user: User) => void;
   onToggleInterest: (adventureId: string) => void;
   onSelectStories: (stories: HydratedStory[]) => void;
-  onAddStory: () => void;
   onNavigateToNotifications: () => void;
   hasUnreadNotifications: boolean;
   onNavigateToChat: () => void;
@@ -34,6 +34,27 @@ interface AdventuresScreenProps {
   viewedStoryTimestamps: Record<string, string>;
 }
 
+const TimeFilterButton: React.FC<{
+  label: string;
+  icon?: React.ReactNode;
+  isActive: boolean;
+  onClick: () => void;
+}> = ({ label, icon, isActive, onClick }) => {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex-1 flex items-center justify-center px-3 py-1.5 rounded-full text-sm font-semibold transition-all duration-300 ${
+        isActive
+          ? 'bg-white dark:bg-zinc-700 text-brand-orange shadow-sm'
+          : 'text-gray-500 dark:text-gray-400 hover:bg-slate-200/50 dark:hover:bg-zinc-800/20'
+      }`}
+    >
+      {icon && <span className="w-4 h-4 me-1.5">{icon}</span>}
+      {label}
+    </button>
+  );
+};
+
 const AdventuresScreen: React.FC<AdventuresScreenProps> = ({ 
   adventures, 
   stories, 
@@ -42,7 +63,6 @@ const AdventuresScreen: React.FC<AdventuresScreenProps> = ({
   onSendMessage, 
   onToggleInterest, 
   onSelectStories,
-  onAddStory,
   onNavigateToNotifications,
   hasUnreadNotifications,
   onNavigateToChat,
@@ -63,13 +83,38 @@ const AdventuresScreen: React.FC<AdventuresScreenProps> = ({
 }) => {
   const { t } = useTranslation();
   const [selectedAdventureType, setSelectedAdventureType] = useState<AdventureType | 'all'>('all');
+  const [timeFilter, setTimeFilter] = useState<'all' | 'upcoming' | 'past'>('upcoming');
 
   const filteredAdventures = useMemo(() => {
-    if (selectedAdventureType === 'all') {
-      return adventures;
+    let adventuresToFilter = adventures;
+
+    // Time filter
+    const now = new Date();
+    if (timeFilter === 'upcoming') {
+      adventuresToFilter = adventuresToFilter.filter(adv => new Date(adv.startDate) >= now);
+    } else if (timeFilter === 'past') {
+      adventuresToFilter = adventuresToFilter.filter(adv => {
+        const effectiveDateString = adv.endDate || adv.startDate;
+        const endDateTime = new Date(effectiveDateString);
+        
+        const wasTimeSpecified = endDateTime.getHours() !== 0 || endDateTime.getMinutes() !== 0 || endDateTime.getSeconds() !== 0 || endDateTime.getMilliseconds() !== 0;
+
+        if (wasTimeSpecified) {
+            return now > endDateTime;
+        } else {
+            const tempDate = new Date(endDateTime);
+            tempDate.setHours(23, 59, 59, 999);
+            return now > tempDate;
+        }
+      });
     }
-    return adventures.filter(adventure => adventure.type === selectedAdventureType);
-  }, [adventures, selectedAdventureType]);
+
+    // Type filter
+    if (selectedAdventureType === 'all') {
+      return adventuresToFilter;
+    }
+    return adventuresToFilter.filter(adventure => adventure.type === selectedAdventureType);
+  }, [adventures, selectedAdventureType, timeFilter]);
 
   return (
     <>
@@ -83,15 +128,29 @@ const AdventuresScreen: React.FC<AdventuresScreenProps> = ({
         onNavigateToProfile={onNavigateToProfile}
         onNavigateToSearch={onNavigateToSearch}
       />
-      <div className="space-y-3">
-        <StoryReel 
-          stories={stories} 
-          currentUser={currentUser} 
-          onSelectStories={onSelectStories} 
-          onAddStory={onAddStory}
-          viewedStoryTimestamps={viewedStoryTimestamps}
-        />
-        
+      <div className="space-y-3 pt-3">
+        <div className="px-4 pt-1">
+          <div className="flex justify-center space-x-1 bg-slate-100 dark:bg-dark-bg-secondary p-1 rounded-full">
+            <TimeFilterButton
+              label={t('upcoming')}
+              icon={<CalendarIcon className="w-4 h-4" />}
+              isActive={timeFilter === 'upcoming'}
+              onClick={() => setTimeFilter('upcoming')}
+            />
+            <TimeFilterButton
+              label={t('all')}
+              isActive={timeFilter === 'all'}
+              onClick={() => setTimeFilter('all')}
+            />
+            <TimeFilterButton
+              label={t('past')}
+              icon={<CheckCircleIcon className="w-4 h-4" />}
+              isActive={timeFilter === 'past'}
+              onClick={() => setTimeFilter('past')}
+            />
+          </div>
+        </div>
+
         <AdventureTypeFilterBar 
           selectedType={selectedAdventureType} 
           onSelectType={setSelectedAdventureType} 
@@ -105,6 +164,10 @@ const AdventuresScreen: React.FC<AdventuresScreenProps> = ({
             adventure={adventure} 
             currentUser={currentUser}
             isGuest={isGuest}
+            // Fix: Pass missing story-related props to AdventureCard.
+            stories={stories}
+            viewedStoryTimestamps={viewedStoryTimestamps}
+            onSelectStories={onSelectStories}
             onCommentClick={onSelectAdventure}
             onMessageClick={onSendMessage}
             onInterestToggle={onToggleInterest}

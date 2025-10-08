@@ -1,13 +1,18 @@
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { HydratedStory, User } from '../types';
+import { HydratedStory, User, AdventurePrivacy } from '../types';
 import MoreIcon from './icons/MoreIcon';
 import { useTranslation } from '../contexts/LanguageContext';
+import GlobeIcon from './icons/GlobeIcon';
+import UsersIcon from './icons/UsersIcon';
+import CakeIcon from './icons/CakeIcon';
 
 interface StoryViewerProps {
   stories: HydratedStory[];
   onClose: () => void;
   currentUser: User | null;
   onDeleteStory: (story: HydratedStory) => void;
+  onUpdateStoryPrivacy: (storyId: string, privacy: AdventurePrivacy) => void;
 }
 
 // Progress Bar component
@@ -20,10 +25,54 @@ const ProgressBar: React.FC<{ active: boolean; progress: number }> = ({ active, 
   </div>
 );
 
-const StoryViewer: React.FC<StoryViewerProps> = ({ stories, onClose, currentUser, onDeleteStory }) => {
+const PrivacyEditor: React.FC<{
+    currentPrivacy: AdventurePrivacy;
+    onSave: (newPrivacy: AdventurePrivacy) => void;
+    onClose: () => void;
+}> = ({ currentPrivacy, onSave, onClose }) => {
+    const { t } = useTranslation();
+    const [selectedPrivacy, setSelectedPrivacy] = useState(currentPrivacy);
+
+    const privacyOptions = [
+        { value: AdventurePrivacy.Public, icon: <GlobeIcon className="w-5 h-5 mr-3"/>, label: t('AdventurePrivacy_Public') },
+        { value: AdventurePrivacy.Followers, icon: <UsersIcon className="w-5 h-5 mr-3"/>, label: t('AdventurePrivacy_Followers') },
+        { value: AdventurePrivacy.Twins, icon: <CakeIcon className="w-5 h-5 mr-3"/>, label: t('AdventurePrivacy_Twins') },
+    ];
+
+    return (
+        <div className="absolute inset-0 bg-black/70 z-30 flex items-center justify-center p-4" onClick={onClose}>
+            <div className="bg-neutral-800 rounded-lg p-4 w-full max-w-xs" onClick={e => e.stopPropagation()}>
+                <h3 className="text-white font-bold text-lg mb-4">{t('editPrivacy')}</h3>
+                <div className="space-y-2">
+                    {privacyOptions.map(opt => (
+                        <label key={opt.value} className={`flex items-center p-3 rounded-md cursor-pointer ${selectedPrivacy === opt.value ? 'bg-orange-500/20' : 'hover:bg-neutral-700'}`}>
+                            <input
+                                type="radio"
+                                name="privacy"
+                                value={opt.value}
+                                checked={selectedPrivacy === opt.value}
+                                onChange={() => setSelectedPrivacy(opt.value)}
+                                className="hidden"
+                            />
+                            {opt.icon}
+                            <span className="text-white">{opt.label}</span>
+                        </label>
+                    ))}
+                </div>
+                <div className="flex justify-end space-x-2 mt-4">
+                    <button onClick={onClose} className="px-4 py-2 text-white font-semibold">{t('cancel')}</button>
+                    <button onClick={() => onSave(selectedPrivacy)} className="px-4 py-2 bg-orange-600 text-white rounded-md font-semibold">{t('saveChanges')}</button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const StoryViewer: React.FC<StoryViewerProps> = ({ stories, onClose, currentUser, onDeleteStory, onUpdateStoryPrivacy }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isEditingPrivacy, setIsEditingPrivacy] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
 
@@ -108,7 +157,12 @@ const StoryViewer: React.FC<StoryViewerProps> = ({ stories, onClose, currentUser
         setIsMenuOpen(false);
     }
   };
-
+  
+  const handleSavePrivacy = (newPrivacy: AdventurePrivacy) => {
+    onUpdateStoryPrivacy(currentStory.id, newPrivacy);
+    setIsEditingPrivacy(false);
+    setIsMenuOpen(false);
+  };
 
   return (
     <div className="fixed inset-0 bg-black z-[100] flex flex-col p-2 animate-fade-in select-none">
@@ -137,9 +191,12 @@ const StoryViewer: React.FC<StoryViewerProps> = ({ stories, onClose, currentUser
                         <MoreIcon />
                     </button>
                     {isMenuOpen && (
-                        <div ref={menuRef} className="absolute top-full right-0 mt-2 w-36 bg-neutral-800 rounded-md shadow-lg z-20 text-white">
+                        <div ref={menuRef} className="absolute top-full right-0 mt-2 w-48 bg-neutral-800 rounded-md shadow-lg z-20 text-white divide-y divide-neutral-700">
+                           <button onClick={() => { setIsEditingPrivacy(true); setIsMenuOpen(false); }} className="w-full text-left px-4 py-2 text-sm hover:bg-neutral-700">
+                                {t('editPrivacy')}
+                            </button>
                             <button onClick={handleDelete} className="w-full text-left px-4 py-2 text-sm hover:bg-neutral-700 text-red-500">
-                                {t('deleteAdventure')}
+                                {t('deleteStory')}
                             </button>
                         </div>
                     )}
@@ -171,6 +228,14 @@ const StoryViewer: React.FC<StoryViewerProps> = ({ stories, onClose, currentUser
             <div className="w-2/3 h-full" onMouseDown={goToNext}></div>
         </div>
       </div>
+      
+      {isAuthor && isEditingPrivacy && (
+         <PrivacyEditor
+            currentPrivacy={currentStory.privacy || AdventurePrivacy.Public}
+            onSave={handleSavePrivacy}
+            onClose={() => setIsEditingPrivacy(false)}
+         />
+      )}
     </div>
   );
 };

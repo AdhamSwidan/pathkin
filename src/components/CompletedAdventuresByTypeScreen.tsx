@@ -1,7 +1,7 @@
 
 
 import React, { useMemo } from 'react';
-import { User, HydratedAdventure, AdventureType, ActivityStatus } from '../types';
+import { User, HydratedAdventure, AdventureType, ActivityStatus, HydratedStory } from '../types';
 import Header from './Header';
 import AdventureCard from './AdventureCard';
 import { useTranslation } from '../contexts/LanguageContext';
@@ -13,10 +13,13 @@ interface CompletedAdventuresByTypeScreenProps {
   allAdventures: HydratedAdventure[];
   currentUser: User;
   isGuest: boolean;
+  stories: HydratedStory[];
+  viewedStoryTimestamps: Record<string, string>;
   onSelectAdventure: (adventure: HydratedAdventure) => void;
   onSendMessage: (user: User) => void;
   onToggleInterest: (adventureId: string) => void;
   onViewProfile: (user: User) => void;
+  onSelectStories: (stories: HydratedStory[]) => void;
   onRepostToggle: (adventureId: string) => void;
   onSaveToggle: (adventureId: string) => void;
   onShareAdventure: (adventure: HydratedAdventure) => void;
@@ -34,10 +37,13 @@ const CompletedAdventuresByTypeScreen: React.FC<CompletedAdventuresByTypeScreenP
   allAdventures,
   currentUser,
   isGuest,
+  stories,
+  viewedStoryTimestamps,
   onSelectAdventure,
   onSendMessage,
   onToggleInterest,
   onViewProfile,
+  onSelectStories,
   onRepostToggle,
   onSaveToggle,
   onShareAdventure,
@@ -74,6 +80,9 @@ const CompletedAdventuresByTypeScreen: React.FC<CompletedAdventuresByTypeScreenP
               adventure={adventure}
               currentUser={currentUser}
               isGuest={isGuest}
+              stories={stories}
+              viewedStoryTimestamps={viewedStoryTimestamps}
+              onSelectStories={onSelectStories}
               onCommentClick={onSelectAdventure}
               onMessageClick={onSendMessage}
               onInterestToggle={onToggleInterest}

@@ -97,6 +97,8 @@
   "budget": "الميزانية ($)",
   "startDate": "تاريخ البدء",
   "endDate": "تاريخ الانتهاء (اختياري)",
+  "startTime": "وقت البدء",
+  "endTime": "وقت الانتهاء (اختياري)",
   "publishAdventure": "نشر المغامرة",
   "searchForPeople": "ابحث عن أشخاص يشاركونك:",
   "sameExactBirthday": "نفس تاريخ الميلاد بالضبط",
@@ -158,6 +160,7 @@
   "country": "الدولة",
   "editAdventure": "تعديل المغامرة",
   "deleteAdventure": "حذف المغامرة",
+  "deleteStory": "حذف القصة",
   "confirmDelete": "هل أنت متأكد من أنك تريد حذف هذه المغامرة؟ لا يمكن التراجع عن هذا الإجراء.",
   "adventureUpdated": "تم تحديث المغامرة بنجاح!",
   "adventureDeleted": "تم حذف المغامرة بنجاح.",
@@ -215,5 +218,11 @@
   "joinGroupChatConfirmationTitle": "الانضمام لمحادثة المغامرة؟",
   "joinGroupChatConfirmationMessage": "بالانضمام، أنت تؤكد نيتك بالمشاركة في هذه المغامرة. هل تريد المتابعة؟",
   "completedAdventuresTitle": "المغامرات المكتملة: {{type}}",
-  "viewAdventure": "عرض المغامرة"
+  "viewAdventure": "عرض المغامرة",
+  "upcoming": "القادمة",
+  "past": "المنتهية",
+  "all": "الكل",
+  "storyPrivacy": "خصوصية القصة",
+  "postStory": "نشر القصة",
+  "editPrivacy": "تعديل الخصوصية"
 }

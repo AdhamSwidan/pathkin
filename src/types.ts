@@ -1,5 +1,8 @@
 
 
+
+
+
 export type ProfileTab = 'adventures' | 'saved' | 'reposts' | 'completed' | 'stats';
 
 export enum AdventureType {
@@ -112,6 +115,7 @@ export interface Story {
   author?: User;
   media: Media;
   createdAt: string;
+  privacy?: AdventurePrivacy;
 }
 
 // A Story that has been "hydrated" with its author's data
@@ -134,9 +138,15 @@ export type HydratedComment = Omit<Comment, 'author'> & {
 
 export interface Message {
   id: string;
-  senderId: string;
-  text: string;
+  senderId: string; // Can be 'system' for automated messages
+  type: 'user' | 'system';
+  content: {
+    text?: string;
+    media?: Media; // For images and videos
+    audio?: { url: string; duration: number }; // For voice messages
+  };
   createdAt: string;
+  isDeletedFor?: string[]; // Array of user IDs for whom this message is deleted
 }
 
 export interface Conversation {
@@ -195,4 +205,5 @@ export type Screen =
   | 'savedAdventures'
   | 'notifications'
   | 'editAdventure'
-  | 'completedAdventuresByType';
+  | 'completedAdventuresByType'
+  | 'groupChatSettings';

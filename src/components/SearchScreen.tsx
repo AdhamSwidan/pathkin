@@ -1,8 +1,9 @@
 
 
 
+
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { User, AdventureType, HydratedAdventure } from '../types';
+import { User, AdventureType, HydratedAdventure, HydratedStory } from '../types';
 import AdventureCard from './AdventureCard';
 import SearchIcon from './icons/SearchIcon';
 import CakeIcon from './icons/CakeIcon';
@@ -18,6 +19,7 @@ import CalendarIcon from './icons/CalendarIcon';
 
 interface SearchScreenProps {
   adventures: HydratedAdventure[];
+  stories: HydratedStory[];
   allUsers: User[];
   currentUser: User;
   isGuest: boolean;
@@ -36,8 +38,9 @@ interface SearchScreenProps {
   onDeleteAdventure: (adventureId: string) => void;
   onEditAdventure: (adventure: HydratedAdventure) => void;
   onFollowToggle: (userId: string) => void;
-  // Fix: Add onJoinGroupChat to the props interface to resolve TypeScript error.
   onJoinGroupChat: (adventure: HydratedAdventure) => void;
+  viewedStoryTimestamps: Record<string, string>;
+  onSelectStories: (stories: HydratedStory[]) => void;
 }
 
 interface AppliedFilters {
@@ -51,6 +54,7 @@ interface AppliedFilters {
 
 const SearchScreen: React.FC<SearchScreenProps> = ({
   adventures,
+  stories,
   allUsers,
   currentUser,
   isGuest,
@@ -70,6 +74,8 @@ const SearchScreen: React.FC<SearchScreenProps> = ({
   onEditAdventure,
   onFollowToggle,
   onJoinGroupChat,
+  viewedStoryTimestamps,
+  onSelectStories,
 }) => {
   const [searchMode, setSearchMode] = useState<'adventures' | 'people'>('adventures');
   const [searchQuery, setSearchQuery] = useState('');
@@ -355,12 +361,25 @@ const SearchScreen: React.FC<SearchScreenProps> = ({
             {searchMode === 'adventures' && appliedFilters && (
                 <>
                     {filteredAdventures.length > 0 ? filteredAdventures.map(adventure => (
-                        <AdventureCard key={adventure.id} adventure={adventure} currentUser={currentUser} isGuest={isGuest}
-                            onCommentClick={onSelectAdventure} onMessageClick={onSendMessage} onInterestToggle={onToggleInterest}
-                            onViewProfile={onViewProfile} onRepostToggle={onRepostToggle} onSaveToggle={onSaveToggle}
-                            onShareAdventure={onShareAdventure} onToggleCompleted={onToggleCompleted} onViewLocationOnMap={onViewLocationOnMap}
-                            onDeleteAdventure={onDeleteAdventure} onEditAdventure={onEditAdventure}
-                            // Fix: Pass the onJoinGroupChat prop to AdventureCard to fix missing prop error.
+                        <AdventureCard 
+                            key={adventure.id} 
+                            adventure={adventure} 
+                            currentUser={currentUser} 
+                            isGuest={isGuest}
+                            stories={stories}
+                            viewedStoryTimestamps={viewedStoryTimestamps}
+                            onSelectStories={onSelectStories}
+                            onCommentClick={onSelectAdventure} 
+                            onMessageClick={onSendMessage} 
+                            onInterestToggle={onToggleInterest}
+                            onViewProfile={onViewProfile} 
+                            onRepostToggle={onRepostToggle} 
+                            onSaveToggle={onSaveToggle}
+                            onShareAdventure={onShareAdventure} 
+                            onToggleCompleted={onToggleCompleted} 
+                            onViewLocationOnMap={onViewLocationOnMap}
+                            onDeleteAdventure={onDeleteAdventure} 
+                            onEditAdventure={onEditAdventure}
                             onJoinGroupChat={onJoinGroupChat}
                         />
                     )) : (

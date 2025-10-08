@@ -1,3 +1,4 @@
+
 // Fix: Import `useRef` from React to resolve "Cannot find name 'useRef'" error.
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Adventure, AdventurePrivacy, AdventureType, HydratedAdventure } from '../types';
@@ -87,6 +88,18 @@ const LocationInputWithAutocomplete: React.FC<{
 
 const EditAdventureScreen: React.FC<EditAdventureScreenProps> = ({ adventure, onBack, onUpdateAdventure, isLoaded }) => {
   const { t } = useTranslation();
+
+  const getLocalTime = (isoString?: string) => {
+    if (!isoString) return '';
+    try {
+        const d = new Date(isoString);
+        const hours = d.getHours().toString().padStart(2, '0');
+        const minutes = d.getMinutes().toString().padStart(2, '0');
+        return `${hours}:${minutes}`;
+    } catch (e) {
+        return '';
+    }
+  };
   
   // Common State
   const [adventureType, setAdventureType] = useState<AdventureType>(adventure.type);
@@ -100,6 +113,8 @@ const EditAdventureScreen: React.FC<EditAdventureScreenProps> = ({ adventure, on
   const [coordinates, setCoordinates] = useState(adventure.coordinates || null);
   const [startDate, setStartDate] = useState(adventure.startDate.split('T')[0]); // Format for date input
   const [endDate, setEndDate] = useState(adventure.endDate?.split('T')[0] || '');
+  const [startTime, setStartTime] = useState(getLocalTime(adventure.startDate));
+  const [endTime, setEndTime] = useState(getLocalTime(adventure.endDate));
   const [budget, setBudget] = useState(adventure.budget.toString());
   
   // Type-specific state
@@ -122,8 +137,8 @@ const EditAdventureScreen: React.FC<EditAdventureScreenProps> = ({ adventure, on
   }, [adventure.eventCategory]);
 
   const handleSubmit = () => {
-    // Build the base update object with common fields.
-    // Use `null` for optional fields that are empty to ensure database compatibility.
+    const finalStartDate = new Date(`${startDate}${startTime ? 'T' + startTime : ''}`).toISOString();
+
     const updatedData: { [key: string]: any } = {
       type: adventureType,
       privacy,
@@ -131,25 +146,28 @@ const EditAdventureScreen: React.FC<EditAdventureScreenProps> = ({ adventure, on
       description,
       location,
       coordinates: coordinates || null,
-      startDate,
+      startDate: finalStartDate,
       budget: parseInt(budget, 10) || 0,
-      endDate: endDate || null,
     };
+    
+    if (endDate) {
+        const finalEndDate = new Date(`${endDate}${endTime ? 'T' + endTime : ''}`).toISOString();
+        updatedData.endDate = finalEndDate;
+    } else {
+        updatedData.endDate = null;
+    }
 
-    // Conditionally set subPrivacy or null it out if privacy is not 'Twins'.
     if (privacy === AdventurePrivacy.Twins) {
       updatedData.subPrivacy = subPrivacy;
     } else {
-      updatedData.subPrivacy = null; // Explicitly clear if not applicable
+      updatedData.subPrivacy = null;
     }
 
-    // Clear data from other adventure types to prevent stale data when type is changed.
     updatedData.destinations = null;
     updatedData.eventCategory = null;
     updatedData.endLocation = null;
     updatedData.endCoordinates = null;
 
-    // Add data specific to the selected adventure type.
     switch (adventureType) {
       case AdventureType.Travel:
         updatedData.destinations = destinations.filter(d => d.location);
@@ -162,7 +180,6 @@ const EditAdventureScreen: React.FC<EditAdventureScreenProps> = ({ adventure, on
         updatedData.endLocation = endLocation || null;
         updatedData.endCoordinates = endCoordinates || null;
         break;
-      // No special fields for Camping or Volunteering.
     }
 
     onUpdateAdventure(adventure.id, updatedData as Partial<Adventure>);
@@ -301,8 +318,22 @@ const EditAdventureScreen: React.FC<EditAdventureScreenProps> = ({ adventure, on
             {renderDynamicFields()}
             
             <div className="grid grid-cols-2 gap-4">
-                <div><label className={labelBaseClasses}>{t('startDate')}</label><input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className={`${inputBaseClasses} text-gray-500`}/></div>
-                <div><label className={labelBaseClasses}>{t('endDate')}</label><input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className={`${inputBaseClasses} text-gray-500`}/></div>
+                <div>
+                    <label className={labelBaseClasses}>{t('startDate')}</label>
+                    <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className={`${inputBaseClasses} text-gray-500`}/>
+                </div>
+                <div>
+                    <label className={labelBaseClasses}>{t('startTime')}</label>
+                    <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className={`${inputBaseClasses} text-gray-500`}/>
+                </div>
+                <div>
+                    <label className={labelBaseClasses}>{t('endDate')}</label>
+                    <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className={`${inputBaseClasses} text-gray-500`}/>
+                </div>
+                <div>
+                    <label className={labelBaseClasses}>{t('endTime')}</label>
+                    <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className={`${inputBaseClasses} text-gray-500`}/>
+                </div>
             </div>
             <div><label className={labelBaseClasses}>{t('budget')}</label><input type="number" value={budget} onChange={e => setBudget(e.target.value)} className={inputBaseClasses}/></div>
 

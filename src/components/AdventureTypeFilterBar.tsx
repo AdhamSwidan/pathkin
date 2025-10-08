@@ -1,7 +1,6 @@
 import React from 'react';
 import { AdventureType } from '../types';
 import { useTranslation } from '../contexts/LanguageContext';
-import GridIcon from './icons/GridIcon';
 import PlaneIcon from './icons/PlaneIcon';
 import GroupIcon from './icons/GroupIcon';
 import HikingIcon from './icons/HikingIcon';
@@ -14,8 +13,7 @@ interface AdventureTypeFilterBarProps {
   onSelectType: (type: AdventureType | 'all') => void;
 }
 
-const filterOptions: { type: AdventureType | 'all', icon: React.ReactNode, labelKey: string }[] = [
-    { type: 'all', icon: <GridIcon />, labelKey: 'allTypes' },
+const filterOptions: { type: AdventureType, icon: React.ReactNode, labelKey: string }[] = [
     { type: AdventureType.Travel, icon: <PlaneIcon />, labelKey: `AdventureType_${AdventureType.Travel}` },
     { type: AdventureType.Volunteering, icon: <HeartIcon />, labelKey: `AdventureType_${AdventureType.Volunteering}` },
     { type: AdventureType.Hiking, icon: <HikingIcon />, labelKey: `AdventureType_${AdventureType.Hiking}` },

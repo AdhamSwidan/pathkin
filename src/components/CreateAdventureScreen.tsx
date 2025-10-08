@@ -96,6 +96,8 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ currentUs
   const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
   const [budget, setBudget] = useState('');
   
   // Event-specific state
@@ -178,17 +180,25 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ currentUs
         return;
     }
     
+    // Combine date and time, then convert to ISO string.
+    // The user's browser automatically handles the local timezone.
+    const finalStartDate = new Date(`${startDate}${startTime ? 'T' + startTime : ''}`).toISOString();
+
     const adventureData: any = {
       type: adventureType,
       privacy,
       title,
       description,
-      startDate,
+      startDate: finalStartDate,
       budget: parseInt(budget, 10) || 0,
     };
     
     if (privacy === AdventurePrivacy.Twins) adventureData.subPrivacy = subPrivacy;
-    if (endDate) adventureData.endDate = endDate;
+    
+    if (endDate) {
+      const finalEndDate = new Date(`${endDate}${endTime ? 'T' + endTime : ''}`).toISOString();
+      adventureData.endDate = finalEndDate;
+    }
     
     switch(adventureType) {
         case AdventureType.Travel:
@@ -378,8 +388,16 @@ const CreateAdventureScreen: React.FC<CreateAdventureScreenProps> = ({ currentUs
                     <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className={`${inputBaseClasses} mt-2 text-gray-500`} />
                 </div>
                  <div>
+                    <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">{t('startTime')}</label>
+                    <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className={`${inputBaseClasses} mt-2 text-gray-500`} />
+                </div>
+                <div>
                     <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">{t('endDate')}</label>
                     <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className={`${inputBaseClasses} mt-2 text-gray-500`} />
+                </div>
+                <div>
+                    <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">{t('endTime')}</label>
+                    <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className={`${inputBaseClasses} mt-2 text-gray-500`} />
                 </div>
             </div>
              <div>

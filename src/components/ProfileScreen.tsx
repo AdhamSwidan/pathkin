@@ -1,13 +1,5 @@
-
-
-
-
-
-
-
-
 import React, { useMemo } from 'react';
-import { User, HydratedAdventure, ActivityStatus, AdventureType, ProfileTab } from '../types';
+import { User, HydratedAdventure, ActivityStatus, AdventureType, ProfileTab, HydratedStory } from '../types';
 import Header from './Header';
 import AdventureCard from './AdventureCard';
 import GridIcon from './icons/GridIcon';
@@ -22,6 +14,7 @@ import SettingsIcon from './icons/SettingsIcon';
 import { useTranslation } from '../contexts/LanguageContext';
 import UserIcon from './icons/UserIcon';
 import { getFlagUrl } from '../utils/countryUtils';
+import PlusIcon from './icons/PlusIcon';
 
 
 interface ProfileScreenProps {
@@ -45,6 +38,11 @@ interface ProfileScreenProps {
   onViewCompletedByType: (user: User, type: AdventureType) => void;
   activeTab: ProfileTab;
   setActiveTab: (tab: ProfileTab) => void;
+  // Fix: Add missing story-related props to resolve TypeScript errors.
+  stories: HydratedStory[];
+  onSelectStories: (stories: HydratedStory[]) => void;
+  onAddStory: () => void;
+  viewedStoryTimestamps: Record<string, string>;
 }
 
 const ProfileScreen: React.FC<ProfileScreenProps> = ({ 
@@ -68,8 +66,26 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   onViewCompletedByType,
   activeTab,
   setActiveTab,
+  stories,
+  onSelectStories,
+  onAddStory,
+  viewedStoryTimestamps,
 }) => {
   const { t } = useTranslation();
+
+  const { myStories, hasUnviewedStories } = useMemo(() => {
+    const userStories = stories.filter(s => s.authorId === user.id);
+    if (userStories.length === 0) {
+      return { myStories: [], hasUnviewedStories: false };
+    }
+    const lastViewed = viewedStoryTimestamps[user.id];
+    const latestStory = userStories.reduce((a, b) => new Date(a.createdAt) > new Date(b.createdAt) ? a : b);
+    const hasUnviewed = !lastViewed || new Date(latestStory.createdAt) > new Date(lastViewed);
+    
+    const sortedStories = userStories.slice().sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    
+    return { myStories: sortedStories, hasUnviewedStories: hasUnviewed };
+  }, [stories, user.id, viewedStoryTimestamps]);
 
   const headerActions = (
     <div className="flex items-center space-x-2">
@@ -125,6 +141,10 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                 adventure={adventure} 
                 currentUser={user}
                 isGuest={false}
+                // Fix: Pass missing story-related props to AdventureCard.
+                stories={stories}
+                viewedStoryTimestamps={viewedStoryTimestamps}
+                onSelectStories={onSelectStories}
                 onCommentClick={onSelectAdventure}
                 onMessageClick={onSendMessage}
                 onInterestToggle={onToggleInterest}
@@ -163,12 +183,30 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
         
         <div className="px-4 relative">
           <div className="flex items-end">
-            <div className="w-24 h-24 rounded-full border-4 border-light-bg dark:border-dark-bg shadow-lg flex-shrink-0 -mt-12 bg-gray-300 dark:bg-neutral-700 flex items-center justify-center">
-                {user.avatarUrl ? (
-                    <img src={user.avatarUrl} alt={user.name} className="w-full h-full rounded-full object-cover" />
-                ) : (
-                    <UserIcon className="w-12 h-12 text-white dark:text-neutral-950" />
-                )}
+             <div className="relative w-24 h-24 flex-shrink-0 -mt-12">
+              <div 
+                className={`w-full h-full rounded-full border-4 border-light-bg dark:border-dark-bg shadow-lg ${myStories.length > 0 ? 'p-0.5' : ''} ${hasUnviewedStories ? 'bg-gradient-to-tr from-amber-400 via-rose-500 to-fuchsia-600' : (myStories.length > 0 ? 'bg-gray-300 dark:bg-neutral-700' : '')}`}
+              >
+                <button
+                  onClick={() => myStories.length > 0 && onSelectStories(myStories)}
+                  className="w-full h-full rounded-full bg-gray-300 dark:bg-neutral-700 flex items-center justify-center overflow-hidden"
+                  aria-label={myStories.length > 0 ? "View story" : "No story to view"}
+                >
+                  {user.avatarUrl ? (
+                      <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
+                  ) : (
+                      <UserIcon className="w-12 h-12 text-white dark:text-neutral-950" />
+                  )}
+                </button>
+              </div>
+
+              <button
+                onClick={onAddStory}
+                className="absolute bottom-0 end-0 bg-brand-orange text-white w-8 h-8 rounded-full flex items-center justify-center border-4 border-light-bg dark:border-dark-bg hover:bg-brand-orange-light transition-colors"
+                aria-label={t('addStory')}
+              >
+                <PlusIcon strokeWidth="3" className="w-4 h-4" />
+              </button>
             </div>
             <div className="flex-grow ms-4 flex items-center">
                 <div className="flex justify-around w-full">

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { HydratedConversation, User } from '../types';
+import { HydratedConversation, User, Message } from '../types';
 import Header from './Header';
 import { useTranslation } from '../contexts/LanguageContext';
 
@@ -34,6 +34,16 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversations, onSelectConversa
     );
   };
   
+  const getLastMessagePreview = (message?: Message): string => {
+    if (!message?.content) return '';
+    if (message.type === 'system') return message.content.text || 'System message';
+    if (message.content.text) return message.content.text;
+    if (message.content.media?.type === 'image') return '📷 Image';
+    if (message.content.media?.type === 'video') return '📹 Video';
+    if (message.content.audio) return '🎤 Voice message';
+    return '';
+  };
+  
   const renderList = (list: HydratedConversation[]) => {
     if (list.length === 0) {
         return <p className="text-center text-gray-500 dark:text-gray-400 py-10">No conversations yet.</p>;
@@ -50,6 +60,8 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversations, onSelectConversa
                 const imageUrl = convo.type === 'private' 
                     ? participant?.avatarUrl || `https://picsum.photos/seed/${convo.id}/200`
                     : convo.imageUrl;
+                
+                const lastMessagePreview = getLastMessagePreview(convo.lastMessage);
 
                 return (
                     <div key={convo.id} onClick={() => onSelectConversation(convo)} className="p-4 rounded-2xl bg-light-bg-secondary/70 dark:bg-dark-bg-secondary/70 backdrop-blur-sm flex items-center space-x-4 hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary cursor-pointer transition-colors">
@@ -66,7 +78,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversations, onSelectConversa
                             )}
                         </div>
                         <div className="flex items-center justify-between mt-1">
-                            {convo.lastMessage && <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{convo.lastMessage.text}</p>}
+                            <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{lastMessagePreview}</p>
                             {unreadCount > 0 && (
                             <span className="ms-2 flex-shrink-0 bg-orange-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
                                 {unreadCount}

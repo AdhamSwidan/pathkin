@@ -6,8 +6,9 @@
 
 
 
+
 import React, { useMemo } from 'react';
-import { User, ActivityStatus, HydratedAdventure, AdventureType, ProfileTab } from '../types';
+import { User, ActivityStatus, HydratedAdventure, AdventureType, ProfileTab, HydratedStory } from '../types';
 import Header from './Header';
 import AdventureCard from './AdventureCard';
 import GridIcon from './icons/GridIcon';
@@ -46,6 +47,10 @@ interface UserProfileScreenProps {
   onViewCompletedByType: (user: User, type: AdventureType) => void;
   activeTab: ProfileTab;
   setActiveTab: (tab: ProfileTab) => void;
+  // Fix: Add missing story-related props to resolve TypeScript errors.
+  stories: HydratedStory[];
+  onSelectStories: (stories: HydratedStory[]) => void;
+  viewedStoryTimestamps: Record<string, string>;
 }
 
 const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ 
@@ -72,6 +77,9 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
   onViewCompletedByType,
   activeTab,
   setActiveTab,
+  stories,
+  onSelectStories,
+  viewedStoryTimestamps,
 }) => {
   const { t } = useTranslation();
 
@@ -151,6 +159,10 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
                 adventure={adventure} 
                 currentUser={currentUser}
                 isGuest={isGuest}
+                // Fix: Pass missing story-related props to AdventureCard.
+                stories={stories}
+                viewedStoryTimestamps={viewedStoryTimestamps}
+                onSelectStories={onSelectStories}
                 onCommentClick={onSelectAdventure}
                 onMessageClick={onSendMessage}
                 onInterestToggle={onToggleInterest}

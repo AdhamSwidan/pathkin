@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, HydratedAdventure } from '../../types';
+import { User, HydratedAdventure, HydratedStory } from '../../types';
 import Header from '../Header';
 import AdventureCard from '../AdventureCard';
 import { useTranslation } from '../../contexts/LanguageContext';
@@ -8,10 +8,13 @@ interface SavedAdventuresScreenProps {
   onBack: () => void;
   adventures: HydratedAdventure[];
   currentUser: User;
+  stories: HydratedStory[];
+  viewedStoryTimestamps: Record<string, string>;
   onSelectAdventure: (adventure: HydratedAdventure) => void;
   onSendMessage: (user: User) => void;
   onToggleInterest: (adventureId: string) => void;
   onViewProfile: (user: User) => void;
+  onSelectStories: (stories: HydratedStory[]) => void;
   onRepostToggle: (adventureId: string) => void;
   onSaveToggle: (adventureId: string) => void;
   onShareAdventure: (adventure: HydratedAdventure) => void;
@@ -19,7 +22,6 @@ interface SavedAdventuresScreenProps {
   onViewLocationOnMap: (adventure: HydratedAdventure | null) => void;
   onDeleteAdventure: (adventureId: string) => void;
   onEditAdventure: (adventure: HydratedAdventure) => void;
-  // Fix: Add onJoinGroupChat to the props interface to resolve TypeScript error.
   onJoinGroupChat: (adventure: HydratedAdventure) => void;
 }
 
@@ -27,10 +29,13 @@ const SavedAdventuresScreen: React.FC<SavedAdventuresScreenProps> = ({
   onBack,
   adventures,
   currentUser,
+  stories,
+  viewedStoryTimestamps,
   onSelectAdventure,
   onSendMessage,
   onToggleInterest,
   onViewProfile,
+  onSelectStories,
   onRepostToggle,
   onSaveToggle,
   onShareAdventure,
@@ -53,6 +58,9 @@ const SavedAdventuresScreen: React.FC<SavedAdventuresScreenProps> = ({
               adventure={adventure}
               currentUser={currentUser}
               isGuest={false}
+              stories={stories}
+              viewedStoryTimestamps={viewedStoryTimestamps}
+              onSelectStories={onSelectStories}
               onCommentClick={onSelectAdventure}
               onMessageClick={onSendMessage}
               onInterestToggle={onToggleInterest}
@@ -64,7 +72,6 @@ const SavedAdventuresScreen: React.FC<SavedAdventuresScreenProps> = ({
               onViewLocationOnMap={onViewLocationOnMap}
               onDeleteAdventure={onDeleteAdventure}
               onEditAdventure={onEditAdventure}
-              // Fix: Pass the onJoinGroupChat prop to AdventureCard to fix missing prop error.
               onJoinGroupChat={onJoinGroupChat}
             />
           ))
